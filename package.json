@@ -1,0 +1,81 @@
+{
+  "name": "@escapace/typescript-library-starter",
+  "description": "",
+  "version": "0.0.0",
+  "author": "escapace <opensource@escapace.com>",
+  "bugs": "https://github.com/escapace/typescript-library-starter/issues",
+  "devDependencies": {
+    "@commitlint/cli": "17.3.0",
+    "@commitlint/config-conventional": "17.3.0",
+    "@ls-lint/ls-lint": "1.11.2",
+    "@types/chai": "4.3.4",
+    "@types/mocha": "10.0.1",
+    "@types/node": "18.11.16",
+    "@typescript-eslint/eslint-plugin": "5.46.1",
+    "@typescript-eslint/parser": "5.46.1",
+    "arg": "5.0.2",
+    "c8": "7.12.0",
+    "chai": "4.3.7",
+    "changelogithub": "0.12.7",
+    "esbuild": "0.16.8",
+    "eslint": "8.30.0",
+    "eslint-config-escapace": "3.15.0",
+    "eslint-config-prettier": "8.5.0",
+    "eslint-plugin-editorconfig": "4.0.2",
+    "eslint-plugin-no-null": "1.0.2",
+    "execa": "6.1.0",
+    "fast-glob": "3.2.12",
+    "fs-extra": "11.1.0",
+    "husky": "8.0.2",
+    "is-ci": "3.0.1",
+    "lint-staged": "13.1.0",
+    "mocha": "10.2.0",
+    "prettier": "2.8.1",
+    "prettier-config-escapace": "1.0.4",
+    "semver": "7.3.8",
+    "syncpack": "8.4.11",
+    "typescript": "4.9.4"
+  },
+  "engines": {
+    "node": ">= 18.2.0",
+    "pnpm": ">= 7.14.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./lib/esm/index.mjs",
+      "require": "./lib/cjs/index.cjs"
+    }
+  },
+  "files": [
+    "lib/cjs",
+    "lib/esm",
+    "lib/types"
+  ],
+  "homepage": "https://github.com/escapace/typescript-library-starter",
+  "license": "MPL-2.0",
+  "main": "lib/cjs/index.cjs",
+  "module": "lib/esm/index.mjs",
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "ts-node"
+      ]
+    }
+  },
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": "https://github.com/escapace/typescript-library-starter.git",
+  "scripts": {
+    "build": "node ./scripts/build.mjs",
+    "lint": "ls-lint && eslint 'src/**/*.{js,mjs,cjs,ts,mts,cts}'",
+    "prepare": "is-ci || husky install",
+    "release": "node ./scripts/release.mjs",
+    "test": "node ./scripts/test.mjs && c8 mocha --enable-source-maps 'lib/tests/**/*.spec.js'",
+    "typecheck": "tsc --noEmit"
+  },
+  "sideEffects": false,
+  "type": "module",
+  "types": "lib/types/index.d.ts"
+}
