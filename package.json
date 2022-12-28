@@ -1,9 +1,9 @@
 {
-  "name": "@escapace/typescript-library-starter",
+  "name": "cassiopeia",
   "description": "",
   "version": "0.0.0",
   "author": "escapace <opensource@escapace.com>",
-  "bugs": "https://github.com/escapace/typescript-library-starter/issues",
+  "bugs": "https://github.com/escapace/cassiopeia/issues",
   "devDependencies": {
     "@commitlint/cli": "17.3.0",
     "@commitlint/config-conventional": "17.3.0",
@@ -42,31 +42,31 @@
   },
   "exports": {
     ".": {
-      "import": "./lib/esm/index.mjs",
-      "require": "./lib/cjs/index.cjs"
+      "node": {
+        "import": {
+          "types": "./lib/types/server.d.ts",
+          "default": "./lib/esm/server.mjs"
+        }
+      },
+      "default": {
+        "import": {
+          "types": "./lib/types/browser.d.ts",
+          "default": "./lib/esm/browser.mjs"
+        }
+      }
     }
   },
   "files": [
-    "lib/cjs",
-    "lib/esm",
-    "lib/types"
+    "lib/types",
+    "lib/esm"
   ],
-  "homepage": "https://github.com/escapace/typescript-library-starter",
+  "homepage": "https://github.com/escapace/cassiopeia",
   "license": "MPL-2.0",
-  "main": "lib/cjs/index.cjs",
-  "module": "lib/esm/index.mjs",
-  "pnpm": {
-    "peerDependencyRules": {
-      "ignoreMissing": [
-        "ts-node"
-      ]
-    }
-  },
   "private": false,
   "publishConfig": {
     "access": "public"
   },
-  "repository": "https://github.com/escapace/typescript-library-starter.git",
+  "repository": "https://github.com/escapace/cassiopeia.git",
   "scripts": {
     "build": "node ./scripts/build.mjs",
     "lint": "ls-lint && eslint 'src/**/*.{js,mjs,cjs,ts,mts,cts}'",
@@ -77,5 +77,5 @@
   },
   "sideEffects": false,
   "type": "module",
-  "types": "lib/types/index.d.ts"
+  "types": "./lib/types/browser.d.ts"
 }
