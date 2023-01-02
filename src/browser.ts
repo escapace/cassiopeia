@@ -292,7 +292,7 @@ export function cassiopeia(options: Options): Cassiopeia {
     }
   }
 
-  const start = () => {
+  const stop = () => {
     if (store.state !== TypeState.Inactive) {
       store.state = TypeState.Inactive
 
@@ -302,7 +302,7 @@ export function cassiopeia(options: Options): Cassiopeia {
     }
   }
 
-  const stop = () => {
+  const start = () => {
     if (store.state === TypeState.Inactive) {
       store.state = TypeState.Activating
 
