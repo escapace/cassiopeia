@@ -3,7 +3,7 @@ import { execa } from 'execa'
 import fse from 'fs-extra'
 import { mkdir } from 'fs/promises'
 import path from 'path'
-import { cwd, target, external } from './constants.mjs'
+import { cwd, external, target } from './constants.mjs'
 
 process.umask(0o022)
 process.chdir(cwd)
