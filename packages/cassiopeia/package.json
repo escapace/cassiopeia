@@ -58,7 +58,8 @@
   },
   "files": [
     "lib/types",
-    "lib/esm"
+    "lib/browser",
+    "lib/server"
   ],
   "homepage": "https://github.com/escapace/cassiopeia",
   "license": "MPL-2.0",
