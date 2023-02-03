@@ -3,7 +3,7 @@ import fastGlob from 'fast-glob'
 import { remove } from 'fs-extra'
 import { mkdir } from 'fs/promises'
 import path from 'path'
-import { cwd, external, target } from './constants.mjs'
+import { cwd, target, external } from './constants.mjs'
 
 const directoryTests = path.join(cwd, 'lib/tests')
 const directorySrc = path.join(cwd, 'src')
@@ -24,6 +24,9 @@ await build({
   bundle: true,
   entryPoints,
   external,
+  define: {
+    __BROWSER__: JSON.stringify(false),
+  },
   format: 'esm',
   logLevel: 'info',
   outbase: directorySrc,

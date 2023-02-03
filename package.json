@@ -1,81 +1,50 @@
 {
-  "name": "cassiopeia",
+  "name": "@cassiopeia/monorepo",
   "description": "",
-  "version": "0.0.0",
-  "author": "escapace <opensource@escapace.com>",
-  "bugs": "https://github.com/escapace/cassiopeia/issues",
+  "version": "1.0.0",
+  "author": "",
   "devDependencies": {
-    "@commitlint/cli": "17.3.0",
-    "@commitlint/config-conventional": "17.3.0",
+    "@commitlint/cli": "17.4.2",
+    "@commitlint/config-conventional": "17.4.2",
     "@ls-lint/ls-lint": "1.11.2",
-    "@types/chai": "4.3.4",
-    "@types/mocha": "10.0.1",
-    "@types/node": "18.11.17",
-    "@typescript-eslint/eslint-plugin": "5.47.0",
-    "@typescript-eslint/parser": "5.47.0",
+    "@typescript-eslint/eslint-plugin": "5.50.0",
+    "@typescript-eslint/parser": "5.50.0",
     "arg": "5.0.2",
     "c8": "7.12.0",
     "chai": "4.3.7",
     "changelogithub": "0.12.7",
-    "esbuild": "0.16.10",
-    "eslint": "8.30.0",
-    "eslint-config-escapace": "3.15.0",
-    "eslint-config-prettier": "8.5.0",
+    "esbuild": "0.17.5",
+    "eslint": "8.33.0",
+    "eslint-config-escapace": "3.16.0",
+    "eslint-config-prettier": "8.6.0",
     "eslint-plugin-editorconfig": "4.0.2",
     "eslint-plugin-no-null": "1.0.2",
     "execa": "6.1.0",
     "fast-glob": "3.2.12",
     "fs-extra": "11.1.0",
-    "husky": "8.0.2",
+    "husky": "8.0.3",
     "is-ci": "3.0.1",
     "lint-staged": "13.1.0",
-    "mocha": "10.2.0",
-    "prettier": "2.8.1",
+    "lodash-es": "4.17.21",
+    "prettier": "2.8.3",
     "prettier-config-escapace": "1.0.4",
     "semver": "7.3.8",
     "syncpack": "8.4.11",
-    "typescript": "4.9.4"
+    "typescript": "4.9.5"
   },
   "engines": {
-    "node": ">= 18.2.0",
-    "pnpm": ">= 7.14.0"
+    "node": ">= 18.12.1",
+    "pnpm": ">= 7.14.2"
   },
-  "exports": {
-    ".": {
-      "node": {
-        "import": {
-          "types": "./lib/types/server.d.ts",
-          "default": "./lib/esm/server.mjs"
-        }
-      },
-      "default": {
-        "import": {
-          "types": "./lib/types/browser.d.ts",
-          "default": "./lib/esm/browser.mjs"
-        }
-      }
-    }
-  },
-  "files": [
-    "lib/types",
-    "lib/esm"
-  ],
-  "homepage": "https://github.com/escapace/cassiopeia",
+  "keywords": [],
   "license": "MPL-2.0",
-  "private": false,
-  "publishConfig": {
-    "access": "public"
-  },
-  "repository": "https://github.com/escapace/cassiopeia.git",
+  "private": true,
   "scripts": {
-    "build": "node ./scripts/build.mjs",
-    "lint": "ls-lint && eslint 'src/**/*.{js,mjs,cjs,ts,mts,cts}'",
+    "build": "pnpm run -r --filter './packages/*' build",
+    "lint": "ls-lint && pnpm run -r --filter './packages/*' lint",
     "prepare": "is-ci || husky install",
-    "release": "node ./scripts/release.mjs",
-    "test": "node ./scripts/test.mjs && c8 mocha --enable-source-maps 'lib/tests/**/*.spec.js'",
-    "typecheck": "tsc --noEmit"
-  },
-  "sideEffects": false,
-  "type": "module",
-  "types": "./lib/types/browser.d.ts"
+    "release": "pnpm run -r --filter './packages/*' release",
+    "test": "pnpm run -r --filter './packages/*' test",
+    "typecheck": "pnpm run -r --filter './packages/*' typecheck"
+  }
 }

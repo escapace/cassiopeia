@@ -1,4 +1,4 @@
-import { STORE } from './constants'
+import { SOURCE, STORE } from './constants'
 
 export type Iterator = Generator<undefined, string | undefined, string | true>
 export type Iterators = Map<string, () => Iterator>
@@ -12,9 +12,8 @@ export type Plugin = (iterators: Iterators) => {
 }
 
 export interface Options {
-  id?: string
+  source: Source
   plugins: Plugin[]
-  [key: string]: unknown
 }
 
 export type Matcher = Generator<undefined, string | undefined, true | undefined>
@@ -24,22 +23,48 @@ export type Variables = Generator<
   true | undefined
 >
 
-export const enum TypeState {
+export enum TypeState {
   Inactive,
   Activating,
   Active
 }
 
+export type VariablesCache = Set<[string, string, string]>
+
+export const enum TypeUpdate {
+  Locked,
+  None,
+  Scheduled,
+  Running
+}
+
+export type Unsubscribe = () => void
+export type Subscription = (value: string) => void
+
 export interface Store {
-  state: TypeState
-  id: string
+  cache: VariablesCache
   iterators: Iterators
+  matcher?: Matcher
+  state: TypeState
+  subscriptions: Set<Subscription>
+  update: TypeUpdate
 }
 
 export interface Cassiopeia {
   [STORE]: Store
+  subscribe: (subscription: Subscription) => Unsubscribe
   start: () => void
   stop: () => void
   update: () => void
   isActive: () => boolean
+}
+
+export type Source = (
+  store: Store,
+  update: (createVariables: () => Variables) => void
+) => {
+  [SOURCE]: {
+    start: () => void
+    stop?: () => void
+  }
 }

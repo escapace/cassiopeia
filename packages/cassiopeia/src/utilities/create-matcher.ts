@@ -1,16 +1,28 @@
-import type { Iterators, Matcher, Variables } from '../types'
+import type { Iterators, Matcher, Variables, VariablesCache } from '../types'
 import { cacheIterators } from './cache-iterators'
 
 export function* createMatcher(
-  variables: Variables,
-  iterators: Iterators
+  variables: Variables | undefined,
+  iterators: Iterators,
+  variablesCache: VariablesCache
 ): Matcher {
   const seen = new Set<string>()
   const [iteratorsRecord, iteratorsMap] = cacheIterators(iterators)
+  const updateCache = variables !== undefined
+
+  if (updateCache) {
+    variablesCache.clear()
+  }
 
   let cancelled = false
 
-  for (const [id, key, variable] of variables) {
+  for (const entry of variables ?? variablesCache.values()) {
+    const [id, key, variable] = entry
+
+    if (updateCache) {
+      variablesCache.add(entry)
+    }
+
     if (cancelled) {
       break
     }
