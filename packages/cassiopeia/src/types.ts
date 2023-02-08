@@ -3,7 +3,7 @@ import { SOURCE, STORE } from './constants'
 export type Iterator = Generator<undefined, string | undefined, string | true>
 export type Iterators = Map<string, () => Iterator>
 
-export type Register = (update: () => void) => void
+export type Register = (update: (isAsync?: boolean) => void) => void
 export type Deregister = () => void
 
 export type Plugin = (iterators: Iterators) => {
@@ -12,7 +12,7 @@ export type Plugin = (iterators: Iterators) => {
 }
 
 export interface Options {
-  source: Source
+  source?: Source
   plugins: Plugin[]
 }
 
@@ -41,6 +41,11 @@ export const enum TypeUpdate {
 export type Unsubscribe = () => void
 export type Subscription = (value: string) => void
 
+export type Update = (
+  createVariables: (() => Variables) | undefined,
+  isAsync?: boolean
+) => void
+
 export interface Store {
   cache: VariablesCache
   iterators: Iterators
@@ -55,13 +60,13 @@ export interface Cassiopeia {
   subscribe: (subscription: Subscription) => Unsubscribe
   start: () => void
   stop: () => void
-  update: () => void
+  update: Update
   isActive: () => boolean
 }
 
 export type Source = (
   store: Store,
-  update: (createVariables: () => Variables) => void
+  update: Update
 ) => {
   [SOURCE]: {
     start: () => void

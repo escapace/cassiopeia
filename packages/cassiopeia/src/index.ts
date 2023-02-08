@@ -18,15 +18,19 @@ import {
 } from './types'
 import { createMatcher } from './utilities/create-matcher'
 
-function schedulerTask(matcher: Matcher, store: Store): void {
+function schedulerTask(
+  matcher: Matcher,
+  store: Store,
+  isAsync = __BROWSER__
+): void {
   if (matcher === store.matcher && store.update === TypeUpdate.Running) {
     const { done, value } = matcher.next()
 
     if (done !== true) {
-      if (__BROWSER__) {
-        setTimeout(() => schedulerTask(matcher, store))
+      if (isAsync) {
+        setTimeout(() => schedulerTask(matcher, store, isAsync))
       } else {
-        schedulerTask(matcher, store)
+        schedulerTask(matcher, store, isAsync)
       }
       return
     }
@@ -43,7 +47,11 @@ function schedulerTask(matcher: Matcher, store: Store): void {
   }
 }
 
-function schedulerFrame(store: Store, createVariables?: () => Variables) {
+function schedulerFrame(
+  store: Store,
+  createVariables: undefined | (() => Variables),
+  isAsync = __BROWSER__
+) {
   if (store.update === TypeUpdate.Scheduled) {
     const matcher = (store.matcher = createMatcher(
       createVariables === undefined ? undefined : createVariables(),
@@ -53,7 +61,7 @@ function schedulerFrame(store: Store, createVariables?: () => Variables) {
 
     store.update = TypeUpdate.Running
 
-    schedulerTask(matcher, store)
+    schedulerTask(matcher, store, isAsync)
   }
 }
 
@@ -64,7 +72,7 @@ function createScheduler(store: Store) {
     store.update = lock ? TypeUpdate.Locked : TypeUpdate.None
   }
 
-  const update = (createVariables?: () => Variables) => {
+  const update = (createVariables?: () => Variables, isAsync = __BROWSER__) => {
     if (store.update === TypeUpdate.Running) {
       store.matcher = undefined
       store.update = TypeUpdate.None
@@ -73,10 +81,12 @@ function createScheduler(store: Store) {
     if (store.update === TypeUpdate.None) {
       store.update = TypeUpdate.Scheduled
 
-      if (__BROWSER__) {
-        requestAnimationFrame(() => schedulerFrame(store, createVariables))
+      if (isAsync) {
+        requestAnimationFrame(() =>
+          schedulerFrame(store, createVariables, isAsync)
+        )
       } else {
-        schedulerFrame(store, createVariables)
+        schedulerFrame(store, createVariables, isAsync)
       }
     }
   }
@@ -122,14 +132,20 @@ export function cassiopeia(options: Options): Cassiopeia {
 
   const plugins = options.plugins.map((plugin) => plugin(store.iterators))
   const scheduler = createScheduler(store)
-  const update = () => scheduler.update()
-  const source = options.source(store, scheduler.update)[SOURCE]
+  const source =
+    options.source === undefined
+      ? undefined
+      : options.source(store, scheduler.update)[SOURCE]
 
   const init = () => {
     if (store.state === TypeState.Activating) {
-      plugins.forEach((values) => values.register(update))
+      plugins.forEach((values) =>
+        values.register((isAsync) => scheduler.update(undefined, isAsync))
+      )
       scheduler.lock(false)
-      source.start()
+      if (source !== undefined) {
+        source.start()
+      }
 
       store.state = TypeState.Active
     }
@@ -139,7 +155,7 @@ export function cassiopeia(options: Options): Cassiopeia {
     if (store.state !== TypeState.Inactive) {
       store.state = TypeState.Inactive
 
-      if (source.stop !== undefined) {
+      if (source?.stop !== undefined) {
         source.stop()
       }
 
@@ -172,7 +188,7 @@ export function cassiopeia(options: Options): Cassiopeia {
     isActive,
     start,
     stop,
-    update,
+    update: scheduler.update,
     subscribe
   }
 }
