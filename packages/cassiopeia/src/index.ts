@@ -130,7 +130,7 @@ export function cassiopeia(options: Options): Cassiopeia {
     subscriptions: new Set()
   }
 
-  const plugins = options.plugins.map((plugin) => plugin(store.iterators))
+  const plugins = options.plugins.map(({ plugin }) => plugin(store.iterators))
   const scheduler = createScheduler(store)
   const source =
     options.source === undefined
@@ -142,7 +142,9 @@ export function cassiopeia(options: Options): Cassiopeia {
       plugins.forEach((values) =>
         values.register((isAsync) => scheduler.update(undefined, isAsync))
       )
+
       scheduler.lock(false)
+
       if (source !== undefined) {
         source.start()
       }

@@ -1,4 +1,10 @@
-import type { Iterators, Matcher, Variables, VariablesCache } from '../types'
+import type {
+  Iterators,
+  Matcher,
+  StyleSheet,
+  Variables,
+  VariablesCache
+} from '../types'
 import { cacheIterators } from './cache-iterators'
 
 export function* createMatcher(
@@ -43,6 +49,8 @@ export function* createMatcher(
     cancelled = (yield) === true
   }
 
+  const accumulator: StyleSheet[] = []
+
   if (cancelled) {
     for (const iterator of iteratorsMap.values()) {
       if (iterator !== undefined) {
@@ -50,23 +58,19 @@ export function* createMatcher(
       }
     }
 
-    return
+    return []
   }
 
-  let accumulator = ''
-
-  for (const iterator of iteratorsMap.values()) {
+  for (const [key, iterator] of iteratorsMap.entries()) {
     if (iterator !== undefined) {
       const { done, value } = iterator.next(true)
 
       if (done === true && value !== undefined) {
-        accumulator += value
+        Array.isArray(value)
+          ? accumulator.push(...value.map((value) => ({ ...value, key })))
+          : accumulator.push({ ...value, key })
       }
     }
-  }
-
-  if (accumulator.length === 0) {
-    return undefined
   }
 
   return accumulator

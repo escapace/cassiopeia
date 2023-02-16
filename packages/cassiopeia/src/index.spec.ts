@@ -25,7 +25,7 @@ function* createIterator(name: string, state: State): Iterator {
     return
   }
 
-  return `:root { ${strings.join(' ')} }`
+  return { content: `:root { ${strings.join(' ')} }` }
 }
 
 interface State {
@@ -37,19 +37,21 @@ const createPlugin = () => {
     i: 0
   }
 
-  const plugin: Plugin = (iterators: Map<string, () => Iterator>) => {
-    const register = () => {
-      iterators.set('abc', () => createIterator('abc', state))
-      iterators.set('zxc', () => createIterator('zxc', state))
-    }
+  const plugin: Plugin = {
+    plugin: (iterators: Map<string, () => Iterator>) => {
+      const register = () => {
+        iterators.set('abc', () => createIterator('abc', state))
+        iterators.set('zxc', () => createIterator('zxc', state))
+      }
 
-    const deregister = () => {
-      iterators.delete('abc')
-      iterators.delete('zxc')
-      state.i = 0
-    }
+      const deregister = () => {
+        iterators.delete('abc')
+        iterators.delete('zxc')
+        state.i = 0
+      }
 
-    return { register, deregister }
+      return { register, deregister }
+    }
   }
 
   return { state, plugin }
@@ -68,8 +70,13 @@ describe('./src/server.spec.ts', () => {
     assert.equal(state.i, 0)
 
     instance.start()
-    assert.equal(renderToString(instance), ':root { ---abc-hello: 2; }')
-    assert.equal(renderToString(instance), ':root { ---abc-hello: 3; }')
+    assert.deepEqual(renderToString(instance), [
+      { content: ':root { ---abc-hello: 2; }', key: 'abc' }
+    ])
+
+    assert.deepEqual(renderToString(instance), [
+      { content: ':root { ---abc-hello: 3; }', key: 'abc' }
+    ])
 
     // assert.equal(state.i, 0)
     //
