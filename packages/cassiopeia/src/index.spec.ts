@@ -1,5 +1,5 @@
 import { assert } from 'chai'
-import { cassiopeia, Iterator, Plugin, renderToString } from './index'
+import { createCassiopeia, Iterator, Plugin, renderToString } from './index'
 import { createSourceStrings } from './sources/strings'
 
 const REGEX = /^([a-zA-Z-0-9])+$/i
@@ -60,7 +60,7 @@ const createPlugin = () => {
 describe('./src/server.spec.ts', () => {
   it('.', () => {
     const { state, plugin } = createPlugin()
-    const instance = cassiopeia({
+    const instance = createCassiopeia({
       source: createSourceStrings(['var(---abc-hello)']),
       plugins: [plugin]
     })

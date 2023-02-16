@@ -1,6 +1,7 @@
 import { REGEX, SOURCE, STORE } from './constants'
 import {
   Cassiopeia,
+  CassiopeiaInstance,
   Deregister,
   Iterator,
   Iterators,
@@ -124,7 +125,7 @@ function createScheduler(store: Store) {
 //   return styleElement
 // }
 
-export function cassiopeia(options: Options): Cassiopeia {
+export function createCassiopeia(options: Options): Cassiopeia {
   const store: Store = {
     cache: new Set(),
     iterators: new Map(),
@@ -199,7 +200,7 @@ export function cassiopeia(options: Options): Cassiopeia {
   }
 }
 
-export const renderToString = (cassiopeia: Cassiopeia) => {
+export const renderToString = <T extends CassiopeiaInstance>(cassiopeia: T) => {
   const store = cassiopeia[STORE]
 
   if (store.state === TypeState.Active) {
@@ -225,6 +226,7 @@ export type {
   Iterators,
   Options,
   Plugin,
+  CassiopeiaInstance,
   Register,
   Source,
   Store,
