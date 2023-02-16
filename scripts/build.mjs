@@ -41,7 +41,7 @@ const buildOptions = {
   },
   mainFields: ['module'],
   entryPoints: ['src/index.ts'],
-  external: ['cassiopeia', '@cassiopeia/*', ...external],
+  external: ['cassiopeia', '@cassiopeia/*', 'vue', ...external],
   format: 'esm',
   logLevel: 'info',
   outExtension: { '.js': '.mjs' },

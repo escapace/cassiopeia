@@ -13,27 +13,17 @@
     "@types/node": "18.13.0",
     "@typescript-eslint/eslint-plugin": "5.52.0",
     "@typescript-eslint/parser": "5.52.0",
-    "arg": "5.0.2",
-    "c8": "7.12.0",
     "cassiopeia": "workspace:*",
     "chai": "4.3.7",
-    "changelogithub": "0.12.7",
-    "esbuild": "0.17.8",
     "eslint": "8.34.0",
     "eslint-config-escapace": "3.16.1",
     "eslint-config-prettier": "8.6.0",
     "eslint-plugin-editorconfig": "4.0.2",
     "eslint-plugin-no-null": "1.0.2",
-    "execa": "7.0.0",
-    "fast-glob": "3.2.12",
-    "fs-extra": "11.1.0",
-    "is-ci": "3.0.1",
     "lint-staged": "13.1.2",
     "mocha": "10.2.0",
     "prettier": "2.8.4",
     "prettier-config-escapace": "1.0.4",
-    "semver": "7.3.8",
-    "syncpack": "9.0.2",
     "typescript": "4.9.5"
   },
   "engines": {
@@ -42,18 +32,15 @@
   },
   "exports": {
     ".": {
-      "import": "./lib/esm/index.mjs",
-      "require": "./lib/cjs/index.cjs"
+      "import": "./lib/esm/index.mjs"
     }
   },
   "files": [
-    "lib/cjs",
     "lib/esm",
     "lib/types"
   ],
   "homepage": "https://github.com/escapace/cassiopeia",
   "license": "MPL-2.0",
-  "main": "lib/cjs/index.cjs",
   "module": "lib/esm/index.mjs",
   "peerDependencies": {
     "cassiopeia": "workspace:*"

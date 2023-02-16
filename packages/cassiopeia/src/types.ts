@@ -71,8 +71,11 @@ export interface Store {
   update: TypeUpdate
 }
 
-export interface Cassiopeia {
+export interface CassiopeiaInstance {
   [STORE]: Store
+}
+
+export interface Cassiopeia extends CassiopeiaInstance {
   subscribe: (subscription: Subscription) => Unsubscribe
   start: () => void
   stop: () => void
