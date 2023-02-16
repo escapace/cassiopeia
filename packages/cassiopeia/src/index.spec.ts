@@ -71,11 +71,11 @@ describe('./src/server.spec.ts', () => {
 
     instance.start()
     assert.deepEqual(renderToString(instance), [
-      { content: ':root { ---abc-hello: 2; }', key: 'abc' }
+      { content: ':root { ---abc-hello: 2; }', key: 'abc-0' }
     ])
 
     assert.deepEqual(renderToString(instance), [
-      { content: ':root { ---abc-hello: 3; }', key: 'abc' }
+      { content: ':root { ---abc-hello: 3; }', key: 'abc-0' }
     ])
 
     // assert.equal(state.i, 0)
