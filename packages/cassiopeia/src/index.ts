@@ -10,6 +10,8 @@ import {
   Register,
   Source,
   Store,
+  StyleSheet,
+  StyleSheetPartial,
   Subscription,
   TypeState,
   TypeUpdate,
@@ -35,8 +37,10 @@ function schedulerTask(
       return
     }
 
-    if (value !== undefined) {
-      store.subscriptions.forEach((subscription) => subscription(value))
+    if (value.length !== 0) {
+      store.subscriptions.forEach((subscription) => {
+        subscription(value)
+      })
     }
 
     store.update = TypeUpdate.None
@@ -224,6 +228,8 @@ export type {
   Register,
   Source,
   Store,
+  StyleSheet,
+  StyleSheetPartial,
   Subscription,
   Unsubscribe,
   Variables
