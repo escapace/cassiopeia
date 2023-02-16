@@ -61,7 +61,11 @@ export function* createMatcher(
     return []
   }
 
-  for (const [key, iterator] of iteratorsMap.entries()) {
+  let index = 0
+
+  for (const [name, iterator] of iteratorsMap.entries()) {
+    const key = `${name}-${index}`
+
     if (iterator !== undefined) {
       const { done, value } = iterator.next(true)
 
@@ -71,6 +75,8 @@ export function* createMatcher(
           : accumulator.push({ ...value, key })
       }
     }
+
+    index += 1
   }
 
   return accumulator
