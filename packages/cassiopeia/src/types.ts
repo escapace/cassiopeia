@@ -1,14 +1,30 @@
 import { SOURCE, STORE } from './constants'
 
-export type Iterator = Generator<undefined, string | undefined, string | true>
+export interface StyleSheetPartial {
+  content: string
+  [key: string]: string | string[]
+}
+
+export interface StyleSheet extends StyleSheetPartial {
+  key: string
+  content: string
+}
+
+export type Iterator = Generator<
+  undefined,
+  StyleSheetPartial | StyleSheetPartial[] | undefined,
+  string | true
+>
 export type Iterators = Map<string, () => Iterator>
 
 export type Register = (update: (isAsync?: boolean) => void) => void
 export type Deregister = () => void
 
-export type Plugin = (iterators: Iterators) => {
-  register: Register
-  deregister: Deregister
+export interface Plugin {
+  plugin: (iterators: Iterators) => {
+    register: Register
+    deregister: Deregister
+  }
 }
 
 export interface Options {
@@ -16,7 +32,7 @@ export interface Options {
   plugins: Plugin[]
 }
 
-export type Matcher = Generator<undefined, string | undefined, true | undefined>
+export type Matcher = Generator<undefined, StyleSheet[], true | undefined>
 export type Variables = Generator<
   [string, string, string],
   void,
@@ -39,7 +55,7 @@ export const enum TypeUpdate {
 }
 
 export type Unsubscribe = () => void
-export type Subscription = (value: string) => void
+export type Subscription = (stylesheets: StyleSheet[]) => void
 
 export type Update = (
   createVariables: (() => Variables) | undefined,
