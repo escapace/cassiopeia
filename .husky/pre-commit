@@ -2,16 +2,13 @@
 . "$(dirname "$0")/_/husky.sh"
 
 pnpm exec syncpack set-semver-ranges \
-  --prod \
-  --dev \
+  --types dev,prod \
   --source 'package.json' \
   --source 'packages/*/package.json' \
   --filter '(?!cassiopeia).*$'  || exit 1
 
 pnpm exec syncpack fix-mismatches \
-  --dev \
-  --prod \
-  --peer \
+  --types dev,prod,peer \
   --source 'package.json' \
   --source 'packages/*/package.json' \
   --filter '(?!cassiopeia).*$'  || exit 1
