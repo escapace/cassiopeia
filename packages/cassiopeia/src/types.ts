@@ -2,7 +2,7 @@ import { SOURCE, STORE } from './constants'
 
 export interface StyleSheetPartial {
   content: string
-  [key: string]: string | string[] | undefined
+  [key: string]: string | undefined
 }
 
 export interface StyleSheet extends StyleSheetPartial {
