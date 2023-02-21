@@ -1,15 +1,23 @@
 {
-  "name": "cassiopeia",
+  "name": "@cassiopeia/vite",
   "description": "",
   "version": "0.0.0",
   "author": "escapace <opensource@escapace.com>",
   "bugs": "https://github.com/escapace/cassiopeia/issues",
+  "dependencies": {
+    "@babel/parser": "^7.21.0",
+    "@babel/types": "^7.21.0",
+    "estree-walker": "^3.0.3",
+    "magic-string": "^0.29.0"
+  },
   "devDependencies": {
     "@types/chai": "4.3.4",
     "@types/mocha": "10.0.1",
     "@types/node": "18.13.0",
     "@typescript-eslint/eslint-plugin": "5.52.0",
     "@typescript-eslint/parser": "5.52.0",
+    "@vitejs/plugin-vue": "4.0.0",
+    "cassiopeia": "workspace:*",
     "chai": "4.3.7",
     "eslint": "8.34.0",
     "eslint-config-escapace": "3.16.1",
@@ -20,31 +28,25 @@
     "mocha": "10.2.0",
     "prettier": "2.8.4",
     "prettier-config-escapace": "1.0.4",
-    "typescript": "4.9.5"
+    "typescript": "4.9.5",
+    "vite": "4.1.3",
+    "vue": "3.2.47"
   },
   "exports": {
     ".": {
-      "node": {
-        "import": {
-          "types": "./lib/types/index.d.ts",
-          "default": "./lib/server/index.mjs"
-        }
-      },
-      "default": {
-        "import": {
-          "types": "./lib/types/index.d.ts",
-          "default": "./lib/browser/index.mjs"
-        }
-      }
+      "import": "./lib/esm/index.mjs"
     }
   },
   "files": [
-    "lib/types",
-    "lib/browser",
-    "lib/server"
+    "lib/esm",
+    "lib/types"
   ],
   "homepage": "https://github.com/escapace/cassiopeia",
   "license": "MPL-2.0",
+  "peerDependencies": {
+    "@vitejs/plugin-vue": ">=4.0.0",
+    "vite": ">=4.1.3"
+  },
   "private": false,
   "publishConfig": {
     "access": "public"
@@ -53,8 +55,6 @@
   "scripts": {
     "build": "node ../../scripts/build.mjs",
     "lint": "eslint 'src/**/*.ts'",
-    "release": "node ../../scripts/release.mjs",
-    "test": "node ../../scripts/test.mjs && c8 mocha --enable-source-maps 'lib/tests/**/*.spec.js'",
     "typecheck": "tsc --noEmit"
   },
   "sideEffects": false,

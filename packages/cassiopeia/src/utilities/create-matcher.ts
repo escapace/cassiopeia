@@ -61,14 +61,16 @@ export function* createMatcher(
     return []
   }
 
-  for (const [key, iterator] of iteratorsMap.entries()) {
+  for (const [name, iterator] of iteratorsMap.entries()) {
     if (iterator !== undefined) {
       const { done, value } = iterator.next(true)
 
       if (done === true && value !== undefined) {
         Array.isArray(value)
-          ? accumulator.push(...value.map((value) => ({ key, ...value })))
-          : accumulator.push({ key, ...value })
+          ? accumulator.push(
+              ...value.map((value) => ({ key: 0, ...value, name }))
+            )
+          : accumulator.push({ key: 0, ...value, name })
       }
     }
   }

@@ -4,16 +4,16 @@
   "version": "1.0.0",
   "author": "",
   "devDependencies": {
-    "@commitlint/cli": "17.4.3",
-    "@commitlint/config-conventional": "17.4.3",
+    "@commitlint/cli": "17.4.4",
+    "@commitlint/config-conventional": "17.4.4",
     "@ls-lint/ls-lint": "1.11.2",
     "@typescript-eslint/eslint-plugin": "5.52.0",
     "@typescript-eslint/parser": "5.52.0",
     "arg": "5.0.2",
-    "c8": "7.12.0",
+    "c8": "7.13.0",
     "chai": "4.3.7",
     "changelogithub": "0.12.7",
-    "esbuild": "0.17.8",
+    "esbuild": "0.17.9",
     "eslint": "8.34.0",
     "eslint-config-escapace": "3.16.1",
     "eslint-config-prettier": "8.6.0",
@@ -29,12 +29,12 @@
     "prettier": "2.8.4",
     "prettier-config-escapace": "1.0.4",
     "semver": "7.3.8",
-    "syncpack": "9.0.2",
+    "syncpack": "9.7.4",
     "typescript": "4.9.5"
   },
   "engines": {
-    "node": ">= 18.12.1",
-    "pnpm": ">= 7.14.2"
+    "node": ">=18.12.1",
+    "pnpm": ">=7.27.1"
   },
   "keywords": [],
   "license": "MPL-2.0",
