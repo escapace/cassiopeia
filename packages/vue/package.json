@@ -29,12 +29,24 @@
   },
   "exports": {
     ".": {
-      "import": "./lib/esm/index.mjs"
+      "node": {
+        "import": {
+          "types": "./lib/types/index.d.ts",
+          "default": "./lib/server/index.mjs"
+        }
+      },
+      "default": {
+        "import": {
+          "types": "./lib/types/index.d.ts",
+          "default": "./lib/browser/index.mjs"
+        }
+      }
     }
   },
   "files": [
-    "lib/esm",
-    "lib/types"
+    "lib/types",
+    "lib/browser",
+    "lib/server"
   ],
   "homepage": "https://github.com/escapace/cassiopeia",
   "license": "MPL-2.0",
