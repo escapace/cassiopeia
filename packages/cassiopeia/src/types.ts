@@ -2,12 +2,12 @@ import { SOURCE, STORE } from './constants'
 
 export interface StyleSheetPartial {
   content: string
-  [key: string]: string | undefined
+  [key: string]: string | number | undefined
 }
 
 export interface StyleSheet extends StyleSheetPartial {
-  key: string
-  content: string
+  name: string
+  key: number
 }
 
 export type Iterator = Generator<

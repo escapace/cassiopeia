@@ -1,9 +1,14 @@
 import type { StyleSheet, Subscription } from 'cassiopeia'
 
+// TODO: hydration
+// On ssr it will hydrate as cassiopeia=color-0 cassiopeia=color-1
+// On browser it will hydrate as color
 export const browserSubscription: Subscription = (values: StyleSheet[]) => {
   values.forEach((value) => {
+    const key = `${value.name}-${value.key}`
+
     let element =
-      (document.querySelector(`head > [cassiopeia="${value.key}"]`) as
+      (document.querySelector(`head > [cassiopeia="${key}"]`) as
         | HTMLStyleElement
         | HTMLLinkElement
         | undefined) ?? undefined
@@ -15,7 +20,7 @@ export const browserSubscription: Subscription = (values: StyleSheet[]) => {
 
     if (element === undefined) {
       element = document.createElement('style')
-      element.setAttribute('cassiopeia', value.key)
+      element.setAttribute('cassiopeia', key)
 
       if (value.media === 'string') {
         element.setAttribute('media', value.media)
