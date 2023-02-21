@@ -1,14 +1,14 @@
 import {
-  createCassiopeia as cas,
   CassiopeiaInstance,
+  createCassiopeia as cas,
   STORE,
   TypeState,
   type Cassiopeia,
   type Variables
 } from 'cassiopeia'
 import { type App, type Plugin } from 'vue'
-import { INJECTION_KEY_CASSIOPEIA, REGEX } from './constants'
-import { Options } from './types'
+import { CASSIOPEIA_VUE_SYMBOL, REGEX } from './constants'
+import { CassiopeiaScope, Options } from './types'
 
 function* createVariableIterator(sets: Set<Set<string>>): Variables {
   for (const set of sets) {
@@ -26,18 +26,20 @@ function* createVariableIterator(sets: Set<Set<string>>): Variables {
   }
 }
 
-export const createCassiopeia = (
-  options: Options
-): Plugin & CassiopeiaInstance & { subscribe: Cassiopeia['subscribe'] } => {
+const createCassiopeiaScope = (options: Options): CassiopeiaScope => {
+  if (typeof globalThis.__CASSIOPEIA_VUE__ !== 'undefined') {
+    return globalThis.__CASSIOPEIA_VUE__
+  }
+
   const sets: Set<Set<string>> = new Set()
 
   const createVariables = () => createVariableIterator(sets)
 
-  const instance = cas({ ...options, source: undefined })
+  const cassiopeia = cas({ ...options, source: undefined })
 
   const update = (isAsync?: boolean) => {
-    if (instance[STORE].state === TypeState.Active) {
-      instance.update(createVariables, isAsync)
+    if (cassiopeia[STORE].state === TypeState.Active) {
+      cassiopeia.update(createVariables, isAsync)
     }
   }
 
@@ -75,21 +77,32 @@ export const createCassiopeia = (
     return { add, clear, delete: del, dispose }
   }
 
-  const subscribe = instance.subscribe
+  cassiopeia.start()
+
+  const subscribe = cassiopeia.subscribe
+
+  const cassiopeiaScope: CassiopeiaScope = {
+    [STORE]: cassiopeia[STORE],
+    createScope,
+    update,
+    subscribe
+  }
+
+  globalThis.__CASSIOPEIA_VUE__ = cassiopeiaScope
+
+  return cassiopeiaScope
+}
+
+export const createCassiopeia = (
+  options: Options
+): Plugin & CassiopeiaInstance & { subscribe: Cassiopeia['subscribe'] } => {
+  const scope = createCassiopeiaScope(options)
 
   return {
-    [STORE]: instance[STORE],
-    subscribe,
+    [STORE]: scope[STORE],
+    subscribe: scope.subscribe,
     install: (app: App) => {
-      instance.start()
-
-      app.provide(INJECTION_KEY_CASSIOPEIA, {
-        createScope,
-        update,
-        subscribe
-      })
+      app.provide(CASSIOPEIA_VUE_SYMBOL, scope)
     }
   }
 }
-
-export type { Options }

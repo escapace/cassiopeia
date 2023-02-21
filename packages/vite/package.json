@@ -5,17 +5,18 @@
   "author": "escapace <opensource@escapace.com>",
   "bugs": "https://github.com/escapace/cassiopeia/issues",
   "dependencies": {
-    "@babel/parser": "^7.21.0",
+    "@babel/parser": "^7.21.1",
     "@babel/types": "^7.21.0",
+    "@escapace/sequentialize": "^2.1.1",
     "estree-walker": "^3.0.3",
     "magic-string": "^0.29.0"
   },
   "devDependencies": {
     "@types/chai": "4.3.4",
     "@types/mocha": "10.0.1",
-    "@types/node": "18.13.0",
-    "@typescript-eslint/eslint-plugin": "5.52.0",
-    "@typescript-eslint/parser": "5.52.0",
+    "@types/node": "18.14.0",
+    "@typescript-eslint/eslint-plugin": "5.53.0",
+    "@typescript-eslint/parser": "5.53.0",
     "@vitejs/plugin-vue": "4.0.0",
     "cassiopeia": "workspace:*",
     "chai": "4.3.7",
