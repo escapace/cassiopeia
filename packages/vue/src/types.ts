@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/method-signature-style */
-import { type Cassiopeia, type Options as CassiopeiaOptions } from 'cassiopeia'
+import {
+  STORE,
+  type Cassiopeia,
+  type Options as CassiopeiaOptions
+} from 'cassiopeia'
 
-export interface CassiopeiaInjection {
+export interface CassiopeiaScope {
+  [STORE]: Cassiopeia[typeof STORE]
   subscribe: Cassiopeia['subscribe']
   createScope: () => {
     add(variable: string[]): string[]
