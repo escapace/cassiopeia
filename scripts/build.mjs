@@ -52,7 +52,7 @@ const buildOptions = {
   tsconfig
 }
 
-if (name === 'cassiopeia') {
+if (name === 'cassiopeia' || name === '@cassiopeia/vue') {
   await build(
     merge(cloneDeep(buildOptions), {
       outdir: path.join(cwd, `lib/server`),

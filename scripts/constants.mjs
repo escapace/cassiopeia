@@ -11,11 +11,11 @@ export const root = path.resolve(
 )
 
 export const cwd = process.cwd()
-export const name = path.basename(cwd)
 export const packageJSON = await fse.readJSON(path.join(cwd, 'package.json'))
 export const rootPackageJSON = await fse.readJSON(
   path.join(root, 'package.json')
 )
+export const name = packageJSON.name
 export const external = [...Object.keys(packageJSON.dependencies ?? {}), ...Object.keys(packageJSON.peerDependencies ?? {})]
 export const target = [
   `node${semver.minVersion(rootPackageJSON.engines.node).version}`
