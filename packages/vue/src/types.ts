@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/method-signature-style */
+
 import {
   STORE,
   type Cassiopeia,
+  type CassiopeiaInstance,
   type Options as CassiopeiaOptions
 } from 'cassiopeia'
+import { type Plugin } from 'vue'
 
 export interface CassiopeiaScope {
   [STORE]: Cassiopeia[typeof STORE]
@@ -17,5 +20,11 @@ export interface CassiopeiaScope {
   }
   update: (isAsync?: boolean) => void
 }
+
+export type CassiopeiaPlugin = Plugin &
+  CassiopeiaInstance & {
+    subscribe: Cassiopeia['subscribe']
+    update: CassiopeiaScope['update']
+  }
 
 export interface Options extends Omit<CassiopeiaOptions, 'source'> {}
