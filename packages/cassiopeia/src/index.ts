@@ -35,14 +35,13 @@ function schedulerTask(
       } else {
         schedulerTask(matcher, store, isAsync)
       }
+
       return
     }
 
-    if (value.length !== 0) {
-      store.subscriptions.forEach((subscription) => {
-        subscription(value)
-      })
-    }
+    store.subscriptions.forEach((subscription) => {
+      subscription(value)
+    })
 
     store.update = TypeUpdate.None
     store.matcher = undefined

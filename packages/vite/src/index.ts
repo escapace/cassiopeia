@@ -1,124 +1,183 @@
-// import { parse } from '@babel/parser'
 import { parseVueRequest } from '@vitejs/plugin-vue'
-// import MagicString from 'magic-string'
-import { type Plugin } from 'vite'
+import { REGEX } from 'cassiopeia'
+import MagicString from 'magic-string'
+import { ResolvedConfig, type Plugin } from 'vite'
 
-export interface VueQuery {
-  vue: boolean
-  type?: string
+declare module '@vitejs/plugin-vue' {
+  interface VueQuery {
+    setup?: string
+  }
 }
-
-export const REGEX = /var\(---([a-zA-Z0-9]+)-([a-zA-Z-0-9]+)[),]/gm
-// /\.(css|less|sass|scss|styl|stylus|pcss|postcss|sss)(?:$|\?)/.test(id)
-// // /Users/mark/devel/cepheus/packages/app/src/components/home.vue?vue&type=style&index=0&scoped=3180c600&lang.css
 
 interface State {
-  files: Map<string, Set<string>>
+  isProduction: boolean
+  sourceMap: boolean
+  devToolsEnabled: boolean
 }
 
-// const map = new Map<string, Set<string>>()
+interface StateProduction extends State {
+  variables: Map<string, Set<string>>
+}
 
-const createPrePlugin = (state: State): Plugin => {
-  return {
-    name: '@cassiopeia/vite',
-    enforce: 'pre',
-    buildStart: {
-      sequential: true,
-      handler() {
-        state.files.clear()
+const configResolved = (config: ResolvedConfig, state: State) => {
+  // https://github.com/vitejs/vite-plugin-vue/blob/main/packages/plugin-vue/src/index.ts#L146
+  state.isProduction = config.isProduction
+  state.sourceMap =
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+    config.command === 'build' ? !!config.build.sourcemap : true
+  state.devToolsEnabled =
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions, @typescript-eslint/no-non-null-assertion
+    !!config.define!.__VUE_PROD_DEVTOOLS__ || !config.isProduction
+}
+
+const initialState: State = {
+  isProduction: false,
+  sourceMap: false,
+  devToolsEnabled: false
+}
+
+const createProdPlugin = (): Plugin[] => {
+  const state: StateProduction = {
+    ...initialState,
+    variables: new Map<string, Set<string>>()
+  }
+
+  return [
+    {
+      name: '@cassiopeia/vite',
+      enforce: 'pre',
+      configResolved: (config) => configResolved(config, state),
+      buildStart() {
+        state.variables.clear()
+      },
+      transform: {
+        handler(source, id) {
+          if (!state.isProduction) {
+            return
+          }
+
+          const { filename, query } = parseVueRequest(id)
+
+          if (query.vue === true && query.type === 'style') {
+            const set = new Set<string>()
+
+            for (const match of source.matchAll(REGEX)) {
+              set.add(['--', ...match.slice(1, 3)].join('-'))
+            }
+
+            if (set.size === 0) {
+              if (state.variables.has(filename)) {
+                state.variables.delete(filename)
+              }
+            } else {
+              state.variables.set(filename, set)
+            }
+          }
+        }
       }
     },
+    {
+      name: '@cassiopeia/vite',
+      enforce: 'post',
+      transform: {
+        handler(source, id) {
+          if (!state.isProduction) {
+            return
+          }
+
+          const { filename, query } = parseVueRequest(id)
+
+          if (
+            query.type === 'script' &&
+            query.vue === true &&
+            query.setup === 'true' &&
+            state.variables.has(filename)
+          ) {
+            const magic = new MagicString(source)
+            magic.prepend(
+              `import { useCassiopeia as __useCassiopeia } from "@cassiopeia/vue"\n`
+            )
+
+            const positionString = 'setup(__props) {'
+            const position =
+              source.indexOf(positionString) + positionString.length
+
+            if (position === -1) {
+              this.warn(`[cassiopeia]: unable to update '${filename}'`)
+            }
+
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const variables = Array.from(state.variables.get(filename)!)
+              .map((value) => `"${value}"`)
+              .join(', ')
+
+            magic.appendRight(
+              position,
+              [
+                '',
+                `    const __cassiopeia = __useCassiopeia()`,
+                `    __cassiopeia.add([${variables}])`,
+                `    __cassiopeia.update(false)`
+              ].join('\n')
+            )
+
+            if (state.sourceMap) {
+              return {
+                code: magic.toString(),
+                map: magic.generateMap()
+              }
+            } else {
+              return magic.toString()
+            }
+          }
+
+          return undefined
+        }
+      }
+    }
+  ]
+}
+
+const createDevPlugin = (): Plugin => {
+  const state: State = { ...initialState }
+
+  return {
+    name: '@cassiopeia/vite',
+    enforce: 'post',
+    configResolved: (config) => configResolved(config, state),
     transform: {
-      handler(code, id) {
-        // if (!id.includes('node_modules')) {
-        const query = parseVueRequest(id)
-
-        const set = new Set<string>()
-
-        if (query.query.vue === true && query.query.type === 'style') {
-          for (const match of code.matchAll(REGEX)) {
-            set.add(['--', ...match.slice(1, 3)].join('-'))
-          }
-
-          if (set.size !== 0) {
-            state.files.set(query.filename, set)
-          }
-
+      handler(source, id) {
+        if (state.isProduction || !state.devToolsEnabled) {
           return
         }
-        // }
 
-        return code
+        const { query } = parseVueRequest(id)
+
+        if (query.vue === true && query.type === 'style') {
+          const magic = new MagicString(source)
+          magic.prepend(
+            `import { updateStyle as __cassiopeiaUpdateStyle } from "@cassiopeia/vue"\n`
+          )
+          magic.append(
+            `\n__cassiopeiaUpdateStyle(__vite__id, __vite__css, import.meta.hot.dispose)`
+          )
+
+          if (state.sourceMap) {
+            return {
+              code: magic.toString(),
+              map: magic.generateMap()
+            }
+          } else {
+            return magic.toString()
+          }
+        }
+
+        return undefined
       }
     }
   }
 }
 
-const createPostPlugin = (state: State): Plugin => ({
-  name: '@cassiopeia/vite',
-  enforce: 'post',
-  transform: {
-    handler(code, id) {
-      const { filename } = parseVueRequest(id)
-
-      if (state.files.has(filename)) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const variables = state.files.get(filename)!
-
-        code += `
-import { useCassiopeia } from '@cassiopeia/vue'
-import { getCurrentInstance } from 'vue'
-
-console.log(getCurrentInstance())
-
-//const cassiopeia = useCassiopeia()
-//cassiopeia.add([${Array.from(variables)
-          .map((value) => `'${value}'`)
-          .join(', ')}])
-
-//cassiopeia.update(false)
-`
-        return code
-      }
-
-      // if (
-      //   state.files.has(filename) &&
-      //   query.type === 'script' &&
-      //   query.vue === true
-      // ) {
-      //   // const s = new MagicString(source)
-      //   // const qwe = parse(s.original, {
-      //   //   sourceFilename: query.filename,
-      //   //   sourceType: 'module'
-      //   // }).program
-      // }
-
-      // if (map.has(query.filename) && query.query.type === 'script') {
-      //   console.log(id)
-      // }
-
-      // const set = new Set<string>()
-      //
-      // if (query.query.vue === true && query.query.type === 'style') {
-      //   for (const match of code.matchAll(REGEX)) {
-      //     set.add(['--', ...match.slice(1, 3)].join('-'))
-      //   }
-      //
-      //   map.set(query.filename, set)
-      //
-      //   return
-      // }
-      // }
-
-      return undefined
-    }
-  }
-})
-
 export const cassiopeia: () => Plugin[] = () => {
-  const state: State = {
-    files: new Map()
-  }
-
-  return [createPrePlugin(state), createPostPlugin(state)]
+  return [...createProdPlugin(), createDevPlugin()]
 }
