@@ -98,32 +98,6 @@ function createScheduler(store: Store) {
   return { update, lock }
 }
 
-// const isDocument = (value: Document | ShadowRoot): value is Document =>
-//   value.nodeType === 9
-
-// const createStyleElement = (
-//   id: string,
-//   root: Document | ShadowRoot = document
-// ): HTMLStyleElement => {
-//   let styleElement =
-//     (root.querySelector(`style[cassiopeia=${id}]`) as
-//       | HTMLStyleElement
-//       | undefined) ?? undefined
-//
-//   if (styleElement === undefined) {
-//     styleElement = document.createElement('style')
-//     styleElement.setAttribute('cassiopeia', id)
-//
-//     if (isDocument(root)) {
-//       root.head.insertBefore(styleElement, null)
-//     } else {
-//       root.appendChild(styleElement)
-//     }
-//   }
-//
-//   return styleElement
-// }
-
 export function createCassiopeia(options: Options): Cassiopeia {
   const store: Store = {
     cache: new Set(),

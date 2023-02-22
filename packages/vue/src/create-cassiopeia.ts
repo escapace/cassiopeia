@@ -1,14 +1,12 @@
 import {
-  CassiopeiaInstance,
   createCassiopeia as cas,
   STORE,
   TypeState,
-  type Cassiopeia,
   type Variables
 } from 'cassiopeia'
-import { type App, type Plugin } from 'vue'
+import { type App } from 'vue'
 import { CASSIOPEIA_VUE_SYMBOL, REGEX } from './constants'
-import { CassiopeiaScope, Options } from './types'
+import { CassiopeiaPlugin, CassiopeiaScope, Options } from './types'
 
 function* createVariableIterator(sets: Set<Set<string>>): Variables {
   for (const set of sets) {
@@ -97,13 +95,12 @@ const createCassiopeiaScope = (options: Options): CassiopeiaScope => {
   return cassiopeiaScope
 }
 
-export const createCassiopeia = (
-  options: Options
-): Plugin & CassiopeiaInstance & { subscribe: Cassiopeia['subscribe'] } => {
+export const createCassiopeia = (options: Options): CassiopeiaPlugin => {
   const scope = createCassiopeiaScope(options)
 
   return {
     [STORE]: scope[STORE],
+    update: scope.update,
     subscribe: scope.subscribe,
     install: (app: App) => {
       app.provide(CASSIOPEIA_VUE_SYMBOL, scope)
