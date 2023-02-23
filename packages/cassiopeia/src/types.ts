@@ -1,4 +1,4 @@
-import { SOURCE, STORE } from './constants'
+import { STORE } from './constants'
 
 export interface StyleSheetPartial {
   content: string
@@ -17,37 +17,28 @@ export type Iterator = Generator<
 >
 export type Iterators = Map<string, () => Iterator>
 
-export type Register = (update: (isAsync?: boolean) => void) => void
-export type Deregister = () => void
+export type Register = () => void
 
 export interface Plugin {
-  plugin: (iterators: Iterators) => {
-    register: Register
-    deregister: Deregister
-  }
+  plugin: (iterators: Iterators, update: (isAsync?: boolean) => void) => void
 }
 
 export interface Options {
-  source?: Source
   plugins: Plugin[]
 }
 
-export type Matcher = Generator<undefined, StyleSheet[], true | undefined>
+export type Matcher = Generator<
+  undefined,
+  undefined | { accumulator: StyleSheet[]; variablesCache?: VariablesCache },
+  true | undefined
+>
 export type Variables = Generator<
   [string, string, string],
   void,
   true | undefined
 >
 
-export enum TypeState {
-  Inactive,
-  Activating,
-  Active
-}
-
-export type VariablesCache = Set<[string, string, string]>
-
-export const enum TypeUpdate {
+export const enum TypeState {
   Locked,
   None,
   Scheduled,
@@ -57,18 +48,44 @@ export const enum TypeUpdate {
 export type Unsubscribe = () => void
 export type Subscription = (stylesheets: StyleSheet[]) => void
 
-export type Update = (
-  createVariables: (() => Variables) | undefined,
-  isAsync?: boolean
-) => void
+export const enum TypeUpdate {
+  Plugin,
+  Source
+}
+
+export const enum TypeUpdateState {
+  None,
+  Scheduled,
+  Done
+}
+
+export interface UpdatePlugin {
+  type: TypeUpdate.Plugin
+  state: TypeUpdateState
+  index: number
+  isAsync: boolean
+}
+
+export interface UpdateSource {
+  type: TypeUpdate.Source
+  state: TypeUpdateState
+  createVariables?: () => Variables
+  isAsync: boolean
+}
+
+export type Update = UpdatePlugin | UpdateSource
+
+export type VariablesCache = Set<[string, string, string]>
+// export type PluginsCache = Map<number, StyleSheet[]>
 
 export interface Store {
-  cache: VariablesCache
-  iterators: Iterators
+  log: Update[]
+  variablesCache: VariablesCache
+  // pluginsCache: PluginsCache
+  iterators: Iterators[]
   matcher?: Matcher
-  state: TypeState
   subscriptions: Set<Subscription>
-  update: TypeUpdate
+  state: TypeState
 }
 
 export interface CassiopeiaInstance {
@@ -77,18 +94,8 @@ export interface CassiopeiaInstance {
 
 export interface Cassiopeia extends CassiopeiaInstance {
   subscribe: (subscription: Subscription) => Unsubscribe
-  start: () => void
-  stop: () => void
-  update: Update
-  isActive: () => boolean
-}
-
-export type Source = (
-  store: Store,
-  update: Update
-) => {
-  [SOURCE]: {
-    start: () => void
-    stop?: () => void
-  }
+  update: (
+    createVariables: (() => Variables) | undefined,
+    isAsync?: boolean
+  ) => void
 }

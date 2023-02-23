@@ -1,162 +1,105 @@
-import { REGEX, SOURCE, STORE } from './constants'
+import { REGEX, STORE } from './constants'
+import { createScheduler } from './create-scheduler'
 import {
   Cassiopeia,
   CassiopeiaInstance,
-  Deregister,
   Iterator,
   Iterators,
-  Matcher,
   Options,
   Plugin,
   Register,
-  Source,
   Store,
   StyleSheet,
   StyleSheetPartial,
   Subscription,
   TypeState,
   TypeUpdate,
+  TypeUpdateState,
   Unsubscribe,
+  UpdatePlugin,
+  UpdateSource,
   Variables
 } from './types'
-import { createMatcher } from './utilities/create-matcher'
-
-function schedulerTask(
-  matcher: Matcher,
-  store: Store,
-  isAsync = __BROWSER__
-): void {
-  if (matcher === store.matcher && store.update === TypeUpdate.Running) {
-    const { done, value } = matcher.next()
-
-    if (done !== true) {
-      if (isAsync) {
-        setTimeout(() => schedulerTask(matcher, store, isAsync))
-      } else {
-        schedulerTask(matcher, store, isAsync)
-      }
-
-      return
-    }
-
-    store.subscriptions.forEach((subscription) => {
-      subscription(value)
-    })
-
-    store.update = TypeUpdate.None
-    store.matcher = undefined
-  } else {
-    /* matcher has been updated or the state has changed, garbage collect */
-    matcher.next(true)
-  }
-}
-
-function schedulerFrame(
-  store: Store,
-  createVariables: undefined | (() => Variables),
-  isAsync = __BROWSER__
-) {
-  if (store.update === TypeUpdate.Scheduled) {
-    const matcher = (store.matcher = createMatcher(
-      createVariables === undefined ? undefined : createVariables(),
-      store.iterators,
-      store.cache
-    ))
-
-    store.update = TypeUpdate.Running
-
-    schedulerTask(matcher, store, isAsync)
-  }
-}
-
-function createScheduler(store: Store) {
-  const lock = (lock: boolean) => {
-    store.matcher = undefined
-
-    store.update = lock ? TypeUpdate.Locked : TypeUpdate.None
-  }
-
-  const update = (createVariables?: () => Variables, isAsync = __BROWSER__) => {
-    if (store.update === TypeUpdate.Running) {
-      store.matcher = undefined
-      store.update = TypeUpdate.None
-    }
-
-    if (store.update === TypeUpdate.None) {
-      store.update = TypeUpdate.Scheduled
-
-      if (isAsync) {
-        requestAnimationFrame(() =>
-          schedulerFrame(store, createVariables, isAsync)
-        )
-      } else {
-        schedulerFrame(store, createVariables, isAsync)
-      }
-    }
-  }
-
-  return { update, lock }
-}
+import { createMatcher } from './create-matcher'
 
 export function createCassiopeia(options: Options): Cassiopeia {
   const store: Store = {
-    cache: new Set(),
-    iterators: new Map(),
+    log: [],
+    variablesCache: new Set(),
+    iterators: [],
     matcher: undefined,
-    state: TypeState.Inactive,
-    update: TypeUpdate.Locked,
+    state: TypeState.Locked,
     subscriptions: new Set()
   }
 
-  const plugins = options.plugins.map(({ plugin }) => plugin(store.iterators))
   const scheduler = createScheduler(store)
-  const source =
-    options.source === undefined
-      ? undefined
-      : options.source(store, scheduler.update)[SOURCE]
 
-  const init = () => {
-    if (store.state === TypeState.Activating) {
-      plugins.forEach((values) =>
-        values.register((isAsync) => scheduler.update(undefined, isAsync))
-      )
+  const updatePlugin = (index: number, isAsync = __BROWSER__) => {
+    const i = store.log.findIndex(
+      (value) =>
+        value.type === TypeUpdate.Plugin &&
+        value.index === index &&
+        value.state === TypeUpdateState.None &&
+        isAsync === value.isAsync
+    )
 
-      scheduler.lock(false)
-
-      if (source !== undefined) {
-        source.start()
-      }
-
-      store.state = TypeState.Active
+    const value: UpdatePlugin = {
+      type: TypeUpdate.Plugin,
+      state: TypeUpdateState.None,
+      isAsync,
+      index
     }
+
+    if (i === -1) {
+      store.log.push(value)
+    } else {
+      store.log[i] = value
+    }
+
+    // console.log(store.log.map((value) => value.state))
+
+    scheduler.update()
   }
 
-  const stop = () => {
-    if (store.state !== TypeState.Inactive) {
-      store.state = TypeState.Inactive
+  const update: Cassiopeia['update'] = (
+    createVariables,
+    isAsync = __BROWSER__
+  ) => {
+    const i = store.log.findIndex(
+      (value) =>
+        value.type === TypeUpdate.Source &&
+        value.state === TypeUpdateState.None &&
+        isAsync === value.isAsync
+    )
 
-      if (source?.stop !== undefined) {
-        source.stop()
-      }
-
-      scheduler.lock(true)
-      plugins.forEach((value) => value.deregister())
+    const value: UpdateSource = {
+      type: TypeUpdate.Source,
+      state: TypeUpdateState.None,
+      isAsync,
+      createVariables
     }
+
+    if (i === -1) {
+      store.log.push(value)
+    } else {
+      store.log[i] = value
+    }
+
+    // console.log(store.log.map((value) => value.state))
+
+    scheduler.update()
   }
 
-  const start = () => {
-    if (store.state === TypeState.Inactive) {
-      store.state = TypeState.Activating
+  store.iterators = options.plugins.map(({ plugin }, index): Iterators => {
+    const iterators: Iterators = new Map()
 
-      if (__BROWSER__ && document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init)
-      } else {
-        init()
-      }
-    }
-  }
+    plugin(iterators, (isAsync) => updatePlugin(index, isAsync))
 
-  const isActive = () => store.state === TypeState.Active
+    return iterators
+  })
+
+  store.state = TypeState.None
+
   const subscribe = (subscription: Subscription): Unsubscribe => {
     store.subscriptions.add(subscription)
 
@@ -165,43 +108,36 @@ export function createCassiopeia(options: Options): Cassiopeia {
 
   return {
     [STORE]: store,
-    isActive,
-    start,
-    stop,
-    update: scheduler.update,
+    update,
     subscribe
   }
 }
 
-export const renderToString = <T extends CassiopeiaInstance>(cassiopeia: T) => {
+export const renderToString = <T extends CassiopeiaInstance>(
+  cassiopeia: T
+): StyleSheet[] => {
   const store = cassiopeia[STORE]
 
-  if (store.state === TypeState.Active) {
-    const matcher = createMatcher(undefined, store.iterators, store.cache)
+  const matcher = createMatcher(store.log, store)
 
-    let cursor = matcher.next()
+  let cursor = matcher.next()
 
-    while (cursor.done !== true) {
-      cursor = matcher.next()
-    }
-
-    return cursor.value
+  while (cursor.done !== true) {
+    cursor = matcher.next()
   }
 
-  return undefined
+  return cursor.value?.accumulator ?? []
 }
 
-export { TypeState, REGEX, STORE, SOURCE }
+export { REGEX, STORE }
 export type {
   Cassiopeia,
-  Deregister,
   Iterator,
   Iterators,
   Options,
   Plugin,
   CassiopeiaInstance,
   Register,
-  Source,
   Store,
   StyleSheet,
   StyleSheetPartial,
