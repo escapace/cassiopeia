@@ -1,5 +1,5 @@
-import { REGEX, SOURCE, TypeState } from 'cassiopeia'
-import type { Source, Store, Variables } from 'cassiopeia'
+import type { Cassiopeia } from 'cassiopeia'
+import { REGEX } from 'cassiopeia'
 
 const isSameDomain = (styleSheet: CSSStyleSheet): boolean => {
   if (styleSheet.href === null) {
@@ -119,43 +119,58 @@ interface Options {
   root?: Document | ShadowRoot
 }
 
-export const createSourceDOM =
-  (options: Options = {}): Source =>
-  (store: Store, update: (createVariables: () => Variables) => void) => {
-    const root = options.root ?? document
-    const createVariables = () => createVariableIterator(root)
+export const createSourceDOM = (
+  options: Options = {},
+  cassiopeia: Cassiopeia
+) => {
+  const root = options.root ?? document
+  const createVariables = () => createVariableIterator(root)
+  let isActive = false
 
-    const mutationObserver = new MutationObserver((mutations) => {
-      if (store.state !== TypeState.Active) {
-        return
-      }
+  const mutationObserver = new MutationObserver((mutations) => {
+    if (!isActive) {
+      return
+    }
 
-      // TODO: timeout unused iterators
-      if (mutations.some((mutation) => isValidMutation(mutation))) {
-        update(createVariables)
-      }
+    // TODO: timeout unused iterators
+    if (mutations.some((mutation) => isValidMutation(mutation))) {
+      cassiopeia.update(createVariables)
+    }
+  })
+
+  const start = () => {
+    if (isActive) {
+      return
+    }
+
+    isActive = true
+
+    cassiopeia.update(createVariables)
+
+    mutationObserver.observe(root, {
+      attributes: true,
+      // characterData: true,
+      // characterDataOldValue: false,
+      attributeOldValue: false,
+      attributeFilter: ['style'],
+      subtree: true,
+      childList: true
     })
-
-    const start = () => {
-      if (store.state !== TypeState.Activating) return
-
-      update(createVariables)
-
-      mutationObserver.observe(root, {
-        attributes: true,
-        // characterData: true,
-        // characterDataOldValue: false,
-        attributeOldValue: false,
-        attributeFilter: ['style'],
-        subtree: true,
-        childList: true
-      })
-    }
-
-    return {
-      [SOURCE]: {
-        start,
-        stop: () => mutationObserver.disconnect()
-      }
-    }
   }
+
+  const stop = () => {
+    if (!isActive) {
+      return
+    }
+
+    isActive = false
+
+    mutationObserver.disconnect()
+  }
+
+  return {
+    start,
+    stop,
+    isActive: () => isActive
+  }
+}

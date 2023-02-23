@@ -1,8 +1,19 @@
 import { assert } from 'chai'
+import { REGEX } from './constants'
 import { createCassiopeia, Iterator, Plugin, renderToString } from './index'
-import { createSourceStrings } from './sources/strings'
+import { Variables } from './types'
 
-const REGEX = /^([a-zA-Z-0-9])+$/i
+export function* fromStrings(strings: string[]): Variables {
+  for (const string of strings) {
+    for (const match of string.matchAll(REGEX)) {
+      const cancelled = yield match as [string, string, string]
+
+      if (cancelled) {
+        return
+      }
+    }
+  }
+}
 
 function* createIterator(name: string, state: State): Iterator {
   const strings: string[] = []
@@ -12,7 +23,7 @@ function* createIterator(name: string, state: State): Iterator {
   while ((cursor = yield) !== true) {
     state.i++
 
-    const string = cursor.match(REGEX)
+    const string = cursor.match(/^([a-zA-Z-0-9])+$/i)
 
     if (string === null) {
       continue
@@ -39,18 +50,8 @@ const createPlugin = () => {
 
   const plugin: Plugin = {
     plugin: (iterators: Map<string, () => Iterator>) => {
-      const register = () => {
-        iterators.set('abc', () => createIterator('abc', state))
-        iterators.set('zxc', () => createIterator('zxc', state))
-      }
-
-      const deregister = () => {
-        iterators.delete('abc')
-        iterators.delete('zxc')
-        state.i = 0
-      }
-
-      return { register, deregister }
+      iterators.set('abc', () => createIterator('abc', state))
+      iterators.set('zxc', () => createIterator('zxc', state))
     }
   }
 
@@ -61,15 +62,17 @@ describe('./src/server.spec.ts', () => {
   it('.', () => {
     const { state, plugin } = createPlugin()
     const instance = createCassiopeia({
-      source: createSourceStrings(['var(---abc-hello)']),
       plugins: [plugin]
     })
 
+    // source: ,
+
     assert.equal(state.i, 0)
-    assert.equal(renderToString(instance), undefined)
+    assert.deepEqual(renderToString(instance), [])
     assert.equal(state.i, 0)
 
-    instance.start()
+    instance.update(() => fromStrings(['var(---abc-hello)']))
+
     assert.deepEqual(renderToString(instance), [
       { content: ':root { ---abc-hello: 2; }', name: 'abc', key: 0 }
     ])

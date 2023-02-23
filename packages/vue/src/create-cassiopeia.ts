@@ -1,9 +1,4 @@
-import {
-  createCassiopeia as cas,
-  STORE,
-  TypeState,
-  type Variables
-} from 'cassiopeia'
+import { createCassiopeia as cas, STORE, type Variables } from 'cassiopeia'
 import { type App } from 'vue'
 import { CASSIOPEIA_VUE_SYMBOL, REGEX } from './constants'
 import { CassiopeiaPlugin, CassiopeiaScope, Options } from './types'
@@ -35,12 +30,10 @@ const createCassiopeiaScope = (options: Options): CassiopeiaScope => {
 
   const createVariables = () => createVariableIterator(sets)
 
-  const cassiopeia = cas({ ...options, source: undefined })
+  const cassiopeia = cas({ ...options })
 
   const update = (isAsync?: boolean) => {
-    if (cassiopeia[STORE].state === TypeState.Active) {
-      cassiopeia.update(createVariables, isAsync)
-    }
+    cassiopeia.update(createVariables, isAsync)
   }
 
   const createScope = () => {
@@ -76,8 +69,6 @@ const createCassiopeiaScope = (options: Options): CassiopeiaScope => {
 
     return { add, clear, delete: del, dispose }
   }
-
-  cassiopeia.start()
 
   const subscribe = cassiopeia.subscribe
 
