@@ -53,22 +53,13 @@ export const enum TypeUpdate {
   Source
 }
 
-export const enum TypeUpdateState {
-  None,
-  Scheduled,
-  Done
-}
-
 export interface UpdatePlugin {
   type: TypeUpdate.Plugin
-  state: TypeUpdateState
-  index: number
   isAsync: boolean
 }
 
 export interface UpdateSource {
   type: TypeUpdate.Source
-  state: TypeUpdateState
   createVariables?: () => Variables
   isAsync: boolean
 }
@@ -76,13 +67,11 @@ export interface UpdateSource {
 export type Update = UpdatePlugin | UpdateSource
 
 export type VariablesCache = Set<[string, string, string]>
-// export type PluginsCache = Map<number, StyleSheet[]>
 
 export interface Store {
   log: Update[]
   variablesCache: VariablesCache
-  // pluginsCache: PluginsCache
-  iterators: Iterators[]
+  iterators: Iterators
   matcher?: Matcher
   subscriptions: Set<Subscription>
   state: TypeState
