@@ -29,7 +29,7 @@ export interface Options {
 
 export type Matcher = Generator<
   undefined,
-  undefined | { accumulator: StyleSheet[]; variablesCache?: VariablesCache },
+  undefined | { accumulator: StyleSheet[]; cache?: Cache },
   true | undefined
 >
 export type Variables = Generator<
@@ -66,11 +66,11 @@ export interface UpdateSource {
 
 export type Update = UpdatePlugin | UpdateSource
 
-export type VariablesCache = Set<[string, string, string]>
+export type Cache = Set<[string, string, string]>
 
 export interface Store {
   log: Update[]
-  variablesCache: VariablesCache
+  cache: Cache
   iterators: Iterators
   matcher?: Matcher
   subscriptions: Set<Subscription>

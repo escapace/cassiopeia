@@ -37,7 +37,7 @@ const append = <T extends Update>(
 export function createCassiopeia(options: Options): Cassiopeia {
   const store: Store = {
     log: [],
-    variablesCache: new Set(),
+    cache: new Set(),
     iterators: new Map(),
     matcher: undefined,
     state: TypeState.Locked,

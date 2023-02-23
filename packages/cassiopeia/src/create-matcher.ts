@@ -1,12 +1,12 @@
 import { cacheIterators } from './cache-iterators'
 import {
+  Cache,
   Matcher,
   Store,
   StyleSheet,
   TypeUpdate,
   Update,
-  UpdateSource,
-  VariablesCache
+  UpdateSource
 } from './types'
 
 export function findLastIndex<T>(
@@ -38,7 +38,7 @@ export function* createMatcher(log: Update[], store: Store): Matcher {
     createVariables === undefined ? undefined : createVariables()
 
   // if variables are provided we create a new cache
-  const variablesCache: VariablesCache | undefined =
+  const cache: Cache | undefined =
     variables === undefined ? undefined : new Set()
 
   let cancelled = false
@@ -46,13 +46,11 @@ export function* createMatcher(log: Update[], store: Store): Matcher {
   const iterators = cacheIterators(store.iterators)
 
   // iterate over variables
-  for (const entry of variables ?? store.variablesCache.values()) {
+  for (const entry of variables ?? store.cache.values()) {
     const [id, name, variable] = entry
 
     // update the cache if we are going over a new source
-    if (variablesCache !== undefined) {
-      variablesCache.add(entry)
-    }
+    cache?.add(entry)
 
     if (cancelled) {
       break
@@ -102,5 +100,5 @@ export function* createMatcher(log: Update[], store: Store): Matcher {
     }
   }
 
-  return { accumulator, variablesCache }
+  return { accumulator, cache }
 }
