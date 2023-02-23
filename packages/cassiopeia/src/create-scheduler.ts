@@ -28,14 +28,18 @@ function schedulerTask(
     }
 
     if (value !== undefined) {
+      // update the subscriptions
       store.subscriptions.forEach((subscription) => {
         subscription(value.accumulator)
       })
 
+      // remove processed items from log
       filter(store.log, (value) => !log.includes(value))
 
-      if (value.variablesCache !== undefined) {
-        store.variablesCache = value.variablesCache
+      // update the cache
+      if (value.cache !== undefined) {
+        store.cache.clear()
+        store.cache = value.cache
       }
     }
 
