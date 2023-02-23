@@ -1,4 +1,5 @@
 import { REGEX, STORE } from './constants'
+import { createMatcher } from './create-matcher'
 import { createScheduler } from './create-scheduler'
 import {
   Cassiopeia,
@@ -14,19 +15,30 @@ import {
   Subscription,
   TypeState,
   TypeUpdate,
-  TypeUpdateState,
   Unsubscribe,
-  UpdatePlugin,
-  UpdateSource,
+  Update,
   Variables
 } from './types'
-import { createMatcher } from './create-matcher'
+
+const append = <T extends Update>(
+  log: Update[],
+  value: T,
+  predicate: (value: Update) => boolean
+) => {
+  const i = log.findIndex(predicate)
+
+  if (i === -1) {
+    log.push(value)
+  } else {
+    log[i] = value
+  }
+}
 
 export function createCassiopeia(options: Options): Cassiopeia {
   const store: Store = {
     log: [],
     variablesCache: new Set(),
-    iterators: [],
+    iterators: new Map(),
     matcher: undefined,
     state: TypeState.Locked,
     subscriptions: new Set()
@@ -34,29 +46,17 @@ export function createCassiopeia(options: Options): Cassiopeia {
 
   const scheduler = createScheduler(store)
 
-  const updatePlugin = (index: number, isAsync = __BROWSER__) => {
-    const i = store.log.findIndex(
-      (value) =>
-        value.type === TypeUpdate.Plugin &&
-        value.index === index &&
-        value.state === TypeUpdateState.None &&
-        isAsync === value.isAsync
+  const updatePlugin = (isAsync = __BROWSER__) => {
+    append(
+      store.log,
+      {
+        type: TypeUpdate.Plugin,
+        isAsync
+      },
+      (value) => value.type === TypeUpdate.Plugin
     )
 
-    const value: UpdatePlugin = {
-      type: TypeUpdate.Plugin,
-      state: TypeUpdateState.None,
-      isAsync,
-      index
-    }
-
-    if (i === -1) {
-      store.log.push(value)
-    } else {
-      store.log[i] = value
-    }
-
-    // console.log(store.log.map((value) => value.state))
+    // console.log(store.log.map((value) => JSON.stringify(value, null, '  ')))
 
     scheduler.update()
   }
@@ -65,37 +65,23 @@ export function createCassiopeia(options: Options): Cassiopeia {
     createVariables,
     isAsync = __BROWSER__
   ) => {
-    const i = store.log.findIndex(
-      (value) =>
-        value.type === TypeUpdate.Source &&
-        value.state === TypeUpdateState.None &&
-        isAsync === value.isAsync
+    append(
+      store.log,
+      {
+        type: TypeUpdate.Source,
+        isAsync,
+        createVariables
+      },
+      (value) => value.type === TypeUpdate.Source
     )
 
-    const value: UpdateSource = {
-      type: TypeUpdate.Source,
-      state: TypeUpdateState.None,
-      isAsync,
-      createVariables
-    }
-
-    if (i === -1) {
-      store.log.push(value)
-    } else {
-      store.log[i] = value
-    }
-
-    // console.log(store.log.map((value) => value.state))
+    // console.log(store.log.map((value) => JSON.stringify(value, null, '  ')))
 
     scheduler.update()
   }
 
-  store.iterators = options.plugins.map(({ plugin }, index): Iterators => {
-    const iterators: Iterators = new Map()
-
-    plugin(iterators, (isAsync) => updatePlugin(index, isAsync))
-
-    return iterators
+  options.plugins.forEach(({ plugin }) => {
+    plugin(store.iterators, (isAsync) => updatePlugin(isAsync))
   })
 
   store.state = TypeState.None

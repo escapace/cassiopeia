@@ -1,6 +1,12 @@
-import { Matcher, Store, TypeState, TypeUpdateState, Update } from './types'
+import { Matcher, Store, TypeState, Update } from './types'
 
 import { createMatcher } from './create-matcher'
+
+const filter = <T>(arr: T[], predicate: (value: T) => boolean) => {
+  for (let l = arr.length - 1; l >= 0; l -= 1) {
+    if (!predicate(arr[l])) arr.splice(l, 1)
+  }
+}
 
 function schedulerTask(
   matcher: Matcher,
@@ -26,13 +32,7 @@ function schedulerTask(
         subscription(value.accumulator)
       })
 
-      log.forEach((value) => {
-        value.state = TypeUpdateState.Done
-      })
-
-      store.log = store.log.filter(
-        (value) => value.state !== TypeUpdateState.Done
-      )
+      filter(store.log, (value) => !log.includes(value))
 
       if (value.variablesCache !== undefined) {
         store.variablesCache = value.variablesCache
@@ -49,10 +49,6 @@ function schedulerTask(
 
 function schedulerFrame(store: Store, log: Update[], isAsync: boolean) {
   if (store.state === TypeState.Scheduled) {
-    log.forEach((value) => {
-      value.state = TypeUpdateState.Scheduled
-    })
-
     const matcher = (store.matcher = createMatcher(log, store))
 
     store.state = TypeState.Running
@@ -72,6 +68,7 @@ export function createScheduler(store: Store) {
     if (store.state === TypeState.None) {
       store.state = TypeState.Scheduled
 
+      // copy the current items in the log into an array
       const log = [...store.log]
 
       const isSync = log.some((value) => !value.isAsync)

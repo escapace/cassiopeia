@@ -41,22 +41,7 @@ export function* createMatcher(log: Update[], store: Store): Matcher {
   const variablesCache: VariablesCache | undefined =
     variables === undefined ? undefined : new Set()
 
-  // clear the cache before writing a new one
-  // if (updateVariablesCache) {
-  //   variablesCache.clear()
-  // }
-
   let cancelled = false
-
-  // const pluginsWithUpdates = new Set<number>()
-  //
-  // log.reduce<Set<number>>((acc, update) => {
-  //   if (update.type === TypeUpdate.Plugin) {
-  //     acc.add(update.index)
-  //   }
-  //
-  //   return acc
-  // }, pluginsWithUpdates)
 
   const iterators = cacheIterators(store.iterators)
 
@@ -86,14 +71,8 @@ export function* createMatcher(log: Update[], store: Store): Matcher {
       continue
     }
 
-    // If the plugin associated with the name/iterator has updates
-    // yes: update all variables associated with the name/iterator
-    // no:
-    // (1) filter old variables from the new variables
-    // (2) pass on the new variables
-    // (3) prepend the old accumulator to the new one
-
     iterator.next(variable)
+
     cancelled = (yield) === true
   }
 
@@ -114,7 +93,6 @@ export function* createMatcher(log: Update[], store: Store): Matcher {
       const { done, value } = iterator.next(true)
 
       if (done === true && value !== undefined) {
-        // Update
         Array.isArray(value)
           ? accumulator.push(
               ...value.map((value) => ({ key: 0, ...value, name }))
