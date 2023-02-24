@@ -1,7 +1,7 @@
 import { createCassiopeia as cas, STORE, type Variables } from 'cassiopeia'
 import { type App } from 'vue'
 import { CASSIOPEIA_VUE_SYMBOL, REGEX } from './constants'
-import { CassiopeiaPlugin, CassiopeiaScope, Options } from './types'
+import { Cassiopeia, CassiopeiaPlugin, Options } from './types'
 
 function* createVariableIterator(sets: Set<Set<string>>): Variables {
   for (const set of sets) {
@@ -19,7 +19,7 @@ function* createVariableIterator(sets: Set<Set<string>>): Variables {
   }
 }
 
-const createCassiopeiaScope = (options: Options): CassiopeiaScope => {
+const createCassiopeiaScope = (options: Options): Cassiopeia => {
   if (__BROWSER__) {
     if (typeof window.__CASSIOPEIA_VUE__ !== 'undefined') {
       return window.__CASSIOPEIA_VUE__
@@ -32,8 +32,8 @@ const createCassiopeiaScope = (options: Options): CassiopeiaScope => {
 
   const cassiopeia = cas({ ...options })
 
-  const update = (isAsync?: boolean) => {
-    cassiopeia.update(createVariables, isAsync)
+  const update = async (isAsync?: boolean) => {
+    return await cassiopeia.update(createVariables, isAsync)
   }
 
   const createScope = () => {
@@ -72,7 +72,7 @@ const createCassiopeiaScope = (options: Options): CassiopeiaScope => {
 
   const subscribe = cassiopeia.subscribe
 
-  const cassiopeiaScope: CassiopeiaScope = {
+  const cassiopeiaScope: Cassiopeia = {
     [STORE]: cassiopeia[STORE],
     createScope,
     update,

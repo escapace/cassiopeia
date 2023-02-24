@@ -26,7 +26,7 @@ export const updateStyle = (
       scope.add(['--', ...match.slice(1, 3)].join('-'))
     }
 
-    cassiopeia.update(false)
+    void cassiopeia.update(false)
 
     onDispose(() => {
       console.info(`[cassiopeia] disposing scope '${__vite__id}'`)

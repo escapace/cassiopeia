@@ -1,5 +1,17 @@
 import { STORE } from './constants'
 
+export const enum TypeAction {
+  UpdatePlugin,
+  UpdateSource
+}
+
+export const enum TypeState {
+  Locked,
+  None,
+  Scheduled,
+  Running
+}
+
 export interface StyleSheetPartial {
   content: string
   [key: string]: string | number | undefined
@@ -17,59 +29,53 @@ export type Iterator = Generator<
 >
 export type Iterators = Map<string, () => Iterator>
 
-export type Register = () => void
+export type Cache = Set<[string, string, string]>
 
-export interface Plugin {
-  plugin: (iterators: Iterators, update: (isAsync?: boolean) => void) => void
-}
-
-export interface Options {
-  plugins: Plugin[]
-}
-
-export type Matcher = Generator<
-  undefined,
-  undefined | { accumulator: StyleSheet[]; cache?: Cache },
-  true | undefined
->
 export type Variables = Generator<
   [string, string, string],
   void,
   true | undefined
 >
 
-export const enum TypeState {
-  Locked,
-  None,
-  Scheduled,
-  Running
+export type Matcher = Generator<
+  undefined,
+  undefined | { accumulator: StyleSheet[]; cache?: Cache },
+  true | undefined
+>
+
+export type UpdatePlugin = (isAsync?: boolean) => Promise<boolean>
+
+export type UpdateSource = (
+  createVariables: (() => Variables) | undefined,
+  isAsync?: boolean
+) => Promise<boolean>
+
+export interface Plugin {
+  plugin: (iterators: Iterators, update: UpdatePlugin) => void
 }
 
-export type Unsubscribe = () => void
-export type Subscription = (stylesheets: StyleSheet[]) => void
-
-export const enum TypeUpdate {
-  Plugin,
-  Source
+export interface Options {
+  plugins: Plugin[]
 }
 
-export interface UpdatePlugin {
-  type: TypeUpdate.Plugin
+export interface ActionUpdatePlugin {
+  type: TypeAction.UpdatePlugin
   isAsync: boolean
 }
 
-export interface UpdateSource {
-  type: TypeUpdate.Source
+export interface ActionUpdateSource {
+  type: TypeAction.UpdateSource
   createVariables?: () => Variables
   isAsync: boolean
 }
 
-export type Update = UpdatePlugin | UpdateSource
+export type ActionUpdate = ActionUpdatePlugin | ActionUpdateSource
 
-export type Cache = Set<[string, string, string]>
+export type Unsubscribe = () => void
+export type Subscription = (stylesheets: StyleSheet[]) => void
 
 export interface Store {
-  log: Update[]
+  log: ActionUpdate[]
   cache: Cache
   iterators: Iterators
   matcher?: Matcher
@@ -83,8 +89,5 @@ export interface CassiopeiaInstance {
 
 export interface Cassiopeia extends CassiopeiaInstance {
   subscribe: (subscription: Subscription) => Unsubscribe
-  update: (
-    createVariables: (() => Variables) | undefined,
-    isAsync?: boolean
-  ) => void
+  update: UpdateSource
 }

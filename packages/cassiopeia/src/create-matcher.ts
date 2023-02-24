@@ -1,39 +1,28 @@
 import { cacheIterators } from './cache-iterators'
 import {
+  ActionUpdate,
+  ActionUpdateSource,
   Cache,
   Matcher,
   Store,
   StyleSheet,
-  TypeUpdate,
-  Update,
-  UpdateSource
+  TypeAction
 } from './types'
+import { findLastIndex } from './utilities/find-last-index'
 
-export function findLastIndex<T>(
-  array: T[],
-  predicate: (value: T, index: number, obj: T[]) => boolean
-): number {
-  let l = array.length
-  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-  while (l--) {
-    if (predicate(array[l], l, array)) return l
-  }
-  return -1
-}
-
-export function* createMatcher(log: Update[], store: Store): Matcher {
+export function* createMatcher(log: ActionUpdate[], store: Store): Matcher {
   const seen = new Set<string>()
 
   // check if log has source update
   const sourceIndex = findLastIndex(
     log,
-    (value) => value.type === TypeUpdate.Source
+    (value) => value.type === TypeAction.UpdateSource
   )
 
   const createVariables =
     sourceIndex === -1
       ? undefined
-      : (log[sourceIndex] as UpdateSource).createVariables
+      : (log[sourceIndex] as ActionUpdateSource).createVariables
   const variables =
     createVariables === undefined ? undefined : createVariables()
 
