@@ -8,7 +8,7 @@ async function reducer(
   log: Action[],
   store: Store
 ): Promise<boolean> {
-  if (store.state === TypeState.Scheduled && log.length !== 0) {
+  if (store.state === TypeState.Scheduled) {
     store.state = TypeState.Running
     const matcher = (store.matcher = createMatcher(log, store))
     let iteratorResult: IteratorResult<undefined, MatcherReturn> | undefined
@@ -59,7 +59,7 @@ async function reducer(
 
 export const scheduleUpdate = async (store: Store): Promise<boolean> => {
   if (store.state === TypeState.Running) {
-    // the matcher will be cancelled in schedulerTask()
+    // the matcher will be cancelled in reducer()
     store.matcher = undefined
     store.state = TypeState.None
   }
@@ -67,9 +67,8 @@ export const scheduleUpdate = async (store: Store): Promise<boolean> => {
   if (store.state === TypeState.None) {
     store.state = TypeState.Scheduled
 
-    // copy the current items in the log into an array
+    // copy action refs into an array
     const log = [...store.log]
-
     const isAsync = !log.some((value) => !value.isAsync)
 
     if (isAsync) {
