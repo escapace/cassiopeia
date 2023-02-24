@@ -37,11 +37,9 @@ export type Variables = Generator<
   true | undefined
 >
 
-export type Matcher = Generator<
-  undefined,
-  undefined | { accumulator: StyleSheet[]; cache?: Cache },
-  true | undefined
->
+export type MatcherReturn = undefined | StyleSheet[]
+
+export type Matcher = Generator<undefined, MatcherReturn, true | undefined>
 
 export type UpdatePlugin = (isAsync?: boolean) => Promise<boolean>
 
@@ -69,13 +67,13 @@ export interface ActionUpdateSource {
   isAsync: boolean
 }
 
-export type ActionUpdate = ActionUpdatePlugin | ActionUpdateSource
+export type Action = ActionUpdatePlugin | ActionUpdateSource
 
 export type Unsubscribe = () => void
 export type Subscription = (stylesheets: StyleSheet[]) => void
 
 export interface Store {
-  log: ActionUpdate[]
+  log: Action[]
   cache: Cache
   iterators: Iterators
   matcher?: Matcher

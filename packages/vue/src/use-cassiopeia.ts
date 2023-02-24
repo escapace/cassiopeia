@@ -21,10 +21,10 @@ export const useCassiopeia = (): UseCassiopeia => {
   ): Promise<boolean> => {
     // we update only in browser, on SSR renderToString performs the update.
     if (__BROWSER__) {
-      await cassiopeia.update(isAsync)
+      return await cassiopeia.update(isAsync)
+    } else {
+      return await Promise.resolve(false)
     }
-
-    return await Promise.resolve(false)
   }
 
   return {

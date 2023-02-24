@@ -1,8 +1,7 @@
 import { REGEX, STORE } from './constants'
 import { createMatcher } from './create-matcher'
-import { createScheduler } from './create-scheduler'
+import { scheduleUpdate } from './schedule-update'
 import {
-  ActionUpdate,
   Cassiopeia,
   CassiopeiaInstance,
   Iterator,
@@ -20,20 +19,7 @@ import {
   UpdateSource,
   Variables
 } from './types'
-
-const append = <T extends ActionUpdate>(
-  log: ActionUpdate[],
-  value: T,
-  predicate: (value: ActionUpdate) => boolean
-) => {
-  const i = log.findIndex(predicate)
-
-  if (i === -1) {
-    log.push(value)
-  } else {
-    log[i] = value
-  }
-}
+import { append } from './utilities/append'
 
 export function createCassiopeia(options: Options): Cassiopeia {
   const store: Store = {
@@ -45,8 +31,6 @@ export function createCassiopeia(options: Options): Cassiopeia {
     subscriptions: new Set()
   }
 
-  const scheduler = createScheduler(store)
-
   const updatePlugin: UpdatePlugin = async (isAsync = __BROWSER__) => {
     append(
       store.log,
@@ -57,7 +41,7 @@ export function createCassiopeia(options: Options): Cassiopeia {
       (value) => value.type === TypeAction.UpdatePlugin
     )
 
-    return await scheduler.update()
+    return await scheduleUpdate(store)
   }
 
   const update: UpdateSource = async (
@@ -74,12 +58,10 @@ export function createCassiopeia(options: Options): Cassiopeia {
       (value) => value.type === TypeAction.UpdateSource
     )
 
-    return await scheduler.update()
+    return await scheduleUpdate(store)
   }
 
-  options.plugins.forEach(({ plugin }) => {
-    plugin(store.iterators, async (isAsync) => await updatePlugin(isAsync))
-  })
+  options.plugins.forEach(({ plugin }) => plugin(store.iterators, updatePlugin))
 
   store.state = TypeState.None
 
@@ -109,7 +91,7 @@ export const renderToString = <T extends CassiopeiaInstance>(
     cursor = matcher.next()
   }
 
-  return cursor.value?.accumulator ?? []
+  return cursor.value ?? []
 }
 
 export { REGEX, STORE }

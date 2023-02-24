@@ -1,8 +1,7 @@
 import { cacheIterators } from './cache-iterators'
 import {
-  ActionUpdate,
+  Action,
   ActionUpdateSource,
-  Cache,
   Matcher,
   Store,
   StyleSheet,
@@ -10,7 +9,7 @@ import {
 } from './types'
 import { findLastIndex } from './utilities/find-last-index'
 
-export function* createMatcher(log: ActionUpdate[], store: Store): Matcher {
+export function* createMatcher(log: Action[], store: Store): Matcher {
   const seen = new Set<string>()
 
   // check if log has source update
@@ -26,9 +25,12 @@ export function* createMatcher(log: ActionUpdate[], store: Store): Matcher {
   const variables =
     createVariables === undefined ? undefined : createVariables()
 
+  const hasVariables = variables !== undefined
+
   // if variables are provided we create a new cache
-  const cache: Cache | undefined =
-    variables === undefined ? undefined : new Set()
+  if (hasVariables) {
+    store.cache.clear()
+  }
 
   let cancelled = false
 
@@ -36,14 +38,11 @@ export function* createMatcher(log: ActionUpdate[], store: Store): Matcher {
 
   // iterate over variables
   for (const entry of variables ?? store.cache.values()) {
-    const [id, name, variable] = entry
-
-    // update the cache if we are going over a new source
-    cache?.add(entry)
-
     if (cancelled) {
       break
     }
+
+    const [id, name, variable] = entry
 
     // deduplicate
     if (seen.has(id)) {
@@ -51,6 +50,11 @@ export function* createMatcher(log: ActionUpdate[], store: Store): Matcher {
     }
 
     seen.add(id)
+
+    // update the cache if we are going over a new source
+    if (hasVariables) {
+      store.cache.add(entry)
+    }
 
     const iterator = iterators.get(name)
 
@@ -89,5 +93,5 @@ export function* createMatcher(log: ActionUpdate[], store: Store): Matcher {
     }
   }
 
-  return { accumulator, cache }
+  return accumulator
 }
