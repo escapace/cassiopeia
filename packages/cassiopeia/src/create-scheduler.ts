@@ -1,33 +1,32 @@
-import { Matcher, Store, TypeState, Update } from './types'
+import { ActionUpdate, Matcher, Store, TypeState } from './types'
 
 import { createMatcher } from './create-matcher'
+import { filter } from './utilities/filter'
+import { promisify } from './utilities/promisify'
 
-const filter = <T>(arr: T[], predicate: (value: T) => boolean) => {
-  for (let l = arr.length - 1; l >= 0; l -= 1) {
-    if (!predicate(arr[l])) arr.splice(l, 1)
-  }
-}
-
-function schedulerTask(
+async function schedulerTask(
+  isAsync: boolean,
+  log: ActionUpdate[],
   matcher: Matcher,
-  store: Store,
-  log: Update[],
-  isAsync: boolean
-): void {
+  store: Store
+): Promise<boolean> {
   if (matcher === store.matcher && store.state === TypeState.Running) {
     const { done, value } = matcher.next()
 
     if (done !== true) {
       if (isAsync) {
-        setTimeout(() => schedulerTask(matcher, store, log, isAsync))
+        return await promisify<boolean>(
+          requestAnimationFrame,
+          async () => await schedulerTask(isAsync, log, matcher, store)
+        )
       } else {
-        schedulerTask(matcher, store, log, isAsync)
+        return await schedulerTask(isAsync, log, matcher, store)
       }
-
-      return
     }
 
-    if (value !== undefined) {
+    const cancelled = value === undefined
+
+    if (!cancelled) {
       // update the subscriptions
       store.subscriptions.forEach((subscription) => {
         subscription(value.accumulator)
@@ -41,6 +40,8 @@ function schedulerTask(
         store.cache.clear()
         store.cache = value.cache
       }
+
+      return true
     }
 
     store.state = TypeState.None
@@ -49,20 +50,28 @@ function schedulerTask(
     /* matcher has been updated or the state has changed, garbage collect */
     matcher.next(true)
   }
+
+  return false
 }
 
-function schedulerFrame(store: Store, log: Update[], isAsync: boolean) {
-  if (store.state === TypeState.Scheduled) {
-    const matcher = (store.matcher = createMatcher(log, store))
-
+async function schedulerFrame(
+  isAsync: boolean,
+  log: ActionUpdate[],
+  store: Store
+): Promise<boolean> {
+  if (store.state === TypeState.Scheduled && log.length !== 0) {
     store.state = TypeState.Running
 
-    schedulerTask(matcher, store, log, isAsync)
+    const matcher = (store.matcher = createMatcher(log, store))
+
+    return await schedulerTask(isAsync, log, matcher, store)
   }
+
+  return false
 }
 
 export function createScheduler(store: Store) {
-  const update = () => {
+  const update = async () => {
     if (store.state === TypeState.Running) {
       // the matcher will be cancelled in schedulerTask()
       store.matcher = undefined
@@ -75,15 +84,19 @@ export function createScheduler(store: Store) {
       // copy the current items in the log into an array
       const log = [...store.log]
 
-      const isSync = log.some((value) => !value.isAsync)
-      const isAsync = !isSync
+      const isAsync = !log.some((value) => !value.isAsync)
 
       if (isAsync) {
-        requestAnimationFrame(() => schedulerFrame(store, log, isAsync))
+        return await promisify<boolean>(
+          requestAnimationFrame,
+          async () => await schedulerFrame(isAsync, log, store)
+        )
       } else {
-        schedulerFrame(store, log, isAsync)
+        return await schedulerFrame(isAsync, log, store)
       }
     }
+
+    return false
   }
 
   return { update }

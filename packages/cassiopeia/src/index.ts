@@ -2,28 +2,29 @@ import { REGEX, STORE } from './constants'
 import { createMatcher } from './create-matcher'
 import { createScheduler } from './create-scheduler'
 import {
+  ActionUpdate,
   Cassiopeia,
   CassiopeiaInstance,
   Iterator,
   Iterators,
   Options,
   Plugin,
-  Register,
   Store,
   StyleSheet,
   StyleSheetPartial,
   Subscription,
+  TypeAction,
   TypeState,
-  TypeUpdate,
   Unsubscribe,
-  Update,
+  UpdatePlugin,
+  UpdateSource,
   Variables
 } from './types'
 
-const append = <T extends Update>(
-  log: Update[],
+const append = <T extends ActionUpdate>(
+  log: ActionUpdate[],
   value: T,
-  predicate: (value: Update) => boolean
+  predicate: (value: ActionUpdate) => boolean
 ) => {
   const i = log.findIndex(predicate)
 
@@ -46,42 +47,38 @@ export function createCassiopeia(options: Options): Cassiopeia {
 
   const scheduler = createScheduler(store)
 
-  const updatePlugin = (isAsync = __BROWSER__) => {
+  const updatePlugin: UpdatePlugin = async (isAsync = __BROWSER__) => {
     append(
       store.log,
       {
-        type: TypeUpdate.Plugin,
+        type: TypeAction.UpdatePlugin,
         isAsync
       },
-      (value) => value.type === TypeUpdate.Plugin
+      (value) => value.type === TypeAction.UpdatePlugin
     )
 
-    // console.log(store.log.map((value) => JSON.stringify(value, null, '  ')))
-
-    scheduler.update()
+    return await scheduler.update()
   }
 
-  const update: Cassiopeia['update'] = (
+  const update: UpdateSource = async (
     createVariables,
     isAsync = __BROWSER__
   ) => {
     append(
       store.log,
       {
-        type: TypeUpdate.Source,
+        type: TypeAction.UpdateSource,
         isAsync,
         createVariables
       },
-      (value) => value.type === TypeUpdate.Source
+      (value) => value.type === TypeAction.UpdateSource
     )
 
-    // console.log(store.log.map((value) => JSON.stringify(value, null, '  ')))
-
-    scheduler.update()
+    return await scheduler.update()
   }
 
   options.plugins.forEach(({ plugin }) => {
-    plugin(store.iterators, (isAsync) => updatePlugin(isAsync))
+    plugin(store.iterators, async (isAsync) => await updatePlugin(isAsync))
   })
 
   store.state = TypeState.None
@@ -123,10 +120,11 @@ export type {
   Options,
   Plugin,
   CassiopeiaInstance,
-  Register,
   Store,
   StyleSheet,
   StyleSheetPartial,
+  UpdateSource,
+  UpdatePlugin,
   Subscription,
   Unsubscribe,
   Variables

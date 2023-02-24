@@ -1,7 +1,7 @@
-import type { CassiopeiaScope } from './types'
+import type { Cassiopeia } from './types'
 
 declare global {
   interface Window {
-    __CASSIOPEIA_VUE__: CassiopeiaScope | undefined
+    __CASSIOPEIA_VUE__: Cassiopeia | undefined
   }
 }
