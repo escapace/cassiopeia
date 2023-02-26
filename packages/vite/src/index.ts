@@ -146,8 +146,12 @@ const createDevPlugin = (): Plugin => {
     enforce: 'post',
     configResolved: (config) => configResolved(config, state),
     transform: {
-      handler(source, id) {
-        if (state.isProduction || !state.devToolsEnabled) {
+      handler(source, id, opts) {
+        if (
+          state.isProduction ||
+          !state.devToolsEnabled ||
+          opts?.ssr === true
+        ) {
           return
         }
 
@@ -155,9 +159,11 @@ const createDevPlugin = (): Plugin => {
 
         if (query.vue === true && query.type === 'style') {
           const magic = new MagicString(source)
+
           magic.prepend(
             `import { updateStyle as __cassiopeiaUpdateStyle } from "@cassiopeia/vue"\n`
           )
+
           magic.append(
             `\n__cassiopeiaUpdateStyle(__vite__id, __vite__css, import.meta.hot.dispose)`
           )

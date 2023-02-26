@@ -18,19 +18,23 @@ export const updateStyle = (
       )
     }
   } else {
-    const cassiopeia = window.__CASSIOPEIA_VUE__
+    const variables = Array.from(__vite__css.matchAll(REGEX)).map((value) =>
+      ['--', ...value.slice(1, 3)].join('-')
+    )
 
-    const scope = cassiopeia.createScope()
+    if (variables.length !== 0) {
+      const cassiopeia = window.__CASSIOPEIA_VUE__
 
-    for (const match of __vite__css.matchAll(REGEX)) {
-      scope.add(['--', ...match.slice(1, 3)].join('-'))
+      const scope = cassiopeia.createScope()
+
+      scope.add(variables)
+
+      void cassiopeia.update(false)
+
+      onDispose(() => {
+        console.warn(`[cassiopeia] disposing scope '${__vite__id}'`)
+        scope.dispose()
+      })
     }
-
-    void cassiopeia.update(false)
-
-    onDispose(() => {
-      console.info(`[cassiopeia] disposing scope '${__vite__id}'`)
-      scope.dispose()
-    })
   }
 }

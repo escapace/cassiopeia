@@ -74,6 +74,8 @@ if (name === 'cassiopeia' || name === '@cassiopeia/vue') {
       platform: 'browser'
     })
   )
+} else if (name === "@cassiopeia/vite") {
+  await build({ ...buildOptions, platform: 'node' })
 } else {
   await build(buildOptions)
 }

@@ -59,6 +59,8 @@ const createCassiopeiaScope = (options: Options): Cassiopeia => {
     const dispose = () => {
       clear()
       sets.delete(set)
+
+      void update(__BROWSER__)
     }
 
     const del = (value: string | string[]) => {
