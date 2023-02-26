@@ -1,38 +1,41 @@
 import type { StyleSheet, Subscription } from 'cassiopeia'
 
-// TODO: hydration
-// On ssr it will hydrate as cassiopeia=color-0 cassiopeia=color-1
-// On browser it will hydrate as color
-export const browserSubscription: Subscription = (values: StyleSheet[]) => {
-  values.forEach((value) => {
-    const key = `${value.name}-${value.key}`
+export const browserSubscription: Subscription = (styles: StyleSheet[]) => {
+  const current = Array.from(
+    document.querySelectorAll(`head > [cassiopeia]`)
+  ).map((element) => ({
+    element,
+    key: element.getAttribute('cassiopeia')
+  }))
 
-    let element =
-      (document.querySelector(`head > [cassiopeia="${key}"]`) as
-        | HTMLStyleElement
-        | HTMLLinkElement
-        | undefined) ?? undefined
+  styles.forEach((style) => {
+    const key = `${style.name}-${style.key}`
 
-    const deleteElement =
-      element !== undefined && element.nodeName !== 'STYLE'
-        ? element
-        : undefined
+    const index = current.findIndex((value) => value.key === key)
 
-    if (element === undefined) {
-      element = document.createElement('style')
+    if (index === -1) {
+      const element = document.createElement('style')
       element.setAttribute('cassiopeia', key)
 
-      if (value.media === 'string') {
-        element.setAttribute('media', value.media)
+      if (typeof style.media === 'string') {
+        element.setAttribute('media', style.media)
       }
 
+      element.innerHTML = style.content
+
       document.head.insertBefore(element, null)
-    }
+    } else {
+      const { element } = current.splice(index, 1)[0]
 
-    if (deleteElement !== undefined) {
-      deleteElement.remove()
-    }
+      if (typeof style.media === 'string') {
+        element.setAttribute('media', style.media)
+      } else if (element.hasAttribute('media')) {
+        element.removeAttribute('media')
+      }
 
-    element.innerHTML = value.content
+      element.innerHTML = style.content
+    }
   })
+
+  current.forEach(({ element }) => element.remove())
 }

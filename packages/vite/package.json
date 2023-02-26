@@ -6,12 +6,12 @@
   "bugs": "https://github.com/escapace/cassiopeia/issues",
   "dependencies": {
     "cassiopeia": "workspace:*",
-    "magic-string": "^0.29.0"
+    "magic-string": "^0.30.0"
   },
   "devDependencies": {
     "@types/chai": "4.3.4",
     "@types/mocha": "10.0.1",
-    "@types/node": "18.14.0",
+    "@types/node": "18.14.1",
     "@typescript-eslint/eslint-plugin": "5.53.0",
     "@typescript-eslint/parser": "5.53.0",
     "@vitejs/plugin-vue": "4.0.0",

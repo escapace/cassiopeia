@@ -38,7 +38,7 @@ async function reducer(
             })
 
             // remove processed actions from log
-            filter(store.log, (value) => !log.includes(value))
+            filter(store.log, (action) => !log.includes(action))
           }
 
           store.state = TypeState.None
