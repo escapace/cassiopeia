@@ -54,6 +54,7 @@ export interface Plugin {
 
 export interface Options {
   plugins: Plugin[]
+  rate?: number
 }
 
 export interface ActionUpdatePlugin {
@@ -72,7 +73,7 @@ export type Action = ActionUpdatePlugin | ActionUpdateSource
 export type Unsubscribe = () => void
 export type Subscription = (stylesheets: StyleSheet[]) => void
 
-export interface Store {
+export interface Store extends Required<Pick<Options, 'rate'>> {
   log: Action[]
   cache: Cache
   iterators: Iterators
