@@ -1,4 +1,4 @@
-import { REGEX, STORE } from './constants'
+import { PLUGIN, REGEX, STORE } from './constants'
 import { createMatcher } from './create-matcher'
 import { scheduleUpdate } from './schedule-update'
 import {
@@ -67,7 +67,9 @@ export function createCassiopeia(options: Options): Cassiopeia {
     return await scheduleUpdate(store)
   }
 
-  options.plugins.forEach(({ plugin }) => plugin(store.iterators, updatePlugin))
+  options.plugins.forEach((plugin) =>
+    plugin[PLUGIN](store.iterators, updatePlugin)
+  )
 
   store.state = TypeState.None
 
@@ -100,7 +102,7 @@ export const renderToString = <T extends CassiopeiaInstance>(
   return cursor.value ?? []
 }
 
-export { REGEX, STORE }
+export { REGEX, STORE, PLUGIN }
 export type {
   Cassiopeia,
   Iterator,

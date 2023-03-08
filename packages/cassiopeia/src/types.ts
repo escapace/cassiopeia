@@ -1,4 +1,4 @@
-import { STORE } from './constants'
+import { PLUGIN, STORE } from './constants'
 
 export const enum TypeAction {
   UpdatePlugin,
@@ -49,7 +49,7 @@ export type UpdateSource = (
 ) => Promise<boolean>
 
 export interface Plugin {
-  plugin: (iterators: Iterators, update: UpdatePlugin) => void
+  [PLUGIN]: (iterators: Iterators, update: UpdatePlugin) => void
 }
 
 export interface Options {

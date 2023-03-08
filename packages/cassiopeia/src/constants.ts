@@ -16,3 +16,4 @@
  */
 export const REGEX = /var\(---([a-zA-Z0-9]+)-([a-zA-Z-0-9]+)[),]/gm
 export const STORE = Symbol.for('cassiopeia/store')
+export const PLUGIN = Symbol.for('cassiopeia/plugin')
