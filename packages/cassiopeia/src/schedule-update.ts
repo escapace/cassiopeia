@@ -12,16 +12,23 @@ async function reducer(
     store.state = TypeState.Running
     const matcher = (store.matcher = createMatcher(log, store))
     let iteratorResult: IteratorResult<undefined, MatcherReturn> | undefined
+    let iteration = 0
 
     while (iteratorResult?.done !== true) {
       if (matcher === store.matcher && store.state === TypeState.Running) {
+        iteration++
+
         if (isAsync) {
           iteratorResult = await new Promise<
             IteratorResult<undefined, MatcherReturn>
           >((resolve) => {
-            setTimeout(() => {
+            if (iteration % store.rate === 0) {
+              setTimeout(() => {
+                resolve(matcher.next())
+              }, 0)
+            } else {
               resolve(matcher.next())
-            })
+            }
           })
         } else {
           iteratorResult = matcher.next()

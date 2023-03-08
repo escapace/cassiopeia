@@ -22,11 +22,17 @@ import {
 import { append } from './utilities/append'
 
 export function createCassiopeia(options: Options): Cassiopeia {
+  const rate =
+    Number.isInteger(options.rate) && (options.rate as number) > 0
+      ? (options.rate as number)
+      : 8
+
   const store: Store = {
-    log: [],
     cache: new Set(),
     iterators: new Map(),
+    log: [],
     matcher: undefined,
+    rate,
     state: TypeState.Locked,
     subscriptions: new Set()
   }
