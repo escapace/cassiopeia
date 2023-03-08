@@ -1,5 +1,5 @@
 import { assert } from 'chai'
-import { REGEX } from './constants'
+import { PLUGIN, REGEX } from './constants'
 import { createCassiopeia, Iterator, Plugin, renderToString } from './index'
 import { Variables } from './types'
 
@@ -49,7 +49,7 @@ const createPlugin = () => {
   }
 
   const plugin: Plugin = {
-    plugin: (iterators: Map<string, () => Iterator>) => {
+    [PLUGIN]: (iterators: Map<string, () => Iterator>) => {
       iterators.set('abc', () => createIterator('abc', state))
       iterators.set('zxc', () => createIterator('zxc', state))
     }
@@ -71,7 +71,7 @@ describe('./src/server.spec.ts', () => {
     assert.deepEqual(renderToString(instance), [])
     assert.equal(state.i, 0)
 
-    instance.update(() => fromStrings(['var(---abc-hello)']))
+    void instance.update(() => fromStrings(['var(---abc-hello)']))
 
     assert.deepEqual(renderToString(instance), [
       { content: ':root { ---abc-hello: 2; }', name: 'abc', key: 0 }
