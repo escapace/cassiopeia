@@ -1,5 +1,5 @@
 export { renderToString } from 'cassiopeia'
-export { browserSubscription } from './browser-subscription'
+export { createBrowserSubscription } from './create-browser-subscription'
 export { createCassiopeia } from './create-cassiopeia'
 export type {
   Cassiopeia,
