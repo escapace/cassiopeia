@@ -29,16 +29,16 @@
   },
   "exports": {
     ".": {
-      "node": {
+      "browser": {
         "import": {
           "types": "./lib/types/index.d.ts",
-          "default": "./lib/server/index.mjs"
+          "default": "./lib/browser/index.mjs"
         }
       },
       "default": {
         "import": {
           "types": "./lib/types/index.d.ts",
-          "default": "./lib/browser/index.mjs"
+          "default": "./lib/server/index.mjs"
         }
       }
     }
