@@ -102,11 +102,11 @@ const createProdPlugin = (): Plugin[] => {
             let position = source.indexOf(positionString)
 
             if (position === -1) {
-              this.warn(
-                `[cassiopeia]: unable to update '${filename}', ${JSON.stringify(
-                  query
-                )}`
-              )
+              // this.warn(
+              //   `[cassiopeia]: unable to update '${filename}', ${JSON.stringify(
+              //     query
+              //   )}`
+              // )
             } else {
               position += positionString.length
 
