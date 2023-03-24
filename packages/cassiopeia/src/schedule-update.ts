@@ -80,7 +80,7 @@ export const scheduleUpdate = async (store: Store): Promise<boolean> => {
 
     if (isAsync) {
       return await new Promise<boolean>((resolve) => {
-        requestAnimationFrame(() => {
+        ;(__BROWSER__ ? requestAnimationFrame : setTimeout)(() => {
           void reducer(isAsync, log, store).then(resolve)
         })
       })
