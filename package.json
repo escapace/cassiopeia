@@ -4,17 +4,17 @@
   "version": "1.0.0",
   "author": "",
   "devDependencies": {
-    "@commitlint/cli": "17.5.0",
+    "@commitlint/cli": "17.5.1",
     "@commitlint/config-conventional": "17.4.4",
     "@ls-lint/ls-lint": "1.11.2",
-    "@typescript-eslint/eslint-plugin": "5.57.0",
-    "@typescript-eslint/parser": "5.57.0",
+    "@typescript-eslint/eslint-plugin": "5.57.1",
+    "@typescript-eslint/parser": "5.57.1",
     "arg": "5.0.2",
     "c8": "7.13.0",
     "chai": "4.3.7",
     "changelogithub": "0.12.7",
-    "esbuild": "0.17.14",
-    "eslint": "8.36.0",
+    "esbuild": "0.17.15",
+    "eslint": "8.37.0",
     "eslint-config-escapace": "3.17.0",
     "eslint-config-prettier": "8.8.0",
     "eslint-plugin-editorconfig": "4.0.2",
@@ -30,7 +30,7 @@
     "prettier-config-escapace": "1.0.5",
     "semver": "7.3.8",
     "syncpack": "9.8.4",
-    "typescript": "5.0.2"
+    "typescript": "5.0.3"
   },
   "engines": {
     "node": ">=18.12.1",
