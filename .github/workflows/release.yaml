@@ -49,7 +49,7 @@ jobs:
       - name: restore lib cache
         uses: actions/download-artifact@v3
         with:
-          name: lib
+          name: ci
           path: packages
       - name: write .npmrc
         run: |
