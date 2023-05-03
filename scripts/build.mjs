@@ -48,6 +48,7 @@ const buildOptions = {
   outExtension: { '.js': '.mjs' },
   outdir: path.join(cwd, `lib/esm`),
   platform: 'neutral',
+  minifySyntax: true,
   sourcemap: true,
   splitting: true,
   tsconfig

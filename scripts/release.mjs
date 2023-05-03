@@ -57,6 +57,7 @@ async function main() {
     [
       'publish',
       '--no-git-checks',
+      '--provenance',
       '--access',
       'public',
       '--publish-branch',
