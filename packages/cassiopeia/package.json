@@ -54,7 +54,6 @@
     "build": "node ../../scripts/build.mjs",
     "deploy": "pnpm deploy --filter '.' lib/context",
     "lint": "eslint 'src/**/*.ts'",
-    "release": "node ../../scripts/release.mjs",
     "test": "node ../../scripts/test.mjs && c8 mocha --enable-source-maps 'lib/tests/**/*.spec.js'",
     "typecheck": "tsc --noEmit"
   },

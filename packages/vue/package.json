@@ -61,7 +61,6 @@
   "scripts": {
     "build": "node ../../scripts/build.mjs",
     "lint": "eslint 'src/**/*.ts'",
-    "release": "node ../../scripts/release.mjs",
     "typecheck": "tsc --noEmit"
   },
   "sideEffects": false,
