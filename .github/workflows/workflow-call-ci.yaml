@@ -56,10 +56,10 @@ jobs:
             ${{ runner.os }}-pnpm-store
       - name: install dependencies
         run: pnpm install
-      - name: typecheck
-        run: pnpm run typecheck
       - name: build
         run: pnpm run build
+      - name: typecheck
+        run: pnpm run typecheck
       - name: test
         run: pnpm run test
       - name: code coverage
