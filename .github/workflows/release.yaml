@@ -47,22 +47,20 @@ jobs:
         run: |
           npm install -g npm
           npm --version
-
-          tree .
-      - name: publish to github packages
-        run: |
-          cat << EOF > "$HOME/.npmrc"
-            //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
-            @escapace:registry=https://npm.pkg.github.com
-            provenance=true
-            always-auth=true
-          EOF
-
-          while read -d '' -r file; do
-            npm publish --provenance --access public "${file}"
-          done < <(find "lib" -type f -name '*.tgz' -print0 2>/dev/null)
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: publish to github packages
+      #   run: |
+      #     cat << EOF > "$HOME/.npmrc"
+      #       //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+      #       @escapace:registry=https://npm.pkg.github.com
+      #       provenance=true
+      #       always-auth=true
+      #     EOF
+      #
+      #     while read -d '' -r file; do
+      #       npm publish --provenance --access public "${file}"
+      #     done < <(find "./lib" -type f -name '*.tgz' -print0 2>/dev/null)
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: publish to npmjs
         run: |
           cat << EOF > "$HOME/.npmrc"
@@ -74,7 +72,7 @@ jobs:
 
           while read -d '' -r file; do
             npm publish --provenance --access public "${file}"
-          done < <(find "lib" -type f -name '*.tgz' -print0 2>/dev/null)
+          done < <(find "./lib" -type f -name '*.tgz' -print0 2>/dev/null)
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: checkout
