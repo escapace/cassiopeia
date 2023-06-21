@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { parseVueRequest } from '@vitejs/plugin-vue'
+import { SFCStyleBlock, parse } from '@vue/compiler-sfc'
 import { REGEX } from 'cassiopeia'
 import { readFile } from 'fs/promises'
 import MagicString from 'magic-string'
-import { ResolvedConfig, type Plugin } from 'vite'
-import { parse } from '@vue/compiler-sfc'
+import path from 'path'
+import type { Plugin, ResolvedConfig } from 'vite'
 
 declare module '@vitejs/plugin-vue' {
   interface VueQuery {
@@ -28,7 +30,7 @@ const configResolved = (config: ResolvedConfig, state: State) => {
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     config.command === 'build' ? !!config.build.sourcemap : true
   state.devToolsEnabled =
-    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions, @typescript-eslint/no-non-null-assertion
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     !!config.define!.__VUE_PROD_DEVTOOLS__ || state.isDevelopment
 }
 
@@ -57,6 +59,27 @@ const createProdPlugin = (): Plugin[] => {
           if (state.isDevelopment) {
             return
           }
+          const updateStateVariables = (styles: string) => {
+            const set = state.variables.has(filename)
+              ? state.variables.get(filename)!
+              : (state.variables.set(filename, new Set()),
+                state.variables.get(filename)!)
+
+            for (const match of styles.matchAll(REGEX)) {
+              set.add(['--', ...match.slice(1, 3)].join('-'))
+            }
+          }
+
+          const getStyleContent = async (value: SFCStyleBlock) => {
+            if (value.src === undefined) {
+              return value.content
+            } else {
+              return await readFile(
+                path.resolve(path.dirname(filename), value.src),
+                'utf8'
+              )
+            }
+          }
 
           const { filename, query } = parseVueRequest(id)
 
@@ -64,22 +87,13 @@ const createProdPlugin = (): Plugin[] => {
 
           if (include.test(filename) && query.vue !== true) {
             const source = await readFile(filename, 'utf8')
-            const { descriptor } = parse(source)
-            const styles = descriptor.styles
-              .map((value) => value.content)
-              .join('\n')
-            const set = new Set<string>()
 
-            for (const match of styles.matchAll(REGEX)) {
-              set.add(['--', ...match.slice(1, 3)].join('-'))
-            }
+            const parseResult = parse(source)
 
-            if (set.size === 0) {
-              if (state.variables.has(filename)) {
-                state.variables.delete(filename)
-              }
-            } else {
-              state.variables.set(filename, set)
+            for (const style of parseResult.descriptor.styles) {
+              const content = await getStyleContent(style)
+
+              updateStateVariables(content)
             }
           }
         }
@@ -116,7 +130,6 @@ const createProdPlugin = (): Plugin[] => {
                 `import { useCassiopeia as __useCassiopeia } from "@cassiopeia/vue"\n`
               )
 
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               const variables = Array.from(state.variables.get(filename)!)
                 .map((value) => `"${value}"`)
                 .join(', ')
