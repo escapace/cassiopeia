@@ -15,6 +15,13 @@
       "strategy": "versionsByName"
     }
   },
+  "versionGroups": [
+    {
+      "packages": ["**"],
+      "dependencies": ["@cassiopeia/**", "cassiopeia"],
+      "isIgnored": true
+    }
+  ],
   "semverGroups": [
     {
       "dependencies": ["**"],
