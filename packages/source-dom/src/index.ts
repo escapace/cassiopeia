@@ -134,7 +134,7 @@ export const createSourceDOM = (
 
     // TODO: timeout unused iterators
     if (mutations.some((mutation) => isValidMutation(mutation))) {
-      cassiopeia.update(createVariables)
+      void cassiopeia.update(createVariables)
     }
   })
 
@@ -145,7 +145,7 @@ export const createSourceDOM = (
 
     isActive = true
 
-    cassiopeia.update(createVariables)
+    void cassiopeia.update(createVariables)
 
     mutationObserver.observe(root, {
       attributes: true,
