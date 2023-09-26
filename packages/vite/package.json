@@ -50,7 +50,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "repository": "https://github.com/escapace/cassiopeia.git",
+  "repository": "escapace/cassiopeia",
   "scripts": {
     "build": "node ../../scripts/build.mjs",
     "lint": "eslint 'src/**/*.ts'",
