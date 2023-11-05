@@ -8,14 +8,14 @@
     "cassiopeia": "workspace:*"
   },
   "devDependencies": {
-    "@types/chai": "4.3.6",
-    "@types/mocha": "10.0.2",
-    "@types/node": "20.8.2",
-    "@typescript-eslint/eslint-plugin": "6.7.4",
-    "@typescript-eslint/parser": "6.7.4",
+    "@types/chai": "4.3.9",
+    "@types/mocha": "10.0.3",
+    "@types/node": "20.8.9",
+    "@typescript-eslint/eslint-plugin": "6.9.0",
+    "@typescript-eslint/parser": "6.9.0",
     "cassiopeia": "workspace:*",
     "chai": "4.3.10",
-    "eslint": "8.50.0",
+    "eslint": "8.52.0",
     "eslint-config-escapace": "3.18.2",
     "eslint-config-prettier": "9.0.0",
     "eslint-plugin-editorconfig": "4.0.3",
@@ -25,7 +25,7 @@
     "prettier": "3.0.3",
     "prettier-config-escapace": "1.0.6",
     "typescript": "5.2.2",
-    "vue": "3.3.4"
+    "vue": "3.3.7"
   },
   "exports": {
     ".": {
