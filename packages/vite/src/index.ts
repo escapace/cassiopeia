@@ -189,7 +189,7 @@ const createDevPlugin = (): Plugin => {
           )
 
           magic.append(
-            `\n__cassiopeiaUpdateStyle(__vite__id, __vite__css, import.meta.hot.dispose)`
+            `\n__cassiopeiaUpdateStyle(__vite__id, __vite__css, import.meta.hot.dispose.bind(import.meta.hot))`
           )
 
           if (state.sourceMap) {
