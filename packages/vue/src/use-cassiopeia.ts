@@ -1,4 +1,4 @@
-import { inject, onScopeDispose } from 'vue'
+import { inject, onScopeDispose, getCurrentScope } from 'vue'
 import { CASSIOPEIA_VUE_SYMBOL } from './constants'
 import { UseCassiopeia } from './types'
 
@@ -14,7 +14,9 @@ export const useCassiopeia = (): UseCassiopeia => {
 
   const scope = cassiopeia.createScope()
 
-  onScopeDispose(scope.dispose)
+  if (getCurrentScope() !== undefined) {
+    onScopeDispose(scope.dispose)
+  }
 
   const update: (typeof cassiopeia)['update'] = async (
     isAsync?: boolean | undefined
