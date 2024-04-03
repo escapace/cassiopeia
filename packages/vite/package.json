@@ -5,30 +5,30 @@
   "author": "escapace <opensource@escapace.com>",
   "bugs": "https://github.com/escapace/cassiopeia/issues",
   "dependencies": {
-    "@vue/compiler-sfc": "^3.4.19",
+    "@vue/compiler-sfc": "^3.4.21",
     "cassiopeia": "workspace:*",
-    "magic-string": "^0.30.7"
+    "magic-string": "^0.30.8"
   },
   "devDependencies": {
-    "@types/chai": "4.3.11",
+    "@types/chai": "4.3.14",
     "@types/mocha": "10.0.6",
-    "@types/node": "20.11.19",
-    "@typescript-eslint/eslint-plugin": "7.0.2",
-    "@typescript-eslint/parser": "7.0.2",
+    "@types/node": "20.12.3",
+    "@typescript-eslint/eslint-plugin": "7.5.0",
+    "@typescript-eslint/parser": "7.5.0",
     "@vitejs/plugin-vue": "5.0.4",
     "chai": "5.1.0",
-    "eslint": "8.56.0",
-    "eslint-config-escapace": "3.19.0",
+    "eslint": "8.57.0",
+    "eslint-config-escapace": "3.19.1",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-editorconfig": "4.0.3",
     "eslint-plugin-no-null": "1.0.2",
     "lint-staged": "15.2.2",
-    "mocha": "10.3.0",
+    "mocha": "10.4.0",
     "prettier": "3.2.5",
     "prettier-config-escapace": "1.0.6",
-    "typescript": "5.3.3",
-    "vite": "5.1.4",
-    "vue": "3.4.19"
+    "typescript": "5.4.3",
+    "vite": "5.2.7",
+    "vue": "3.4.21"
   },
   "exports": {
     ".": {
@@ -44,7 +44,7 @@
   "license": "MPL-2.0",
   "peerDependencies": {
     "@vitejs/plugin-vue": ">=5.0.4",
-    "vite": ">=5.1.4"
+    "vite": ">=5.2.7"
   },
   "private": false,
   "publishConfig": {

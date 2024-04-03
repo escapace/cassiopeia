@@ -18,7 +18,7 @@
   "versionGroups": [
     {
       "packages": ["**"],
-      "dependencies": ["@cassiopeia/**", "cassiopeia"],
+      "dependencies": ["$LOCAL"],
       "isIgnored": true
     }
   ],

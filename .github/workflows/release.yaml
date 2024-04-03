@@ -23,6 +23,8 @@ jobs:
       node-version: ${{ needs.context.outputs.node-version }}
       pnpm-version: ${{ needs.context.outputs.pnpm-version }}
       version: ${{ needs.context.outputs.version }}
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   release:
     if: needs.context.outputs.environment == 'production'
     runs-on: ubuntu-latest
@@ -42,7 +44,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: package
-          path: lib
       - name: install latest npm
         run: |
           npm install -g npm
@@ -51,28 +52,28 @@ jobs:
       #   run: |
       #     cat << EOF > "$HOME/.npmrc"
       #       //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
-      #       @escapace:registry=https://npm.pkg.github.com
+      #       @escapace:registry=https://npm.pkg.github.com/
       #       provenance=true
       #       always-auth=true
       #     EOF
       #
       #     while read -d '' -r file; do
       #       npm publish --provenance --access public "${file}"
-      #     done < <(find "./lib" -type f -name '*.tgz' -print0 2>/dev/null)
+      #     done < <(find "." -type f -name '*.tgz' -not -path '**/node_modules/**' -not -name 'escapace-satie-container-*' -not -name 'satie-*' -print0 2>/dev/null)
       #   env:
       #     NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: publish to npmjs
         run: |
           cat << EOF > "$HOME/.npmrc"
             //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
-            @escapace:registry=https://registry.npmjs.org
+            @escapace:registry=https://registry.npmjs.org/
             provenance=true
             always-auth=true
           EOF
 
           while read -d '' -r file; do
             npm publish --provenance --access public "${file}"
-          done < <(find "./lib" -type f -name '*.tgz' -print0 2>/dev/null)
+          done < <(find "." -type f -name '*.tgz' -not -path '**/node_modules/**' -not -name 'cassiopeia-monorepo-' -print0 2>/dev/null)
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: checkout

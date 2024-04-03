@@ -82,7 +82,7 @@ function* createVariableIterator(
 
     if (cssText !== undefined) {
       for (const match of cssText.matchAll(REGEX)) {
-        const cancelled = yield match as [string, string, string]
+        const cancelled = yield match as unknown as [string, string, string]
 
         if (cancelled) {
           return
@@ -103,7 +103,7 @@ function* createVariableIterator(
       for (const cssRule of cssStyleSheet.cssRules) {
         if (isSupportedCSSRule(cssRule)) {
           for (const match of cssRule.cssText.matchAll(REGEX)) {
-            const cancelled = yield match as [string, string, string]
+            const cancelled = yield match as unknown as [string, string, string]
 
             if (cancelled) {
               return

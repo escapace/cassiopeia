@@ -6,7 +6,7 @@ import { Variables } from './types'
 export function* fromStrings(strings: string[]): Variables {
   for (const string of strings) {
     for (const match of string.matchAll(REGEX)) {
-      const cancelled = yield match as [string, string, string]
+      const cancelled = yield match as unknown as [string, string, string]
 
       if (cancelled) {
         return
