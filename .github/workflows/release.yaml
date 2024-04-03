@@ -73,7 +73,7 @@ jobs:
 
           while read -d '' -r file; do
             npm publish --provenance --access public "${file}"
-          done < <(find "." -type f -name '*.tgz' -not -path '**/node_modules/**' -not -name 'cassiopeia-monorepo-' -print0 2>/dev/null)
+          done < <(find "." -type f -name '*.tgz' -not -path '**/node_modules/**' -not -name 'cassiopeia-monorepo-*' -print0 2>/dev/null)
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: checkout
