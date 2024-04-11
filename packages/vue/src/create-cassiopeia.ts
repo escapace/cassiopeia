@@ -26,7 +26,7 @@ const createCassiopeiaScope = (options: Options): Cassiopeia => {
     }
   }
 
-  const sets: Set<Set<string>> = new Set()
+  const sets = new Set<Set<string>>()
 
   const createVariables = () => createVariableIterator(sets)
 

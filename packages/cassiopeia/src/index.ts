@@ -23,8 +23,10 @@ import { append } from './utilities/append'
 
 export function createCassiopeia(options: Options): Cassiopeia {
   const rate =
-    Number.isInteger(options.rate) && (options.rate as number) > 0
-      ? (options.rate as number)
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    Number.isInteger(options.rate) && options.rate! > 0
+      ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        options.rate!
       : 8
 
   const store: Store = {

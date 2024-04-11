@@ -6,7 +6,7 @@ const isSameDomain = (styleSheet: CSSStyleSheet): boolean => {
     return true
   }
 
-  return styleSheet.href.indexOf(window.location.origin) === 0
+  return styleSheet.href.startsWith(window.location.origin)
 }
 
 const isStylesheet = (node: Node) =>

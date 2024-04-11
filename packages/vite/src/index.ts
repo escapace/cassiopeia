@@ -83,9 +83,7 @@ const createProdPlugin = (): Plugin[] => {
 
           const { filename, query } = parseVueRequest(id)
 
-          const include = /\.vue$/
-
-          if (include.test(filename) && query.vue !== true) {
+          if (filename.endsWith('.vue') && query.vue !== true) {
             const source = await readFile(filename, 'utf8')
 
             const parseResult = parse(source)
