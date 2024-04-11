@@ -4,7 +4,7 @@ type RecordsValue = Iterator | undefined
 
 export const cacheIterators = (values: Iterators) => {
   const records: Record<string, RecordsValue> = {}
-  const cache: Map<string, Iterator | undefined> = new Map()
+  const cache = new Map<string, Iterator | undefined>()
 
   for (const key of values.keys()) {
     Object.defineProperty(records, key, {
