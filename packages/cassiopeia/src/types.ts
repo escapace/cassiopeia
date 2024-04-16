@@ -13,13 +13,13 @@ export const enum TypeState {
 }
 
 export interface StyleSheetPartial {
+  [key: string]: number | string | undefined
   content: string
-  [key: string]: string | number | undefined
 }
 
 export interface StyleSheet extends StyleSheetPartial {
-  name: string
   key: number
+  name: string
 }
 
 export type Iterator = Generator<
@@ -37,7 +37,7 @@ export type Variables = Generator<
   true | undefined
 >
 
-export type MatcherReturn = undefined | StyleSheet[]
+export type MatcherReturn = StyleSheet[] | undefined
 
 export type Matcher = Generator<undefined, MatcherReturn, true | undefined>
 
@@ -58,14 +58,14 @@ export interface Options {
 }
 
 export interface ActionUpdatePlugin {
-  type: TypeAction.UpdatePlugin
   isAsync: boolean
+  type: TypeAction.UpdatePlugin
 }
 
 export interface ActionUpdateSource {
-  type: TypeAction.UpdateSource
   createVariables?: () => Variables
   isAsync: boolean
+  type: TypeAction.UpdateSource
 }
 
 export type Action = ActionUpdatePlugin | ActionUpdateSource
@@ -74,12 +74,12 @@ export type Unsubscribe = () => void
 export type Subscription = (stylesheets: StyleSheet[]) => void
 
 export interface Store extends Required<Pick<Options, 'rate'>> {
-  log: Action[]
   cache: Cache
   iterators: Iterators
+  log: Action[]
   matcher?: Matcher
-  subscriptions: Set<Subscription>
   state: TypeState
+  subscriptions: Set<Subscription>
 }
 
 export interface CassiopeiaInstance {

@@ -43,8 +43,8 @@ export function createCassiopeia(options: Options): Cassiopeia {
     append(
       store.log,
       {
-        type: TypeAction.UpdatePlugin,
-        isAsync
+        isAsync,
+        type: TypeAction.UpdatePlugin
       },
       (value) => value.type === TypeAction.UpdatePlugin
     )
@@ -59,9 +59,9 @@ export function createCassiopeia(options: Options): Cassiopeia {
     append(
       store.log,
       {
-        type: TypeAction.UpdateSource,
+        createVariables,
         isAsync,
-        createVariables
+        type: TypeAction.UpdateSource
       },
       (value) => value.type === TypeAction.UpdateSource
     )
@@ -83,8 +83,8 @@ export function createCassiopeia(options: Options): Cassiopeia {
 
   return {
     [STORE]: store,
-    update,
-    subscribe
+    subscribe,
+    update
   }
 }
 
@@ -104,20 +104,20 @@ export const renderToString = <T extends CassiopeiaInstance>(
   return cursor.value ?? []
 }
 
-export { REGEX, STORE, PLUGIN }
+export { PLUGIN, REGEX, STORE }
 export type {
   Cassiopeia,
+  CassiopeiaInstance,
   Iterator,
   Iterators,
   Options,
   Plugin,
-  CassiopeiaInstance,
   Store,
   StyleSheet,
   StyleSheetPartial,
-  UpdateSource,
-  UpdatePlugin,
   Subscription,
   Unsubscribe,
+  UpdatePlugin,
+  UpdateSource,
   Variables
 }

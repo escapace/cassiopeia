@@ -5,11 +5,11 @@ export const append = <T extends Action>(
   value: T,
   predicate: (value: Action) => boolean
 ) => {
-  const i = log.findIndex(predicate)
+  const index = log.findIndex(predicate)
 
-  if (i === -1) {
+  if (index === -1) {
     log.push(value)
   } else {
-    log[i] = value
+    log[index] = value
   }
 }

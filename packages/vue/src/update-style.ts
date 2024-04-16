@@ -4,10 +4,10 @@ import { REGEX } from 'cassiopeia'
 export const updateStyle = (
   __vite__id: string,
   __vite__css: string,
-  onDispose: (cb: () => void) => void,
+  onDispose: (callback: () => void) => void,
   index = 0
 ) => {
-  if (typeof window.__CASSIOPEIA_VUE__ === 'undefined') {
+  if (window.__CASSIOPEIA_VUE__ === undefined) {
     // 3 seconds
     if (index === 30) {
       console.warn(`[cassiopeia] update failed for '${__vite__id}'`)

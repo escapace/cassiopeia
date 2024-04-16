@@ -2,9 +2,9 @@
 import { parseVueRequest } from '@vitejs/plugin-vue'
 import { SFCStyleBlock, parse } from '@vue/compiler-sfc'
 import { REGEX } from 'cassiopeia'
-import { readFile } from 'fs/promises'
+import { readFile } from 'node:fs/promises'
 import MagicString from 'magic-string'
-import path from 'path'
+import path from 'node:path'
 import type { Plugin, ResolvedConfig } from 'vite'
 
 declare module '@vitejs/plugin-vue' {
@@ -14,9 +14,9 @@ declare module '@vitejs/plugin-vue' {
 }
 
 interface State {
+  devToolsEnabled: boolean
   isDevelopment: boolean
   sourceMap: boolean
-  devToolsEnabled: boolean
 }
 
 interface StateProduction extends State {
@@ -35,12 +35,12 @@ const configResolved = (config: ResolvedConfig, state: State) => {
 }
 
 const initialState: State = {
+  devToolsEnabled: false,
   isDevelopment: false,
-  sourceMap: false,
-  devToolsEnabled: false
+  sourceMap: false
 }
 
-const createProdPlugin = (): Plugin[] => {
+const createProductionPlugin = (): Plugin[] => {
   const state: StateProduction = {
     ...initialState,
     variables: new Map<string, Set<string>>()
@@ -48,13 +48,11 @@ const createProdPlugin = (): Plugin[] => {
 
   return [
     {
-      name: '@cassiopeia/vite/production',
-      configResolved: (config) => configResolved(config, state),
       buildStart() {
         state.variables.clear()
       },
+      configResolved: (config) => configResolved(config, state),
       load: {
-        order: 'pre',
         async handler(id) {
           if (state.isDevelopment) {
             return
@@ -71,14 +69,12 @@ const createProdPlugin = (): Plugin[] => {
           }
 
           const getStyleContent = async (value: SFCStyleBlock) => {
-            if (value.src === undefined) {
-              return value.content
-            } else {
-              return await readFile(
-                path.resolve(path.dirname(filename), value.src),
-                'utf8'
-              )
-            }
+            return value.src === undefined
+              ? value.content
+              : await readFile(
+                  path.resolve(path.dirname(filename), value.src),
+                  'utf8'
+                )
           }
 
           const { filename, query } = parseVueRequest(id)
@@ -94,10 +90,11 @@ const createProdPlugin = (): Plugin[] => {
               updateStateVariables(content)
             }
           }
-        }
+        },
+        order: 'pre'
       },
+      name: '@cassiopeia/vite/production',
       transform: {
-        order: 'post',
         handler(source, id) {
           if (state.isDevelopment) {
             return
@@ -142,37 +139,36 @@ const createProdPlugin = (): Plugin[] => {
                 ].join('\n')
               )
 
-              if (state.sourceMap) {
-                return {
-                  code: magic.toString(),
-                  map: magic.generateMap()
-                }
-              } else {
-                return magic.toString()
-              }
+              return state.sourceMap
+                ? {
+                    code: magic.toString(),
+                    map: magic.generateMap()
+                  }
+                : magic.toString()
             }
           }
 
-          return undefined
-        }
+          return
+        },
+        order: 'post'
       }
     }
   ]
 }
 
-const createDevPlugin = (): Plugin => {
+const createDevelopmentPlugin = (): Plugin => {
   const state: State = { ...initialState }
 
   return {
-    name: '@cassiopeia/vite/development',
-    enforce: 'post',
     configResolved: (config) => configResolved(config, state),
+    enforce: 'post',
+    name: '@cassiopeia/vite/development',
     transform: {
-      handler(source, id, opts) {
+      handler(source, id, options) {
         if (
           !state.isDevelopment ||
           !state.devToolsEnabled ||
-          opts?.ssr === true
+          options?.ssr === true
         ) {
           return
         }
@@ -190,22 +186,20 @@ const createDevPlugin = (): Plugin => {
             `\n__cassiopeiaUpdateStyle(__vite__id, __vite__css, import.meta.hot.dispose.bind(import.meta.hot))`
           )
 
-          if (state.sourceMap) {
-            return {
-              code: magic.toString(),
-              map: magic.generateMap()
-            }
-          } else {
-            return magic.toString()
-          }
+          return state.sourceMap
+            ? {
+                code: magic.toString(),
+                map: magic.generateMap()
+              }
+            : magic.toString()
         }
 
-        return undefined
+        return
       }
     }
   }
 }
 
 export const cassiopeia: () => Plugin[] = () => {
-  return [createDevPlugin(), ...createProdPlugin()]
+  return [createDevelopmentPlugin(), ...createProductionPlugin()]
 }

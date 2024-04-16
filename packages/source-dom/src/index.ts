@@ -148,13 +148,13 @@ export const createSourceDOM = (
     void cassiopeia.update(createVariables)
 
     mutationObserver.observe(root, {
-      attributes: true,
+      attributeFilter: ['style'],
       // characterData: true,
       // characterDataOldValue: false,
       attributeOldValue: false,
-      attributeFilter: ['style'],
-      subtree: true,
-      childList: true
+      attributes: true,
+      childList: true,
+      subtree: true
     })
   }
 
@@ -169,8 +169,8 @@ export const createSourceDOM = (
   }
 
   return {
+    isActive: () => isActive,
     start,
-    stop,
-    isActive: () => isActive
+    stop
   }
 }
