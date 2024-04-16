@@ -33,8 +33,8 @@ export const cacheIterators = (values: Iterators) => {
   }
 
   return {
+    entries: () => cache.entries(),
     get: (key: string): RecordsValue => records[key],
-    values: () => cache.values(),
-    entries: () => cache.entries()
+    values: () => cache.values()
   }
 }

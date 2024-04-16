@@ -18,21 +18,19 @@ async function reducer(
       if (matcher === store.matcher && store.state === TypeState.Running) {
         iteration++
 
-        if (isAsync) {
-          iteratorResult = await new Promise<
-            IteratorResult<undefined, MatcherReturn>
-          >((resolve) => {
-            if (iteration % store.rate === 0) {
-              setTimeout(() => {
-                resolve(matcher.next())
-              }, 0)
-            } else {
-              resolve(matcher.next())
-            }
-          })
-        } else {
-          iteratorResult = matcher.next()
-        }
+        iteratorResult = isAsync
+          ? await new Promise<IteratorResult<undefined, MatcherReturn>>(
+              (resolve) => {
+                if (iteration % store.rate === 0) {
+                  setTimeout(() => {
+                    resolve(matcher.next())
+                  }, 0)
+                } else {
+                  resolve(matcher.next())
+                }
+              }
+            )
+          : matcher.next()
 
         if (iteratorResult.done === true) {
           const { value } = iteratorResult
@@ -78,15 +76,13 @@ export const scheduleUpdate = async (store: Store): Promise<boolean> => {
     const log = [...store.log]
     const isAsync = !log.some((value) => !value.isAsync)
 
-    if (isAsync) {
-      return await new Promise<boolean>((resolve) => {
-        ;(__BROWSER__ ? requestAnimationFrame : setTimeout)(() => {
-          void reducer(isAsync, log, store).then(resolve)
+    return await (isAsync
+      ? new Promise<boolean>((resolve) => {
+          ;(__BROWSER__ ? requestAnimationFrame : setTimeout)(() => {
+            void reducer(isAsync, log, store).then(resolve)
+          })
         })
-      })
-    } else {
-      return await reducer(isAsync, log, store)
-    }
+      : reducer(isAsync, log, store))
   }
 
   return false

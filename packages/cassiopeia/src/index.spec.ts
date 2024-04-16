@@ -18,12 +18,12 @@ export function* fromStrings(strings: string[]): Variables {
 function* createIterator(name: string, state: State): Iterator {
   const strings: string[] = []
 
-  let cursor: true | string
+  let cursor: string | true
 
   while ((cursor = yield) !== true) {
     state.i++
 
-    const string = cursor.match(/^([a-zA-Z-0-9])+$/i)
+    const string = cursor.match(/^([\da-z-])+$/i)
 
     if (string === null) {
       continue
@@ -55,12 +55,12 @@ const createPlugin = () => {
     }
   }
 
-  return { state, plugin }
+  return { plugin, state }
 }
 
 describe('./src/server.spec.ts', () => {
   it('.', () => {
-    const { state, plugin } = createPlugin()
+    const { plugin, state } = createPlugin()
     const instance = createCassiopeia({
       plugins: [plugin]
     })
@@ -74,11 +74,11 @@ describe('./src/server.spec.ts', () => {
     void instance.update(() => fromStrings(['var(---abc-hello)']))
 
     assert.deepEqual(renderToString(instance), [
-      { content: ':root { ---abc-hello: 2; }', name: 'abc', key: 0 }
+      { content: ':root { ---abc-hello: 2; }', key: 0, name: 'abc' }
     ])
 
     assert.deepEqual(renderToString(instance), [
-      { content: ':root { ---abc-hello: 3; }', name: 'abc', key: 0 }
+      { content: ':root { ---abc-hello: 3; }', key: 0, name: 'abc' }
     ])
 
     // assert.equal(state.i, 0)

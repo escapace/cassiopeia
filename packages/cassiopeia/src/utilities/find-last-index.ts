@@ -1,6 +1,6 @@
 export function findLastIndex<T>(
   array: T[],
-  predicate: (value: T, index: number, obj: T[]) => boolean
+  predicate: (value: T, index: number, object: T[]) => boolean
 ): number {
   let l = array.length
   // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions

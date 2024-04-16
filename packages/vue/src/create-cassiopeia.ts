@@ -21,7 +21,7 @@ function* createVariableIterator(sets: Set<Set<string>>): Variables {
 
 const createCassiopeiaScope = (options: Options): Cassiopeia => {
   if (__BROWSER__) {
-    if (typeof window.__CASSIOPEIA_VUE__ !== 'undefined') {
+    if (window.__CASSIOPEIA_VUE__ !== undefined) {
       return window.__CASSIOPEIA_VUE__
     }
   }
@@ -75,10 +75,10 @@ const createCassiopeiaScope = (options: Options): Cassiopeia => {
   const subscribe = cassiopeia.subscribe
 
   const cassiopeiaScope: Cassiopeia = {
-    [STORE]: cassiopeia[STORE],
     createScope,
-    update,
-    subscribe
+    [STORE]: cassiopeia[STORE],
+    subscribe,
+    update
   }
 
   if (__BROWSER__) {
@@ -92,11 +92,11 @@ export const createCassiopeia = (options: Options): CassiopeiaPlugin => {
   const scope = createCassiopeiaScope(options)
 
   return {
-    [STORE]: scope[STORE],
-    update: scope.update,
-    subscribe: scope.subscribe,
     install: (app: App) => {
       app.provide(CASSIOPEIA_VUE_SYMBOL, scope)
-    }
+    },
+    [STORE]: scope[STORE],
+    subscribe: scope.subscribe,
+    update: scope.update
   }
 }
