@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/method-signature-style */
 
-import {
+import type {
   STORE,
-  type Cassiopeia as _Cassiopeia,
-  type CassiopeiaInstance,
-  type Options as CassiopeiaOptions
+  Cassiopeia as _Cassiopeia,
+  CassiopeiaInstance,
+  Options as CassiopeiaOptions
 } from 'cassiopeia'
-import { type Plugin } from 'vue'
+import type { Plugin } from 'vue'
 
 export interface CassiopeiaScope {
   add(variable: string): string

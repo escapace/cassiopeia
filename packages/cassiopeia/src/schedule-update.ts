@@ -1,4 +1,4 @@
-import { Action, MatcherReturn, Store, TypeState } from './types'
+import { type Action, type MatcherReturn, type Store, TypeState } from './types'
 
 import { createMatcher } from './create-matcher'
 import { filter } from './utilities/filter'
@@ -20,6 +20,7 @@ async function reducer(
 
         iteratorResult = isAsync
           ? await new Promise<IteratorResult<undefined, MatcherReturn>>(
+              // eslint-disable-next-line @typescript-eslint/no-loop-func
               (resolve) => {
                 if (iteration % store.rate === 0) {
                   setTimeout(() => {

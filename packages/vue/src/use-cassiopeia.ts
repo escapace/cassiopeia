@@ -1,6 +1,6 @@
 import { inject, onScopeDispose, getCurrentScope } from 'vue'
 import { CASSIOPEIA_VUE_SYMBOL } from './constants'
-import { UseCassiopeia } from './types'
+import type { UseCassiopeia } from './types'
 
 export const useCassiopeia = (): UseCassiopeia => {
   const cassiopeia = inject(

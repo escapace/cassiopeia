@@ -1,10 +1,10 @@
 import { cacheIterators } from './cache-iterators'
 import {
-  Action,
-  ActionUpdateSource,
-  Matcher,
-  Store,
-  StyleSheet,
+  type Action,
+  type ActionUpdateSource,
+  type Matcher,
+  type Store,
+  type StyleSheet,
   TypeAction
 } from './types'
 import { findLastIndex } from './utilities/find-last-index'

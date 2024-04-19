@@ -2,22 +2,22 @@ import { PLUGIN, REGEX, STORE } from './constants'
 import { createMatcher } from './create-matcher'
 import { scheduleUpdate } from './schedule-update'
 import {
-  Cassiopeia,
-  CassiopeiaInstance,
-  Iterator,
-  Iterators,
-  Options,
-  Plugin,
-  Store,
-  StyleSheet,
-  StyleSheetPartial,
-  Subscription,
+  type Cassiopeia,
+  type CassiopeiaInstance,
+  type Iterator,
+  type Iterators,
+  type Options,
+  type Plugin,
+  type Store,
+  type StyleSheet,
+  type StyleSheetPartial,
+  type Subscription,
   TypeAction,
   TypeState,
-  Unsubscribe,
-  UpdatePlugin,
-  UpdateSource,
-  Variables
+  type Unsubscribe,
+  type UpdatePlugin,
+  type UpdateSource,
+  type Variables
 } from './types'
 import { append } from './utilities/append'
 

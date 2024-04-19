@@ -1,7 +1,12 @@
 import { assert } from 'chai'
 import { PLUGIN, REGEX } from './constants'
-import { createCassiopeia, Iterator, Plugin, renderToString } from './index'
-import { Variables } from './types'
+import {
+  createCassiopeia,
+  type Iterator,
+  type Plugin,
+  renderToString
+} from './index'
+import type { Variables } from './types'
 
 export function* fromStrings(strings: string[]): Variables {
   for (const string of strings) {

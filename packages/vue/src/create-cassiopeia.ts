@@ -1,7 +1,7 @@
 import { createCassiopeia as cas, STORE, type Variables } from 'cassiopeia'
-import { type App } from 'vue'
+import type { App } from 'vue'
 import { CASSIOPEIA_VUE_SYMBOL, REGEX } from './constants'
-import { Cassiopeia, CassiopeiaPlugin, Options } from './types'
+import type { Cassiopeia, CassiopeiaPlugin, Options } from './types'
 
 function* createVariableIterator(sets: Set<Set<string>>): Variables {
   for (const set of sets) {
