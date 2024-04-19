@@ -1,4 +1,4 @@
-import { PLUGIN, STORE } from './constants'
+import type { PLUGIN, STORE } from './constants'
 
 export const enum TypeAction {
   UpdatePlugin,

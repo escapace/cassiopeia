@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { parseVueRequest } from '@vitejs/plugin-vue'
-import { SFCStyleBlock, parse } from '@vue/compiler-sfc'
+import { type SFCStyleBlock, parse } from '@vue/compiler-sfc'
 import { REGEX } from 'cassiopeia'
 import { readFile } from 'node:fs/promises'
 import MagicString from 'magic-string'

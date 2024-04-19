@@ -1,4 +1,4 @@
-import { Iterator, Iterators } from './types'
+import type { Iterator, Iterators } from './types'
 
 type RecordsValue = Iterator | undefined
 
