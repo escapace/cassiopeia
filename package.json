@@ -20,7 +20,7 @@
     "lint-staged": "15.2.2",
     "lodash-es": "4.17.21",
     "prettier": "3.2.5",
-    "prettier-config-escapace": "1.0.6",
+    "prettier-config-escapace": "1.2.0",
     "semver": "7.6.0",
     "syncpack": "12.3.0",
     "typescript": "5.4.3"
