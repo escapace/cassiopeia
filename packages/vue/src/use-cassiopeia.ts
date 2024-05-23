@@ -1,11 +1,11 @@
-import { inject, onScopeDispose, getCurrentScope } from 'vue'
+import { getCurrentScope, inject, onScopeDispose } from 'vue'
 import { CASSIOPEIA_VUE_SYMBOL } from './constants'
 import type { UseCassiopeia } from './types'
 
 export const useCassiopeia = (): UseCassiopeia => {
   const cassiopeia = inject(
     CASSIOPEIA_VUE_SYMBOL,
-    __BROWSER__ ? window.__CASSIOPEIA_VUE__ : undefined
+    __PLATFORM__ === 'browser' ? window.__CASSIOPEIA_VUE__ : undefined,
   )
 
   if (cassiopeia === undefined) {
@@ -19,16 +19,13 @@ export const useCassiopeia = (): UseCassiopeia => {
   }
 
   const update: (typeof cassiopeia)['update'] = async (
-    isAsync?: boolean | undefined
-  ): Promise<boolean> => {
+    isAsync?: boolean | undefined,
+  ): Promise<boolean> =>
     // we update only in browser, on SSR renderToString performs the update.
-    return await (__BROWSER__
-      ? cassiopeia.update(isAsync)
-      : Promise.resolve(false))
-  }
+    await (__PLATFORM__ === 'browser' ? cassiopeia.update(isAsync) : Promise.resolve(false))
 
   return {
     update,
-    ...scope
+    ...scope,
   }
 }

@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/method-signature-style */
+/* eslint-disable typescript/method-signature-style */
 
 import type {
   STORE,
   Cassiopeia as _Cassiopeia,
   CassiopeiaInstance,
-  Options as CassiopeiaOptions
+  Options as CassiopeiaOptions,
 } from 'cassiopeia'
 import type { Plugin } from 'vue'
 

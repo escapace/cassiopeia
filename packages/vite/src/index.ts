@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable typescript/no-non-null-assertion */
 import { parseVueRequest } from '@vitejs/plugin-vue'
 import { type SFCStyleBlock, parse } from '@vue/compiler-sfc'
 import { REGEX } from 'cassiopeia'
@@ -27,23 +27,23 @@ const configResolved = (config: ResolvedConfig, state: State) => {
   // https://github.com/vitejs/vite-plugin-vue/blob/main/packages/plugin-vue/src/index.ts#L146
   state.isDevelopment = config.mode === 'development'
   state.sourceMap =
-    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+    // eslint-disable-next-line typescript/strict-boolean-expressions
     config.command === 'build' ? !!config.build.sourcemap : true
   state.devToolsEnabled =
-    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+    // eslint-disable-next-line typescript/strict-boolean-expressions
     !!config.define!.__VUE_PROD_DEVTOOLS__ || state.isDevelopment
 }
 
 const initialState: State = {
   devToolsEnabled: false,
   isDevelopment: false,
-  sourceMap: false
+  sourceMap: false,
 }
 
 const createProductionPlugin = (): Plugin[] => {
   const state: StateProduction = {
     ...initialState,
-    variables: new Map<string, Set<string>>()
+    variables: new Map<string, Set<string>>(),
   }
 
   return [
@@ -60,22 +60,17 @@ const createProductionPlugin = (): Plugin[] => {
           const updateStateVariables = (styles: string) => {
             const set = state.variables.has(filename)
               ? state.variables.get(filename)!
-              : (state.variables.set(filename, new Set()),
-                state.variables.get(filename)!)
+              : (state.variables.set(filename, new Set()), state.variables.get(filename)!)
 
             for (const match of styles.matchAll(REGEX)) {
               set.add(['--', ...match.slice(1, 3)].join('-'))
             }
           }
 
-          const getStyleContent = async (value: SFCStyleBlock) => {
-            return value.src === undefined
+          const getStyleContent = async (value: SFCStyleBlock) =>
+            value.src === undefined
               ? value.content
-              : await readFile(
-                  path.resolve(path.dirname(filename), value.src),
-                  'utf8'
-                )
-          }
+              : await readFile(path.resolve(path.dirname(filename), value.src), 'utf8')
 
           const { filename, query } = parseVueRequest(id)
 
@@ -91,7 +86,7 @@ const createProductionPlugin = (): Plugin[] => {
             }
           }
         },
-        order: 'pre'
+        order: 'pre',
       },
       name: '@cassiopeia/vite/production',
       transform: {
@@ -121,9 +116,7 @@ const createProductionPlugin = (): Plugin[] => {
 
               const magic = new MagicString(source)
 
-              magic.prepend(
-                `import { useCassiopeia as __useCassiopeia } from "@cassiopeia/vue"\n`
-              )
+              magic.prepend(`import { useCassiopeia as __useCassiopeia } from "@cassiopeia/vue"\n`)
 
               const variables = Array.from(state.variables.get(filename)!)
                 .map((value) => `"${value}"`)
@@ -135,14 +128,14 @@ const createProductionPlugin = (): Plugin[] => {
                   '',
                   `    const __cassiopeia = __useCassiopeia()`,
                   `    __cassiopeia.add([${variables}])`,
-                  `    __cassiopeia.update(false)`
-                ].join('\n')
+                  `    __cassiopeia.update(false)`,
+                ].join('\n'),
               )
 
               return state.sourceMap
                 ? {
                     code: magic.toString(),
-                    map: magic.generateMap()
+                    map: magic.generateMap(),
                   }
                 : magic.toString()
             }
@@ -150,9 +143,9 @@ const createProductionPlugin = (): Plugin[] => {
 
           return
         },
-        order: 'post'
-      }
-    }
+        order: 'post',
+      },
+    },
   ]
 }
 
@@ -165,11 +158,7 @@ const createDevelopmentPlugin = (): Plugin => {
     name: '@cassiopeia/vite/development',
     transform: {
       handler(source, id, options) {
-        if (
-          !state.isDevelopment ||
-          !state.devToolsEnabled ||
-          options?.ssr === true
-        ) {
+        if (!state.isDevelopment || !state.devToolsEnabled || options?.ssr === true) {
           return
         }
 
@@ -179,27 +168,28 @@ const createDevelopmentPlugin = (): Plugin => {
           const magic = new MagicString(source)
 
           magic.prepend(
-            `import { updateStyle as __cassiopeiaUpdateStyle } from "@cassiopeia/vue"\n`
+            `import { updateStyle as __cassiopeiaUpdateStyle } from "@cassiopeia/vue"\n`,
           )
 
           magic.append(
-            `\n__cassiopeiaUpdateStyle(__vite__id, __vite__css, import.meta.hot.dispose.bind(import.meta.hot))`
+            `\n__cassiopeiaUpdateStyle(__vite__id, __vite__css, import.meta.hot.dispose.bind(import.meta.hot))`,
           )
 
           return state.sourceMap
             ? {
                 code: magic.toString(),
-                map: magic.generateMap()
+                map: magic.generateMap(),
               }
             : magic.toString()
         }
 
         return
-      }
-    }
+      },
+    },
   }
 }
 
-export const cassiopeia: () => Plugin[] = () => {
-  return [createDevelopmentPlugin(), ...createProductionPlugin()]
-}
+export const cassiopeia: () => Plugin[] = () => [
+  createDevelopmentPlugin(),
+  ...createProductionPlugin(),
+]

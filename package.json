@@ -2,52 +2,51 @@
   "name": "@cassiopeia/monorepo",
   "description": "",
   "version": "0.0.0",
-  "author": "",
+  "author": {
+    "name": "escapace",
+    "email": "opensource@escapace.com"
+  },
+  "bugs": "https://github.com/escapace/cassiopeia/issues",
   "devDependencies": {
     "@commitlint/cli": "19.2.1",
     "@commitlint/config-conventional": "19.1.0",
-    "@escapace/pnpm-pack": "0.2.0",
+    "@escapace/pnpm-pack": "0.4.1",
     "@ls-lint/ls-lint": "2.2.3",
-    "esbuild": "0.20.2",
-    "eslint": "9.0.0",
-    "eslint-config-escapace": "4.1.6",
-    "execa": "8.0.1",
-    "fast-glob": "3.3.2",
-    "fs-extra": "11.2.0",
-    "globals": "15.0.0",
-    "husky": "9.0.11",
-    "is-ci": "3.0.1",
-    "lint-staged": "15.2.2",
-    "lodash-es": "4.17.21",
+    "eslint": "9.3.0",
+    "eslint-config-escapace": "5.1.1",
+    "knip": "5.13.0",
+    "lefthook": "1.6.12",
     "prettier": "3.2.5",
-    "prettier-config-escapace": "1.2.0",
-    "semver": "7.6.0",
-    "syncpack": "12.3.0",
-    "typescript": "5.4.3"
+    "prettier-config-escapace": "1.2.1",
+    "syncpack": "12.3.0"
   },
   "engines": {
-    "node": ">=20.12.0",
-    "pnpm": ">=8.15.6"
+    "pnpm": ">=9.0.6"
   },
-  "files": [
-    "pnpm-lock.yaml",
-    "pnpm-workspace.yaml"
-  ],
+  "files": [],
+  "homepage": "https://github.com/escapace/cassiopeia#readme",
   "keywords": [],
   "license": "MPL-2.0",
-  "pnpm": {
-    "overrides": {
-      "esquery": "1.4.0"
-    }
-  },
   "private": true,
+  "repository": "escapace/cassiopeia",
   "scripts": {
-    "build": "pnpm run -r --filter './packages/*' build",
-    "lint": "ls-lint && pnpm run -r --filter './packages/*' lint",
+    "build": "pnpm run workspaces:build",
+    "format": "syncpack format --source package.json && eslint --ignore-pattern packages --no-warn-ignored --fix && prettier -uw !packages . && pnpm run workspaces:format",
+    "lint": "ls-lint --config .ls-lint.yaml && knip && eslint --ignore-pattern packages && pnpm run workspaces:lint",
+    "ls-lint": "ls-lint --config .ls-lint.yaml && pnpm run workspaces:ls-lint",
     "pack": "pnpm-pack workspace",
-    "prepare": "is-ci || husky",
-    "test": "pnpm run -r --filter './packages/*' test",
-    "typecheck": "pnpm run -r --filter './packages/*' typecheck",
-    "update": "pnpm -w -r --filter './packages/*' --filter '.' exec ncu -u && pnpm exec syncpack fix-mismatches && pnpm exec syncpack set-semver-ranges"
-  }
+    "prepare": "lefthook install",
+    "syncpack": "syncpack fix-mismatches && syncpack-set-semver-ranges && syncpack format",
+    "test": "pnpm run workspaces:test",
+    "typecheck": "pnpm run workspaces:typecheck",
+    "workspaces:build": "pnpm run --if-present --workspace-concurrency=4 -r --filter '*' build",
+    "workspaces:format": "pnpm run --if-present --workspace-concurrency=4 -r --filter '*' format",
+    "workspaces:lint": "pnpm run --if-present --workspace-concurrency=4 -r --filter '*' lint",
+    "workspaces:ls-lint": "pnpm run --if-present --workspace-concurrency=4 -r --filter '*' ls-lint",
+    "workspaces:test": "pnpm run --if-present --workspace-concurrency=4 -r --filter '*' test",
+    "workspaces:typecheck": "pnpm run --if-present --workspace-concurrency=4 -r --filter '*' typecheck",
+    "workspaces:update": "pnpm --workspace-concurrency=4 -w -r --filter '*' exec ncu -s -u && pnpm run syncpack"
+  },
+  "sideEffects": false,
+  "type": "module"
 }

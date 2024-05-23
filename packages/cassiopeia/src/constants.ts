@@ -14,6 +14,6 @@
  *
  * https://www.w3.org/TR/css-syntax-3/#ident-token-diagram
  */
-export const REGEX = /var\(---([\dA-Za-z]+)-([\dA-Za-z-]+)[),]/gm
+export const REGEX = /var\(---([\dA-Za-z]+)-([\dA-Za-z-]+)[),]/g
 export const STORE = Symbol.for('cassiopeia/store')
 export const PLUGIN = Symbol.for('cassiopeia/plugin')

@@ -4,12 +4,12 @@ export const createBrowserSubscription = (id?: string): Subscription => {
   const identifier = typeof id === 'string' ? `cassiopeia-${id}` : `cassiopeia`
 
   return (styles: StyleSheet[]) => {
-    const current = Array.from(
-      document.querySelectorAll(`head > [${identifier}]`)
-    ).map((element) => ({
-      element,
-      key: element.getAttribute(identifier)
-    }))
+    const current = Array.from(document.querySelectorAll(`head > [${identifier}]`)).map(
+      (element) => ({
+        element,
+        key: element.getAttribute(identifier),
+      }),
+    )
 
     styles.forEach((style) => {
       const key = `${style.name}-${style.key}`

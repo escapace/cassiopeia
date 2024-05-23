@@ -2,47 +2,59 @@
   "name": "@cassiopeia/source-dom",
   "description": "",
   "version": "0.0.0",
-  "author": "escapace <opensource@escapace.com>",
+  "author": {
+    "name": "escapace",
+    "email": "opensource@escapace.com"
+  },
   "bugs": "https://github.com/escapace/cassiopeia/issues",
   "devDependencies": {
-    "@types/chai": "4.3.14",
-    "@types/mocha": "10.0.6",
-    "@types/node": "20.12.3",
+    "@ls-lint/ls-lint": "2.2.3",
+    "@vitest/coverage-v8": "1.6.0",
     "cassiopeia": "workspace:*",
-    "chai": "5.1.0",
-    "lint-staged": "15.2.2",
-    "mocha": "10.4.0",
+    "eslint": "9.3.0",
+    "eslint-config-escapace": "5.1.1",
+    "esroll": "0.1.1",
     "prettier": "3.2.5",
-    "prettier-config-escapace": "1.2.0",
-    "typescript": "5.4.3"
+    "prettier-config-escapace": "1.2.1",
+    "syncpack": "12.3.0",
+    "tsx": "4.11.0",
+    "typescript": "5.4.3",
+    "vitest": "1.6.0"
+  },
+  "engines": {
+    "pnpm": ">=9.0.6"
   },
   "exports": {
     ".": {
       "types": "./lib/types/index.d.ts",
-      "import": "./lib/esm/index.mjs"
+      "import": "./lib/browser/index.js"
     }
   },
   "files": [
-    "lib/esm",
+    "lib/browser",
     "lib/types"
   ],
-  "homepage": "https://github.com/escapace/cassiopeia",
+  "homepage": "https://github.com/escapace/cassiopeia/tree/trunk/packages/source-dom#readme",
   "license": "MPL-2.0",
-  "module": "lib/esm/index.mjs",
+  "module": "./lib/browser/index.js",
   "peerDependencies": {
     "cassiopeia": "workspace:*"
   },
   "private": false,
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
   "repository": "escapace/cassiopeia",
   "scripts": {
-    "build": "node ../../scripts/build.mjs",
-    "lint": "eslint 'src/**/*.ts'",
+    "build": "tsx scripts/build.ts",
+    "format": "syncpack format --source package.json && eslint --no-warn-ignored --fix && prettier -uw .",
+    "lint": "ls-lint --config .ls-lint.yaml && eslint",
+    "ls-lint": "ls-lint --config .ls-lint.yaml",
+    "test": "vitest --no-watch --coverage",
     "typecheck": "tsc --noEmit"
   },
   "sideEffects": false,
   "type": "module",
-  "types": "lib/types/index.d.ts"
+  "types": "./lib/types/index.d.ts"
 }

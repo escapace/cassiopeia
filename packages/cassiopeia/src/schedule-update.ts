@@ -3,11 +3,7 @@ import { type Action, type MatcherReturn, type Store, TypeState } from './types'
 import { createMatcher } from './create-matcher'
 import { filter } from './utilities/filter'
 
-async function reducer(
-  isAsync: boolean,
-  log: Action[],
-  store: Store
-): Promise<boolean> {
+async function reducer(isAsync: boolean, log: Action[], store: Store): Promise<boolean> {
   if (store.state === TypeState.Scheduled) {
     store.state = TypeState.Running
     const matcher = (store.matcher = createMatcher(log, store))
@@ -20,7 +16,7 @@ async function reducer(
 
         iteratorResult = isAsync
           ? await new Promise<IteratorResult<undefined, MatcherReturn>>(
-              // eslint-disable-next-line @typescript-eslint/no-loop-func
+              // eslint-disable-next-line typescript/no-loop-func
               (resolve) => {
                 if (iteration % store.rate === 0) {
                   setTimeout(() => {
@@ -29,7 +25,7 @@ async function reducer(
                 } else {
                   resolve(matcher.next())
                 }
-              }
+              },
             )
           : matcher.next()
 
@@ -79,7 +75,7 @@ export const scheduleUpdate = async (store: Store): Promise<boolean> => {
 
     return await (isAsync
       ? new Promise<boolean>((resolve) => {
-          ;(__BROWSER__ ? requestAnimationFrame : setTimeout)(() => {
+          ;(__PLATFORM__ === 'browser' ? requestAnimationFrame : setTimeout)(() => {
             void reducer(isAsync, log, store).then(resolve)
           })
         })
