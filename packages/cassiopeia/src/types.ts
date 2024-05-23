@@ -2,14 +2,14 @@ import type { PLUGIN, STORE } from './constants'
 
 export const enum TypeAction {
   UpdatePlugin,
-  UpdateSource
+  UpdateSource,
 }
 
 export const enum TypeState {
   Locked,
   None,
   Scheduled,
-  Running
+  Running,
 }
 
 export interface StyleSheetPartial {
@@ -31,11 +31,7 @@ export type Iterators = Map<string, () => Iterator>
 
 export type Cache = Set<[string, string, string]>
 
-export type Variables = Generator<
-  [string, string, string],
-  void,
-  true | undefined
->
+export type Variables = Generator<[string, string, string], void, true | undefined>
 
 export type MatcherReturn = StyleSheet[] | undefined
 
@@ -45,7 +41,7 @@ export type UpdatePlugin = (isAsync?: boolean) => Promise<boolean>
 
 export type UpdateSource = (
   createVariables: (() => Variables) | undefined,
-  isAsync?: boolean
+  isAsync?: boolean,
 ) => Promise<boolean>
 
 export interface Plugin {
@@ -63,9 +59,9 @@ export interface ActionUpdatePlugin {
 }
 
 export interface ActionUpdateSource {
-  createVariables?: () => Variables
   isAsync: boolean
   type: TypeAction.UpdateSource
+  createVariables?: () => Variables
 }
 
 export type Action = ActionUpdatePlugin | ActionUpdateSource
@@ -77,9 +73,9 @@ export interface Store extends Required<Pick<Options, 'rate'>> {
   cache: Cache
   iterators: Iterators
   log: Action[]
-  matcher?: Matcher
   state: TypeState
   subscriptions: Set<Subscription>
+  matcher?: Matcher
 }
 
 export interface CassiopeiaInstance {

@@ -5,7 +5,7 @@ import {
   type Matcher,
   type Store,
   type StyleSheet,
-  TypeAction
+  TypeAction,
 } from './types'
 import { findLastIndex } from './utilities/find-last-index'
 
@@ -13,17 +13,11 @@ export function* createMatcher(log: Action[], store: Store): Matcher {
   const seen = new Set<string>()
 
   // check if log has source update
-  const sourceIndex = findLastIndex(
-    log,
-    (value) => value.type === TypeAction.UpdateSource
-  )
+  const sourceIndex = findLastIndex(log, (value) => value.type === TypeAction.UpdateSource)
 
   const createVariables =
-    sourceIndex === -1
-      ? undefined
-      : (log[sourceIndex] as ActionUpdateSource).createVariables
-  const variables =
-    createVariables === undefined ? undefined : createVariables()
+    sourceIndex === -1 ? undefined : (log[sourceIndex] as ActionUpdateSource).createVariables
+  const variables = createVariables === undefined ? undefined : createVariables()
 
   const hasVariables = variables !== undefined
 
@@ -85,9 +79,7 @@ export function* createMatcher(log: Action[], store: Store): Matcher {
 
       if (done === true && value !== undefined) {
         Array.isArray(value)
-          ? accumulator.push(
-              ...value.map((value) => ({ key: 0, ...value, name }))
-            )
+          ? accumulator.push(...value.map((value) => ({ key: 0, ...value, name })))
           : accumulator.push({ key: 0, ...value, name })
       }
     }

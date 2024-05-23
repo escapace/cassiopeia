@@ -20,7 +20,7 @@ function* createVariableIterator(sets: Set<Set<string>>): Variables {
 }
 
 const createCassiopeiaScope = (options: Options): Cassiopeia => {
-  if (__BROWSER__) {
+  if (__PLATFORM__ === 'browser') {
     if (window.__CASSIOPEIA_VUE__ !== undefined) {
       return window.__CASSIOPEIA_VUE__
     }
@@ -32,9 +32,7 @@ const createCassiopeiaScope = (options: Options): Cassiopeia => {
 
   const cassiopeia = cas({ ...options })
 
-  const update = async (isAsync?: boolean) => {
-    return await cassiopeia.update(createVariables, isAsync)
-  }
+  const update = async (isAsync?: boolean) => await cassiopeia.update(createVariables, isAsync)
 
   const createScope = () => {
     const set = new Set<string>()
@@ -60,7 +58,7 @@ const createCassiopeiaScope = (options: Options): Cassiopeia => {
       clear()
       sets.delete(set)
 
-      void update(__BROWSER__)
+      void update(__PLATFORM__ === 'browser')
     }
 
     const del = (value: string | string[]) => {
@@ -78,10 +76,10 @@ const createCassiopeiaScope = (options: Options): Cassiopeia => {
     createScope,
     [STORE]: cassiopeia[STORE],
     subscribe,
-    update
+    update,
   }
 
-  if (__BROWSER__) {
+  if (__PLATFORM__ === 'browser') {
     window.__CASSIOPEIA_VUE__ = cassiopeiaScope
   }
 
@@ -97,6 +95,6 @@ export const createCassiopeia = (options: Options): CassiopeiaPlugin => {
     },
     [STORE]: scope[STORE],
     subscribe: scope.subscribe,
-    update: scope.update
+    update: scope.update,
   }
 }

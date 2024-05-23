@@ -41,10 +41,7 @@ const isValidMutation = (mutation: MutationRecord) => {
 
     return true
   } else if (mutation.type === 'characterData') {
-    if (
-      mutation.target.parentNode !== null &&
-      isStyle(mutation.target.parentNode)
-    ) {
+    if (mutation.target.parentNode !== null && isStyle(mutation.target.parentNode)) {
       return true
     }
   } else if (mutation.type === 'childList') {
@@ -73,7 +70,7 @@ const isValidMutation = (mutation: MutationRecord) => {
 }
 
 function* createVariableIterator(
-  root: Document | ShadowRoot
+  root: Document | ShadowRoot,
 ): Generator<[string, string, string], void, true | undefined> {
   const elements = root.querySelectorAll('*[style]')
 
@@ -119,10 +116,7 @@ interface Options {
   root?: Document | ShadowRoot
 }
 
-export const createSourceDOM = (
-  options: Options = {},
-  cassiopeia: Cassiopeia
-) => {
+export const createSourceDOM = (options: Options = {}, cassiopeia: Cassiopeia) => {
   const root = options.root ?? document
   const createVariables = () => createVariableIterator(root)
   let isActive = false
@@ -154,7 +148,7 @@ export const createSourceDOM = (
       attributeOldValue: false,
       attributes: true,
       childList: true,
-      subtree: true
+      subtree: true,
     })
   }
 
@@ -171,6 +165,6 @@ export const createSourceDOM = (
   return {
     isActive: () => isActive,
     start,
-    stop
+    stop,
   }
 }

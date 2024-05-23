@@ -17,15 +17,15 @@ import {
   type Unsubscribe,
   type UpdatePlugin,
   type UpdateSource,
-  type Variables
+  type Variables,
 } from './types'
 import { append } from './utilities/append'
 
 export function createCassiopeia(options: Options): Cassiopeia {
   const rate =
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    // eslint-disable-next-line typescript/no-non-null-assertion
     Number.isInteger(options.rate) && options.rate! > 0
-      ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      ? // eslint-disable-next-line typescript/no-non-null-assertion
         options.rate!
       : 8
 
@@ -36,42 +36,37 @@ export function createCassiopeia(options: Options): Cassiopeia {
     matcher: undefined,
     rate,
     state: TypeState.Locked,
-    subscriptions: new Set()
+    subscriptions: new Set(),
   }
 
-  const updatePlugin: UpdatePlugin = async (isAsync = __BROWSER__) => {
+  const updatePlugin: UpdatePlugin = async (isAsync = __PLATFORM__ === 'browser') => {
     append(
       store.log,
       {
         isAsync,
-        type: TypeAction.UpdatePlugin
+        type: TypeAction.UpdatePlugin,
       },
-      (value) => value.type === TypeAction.UpdatePlugin
+      (value) => value.type === TypeAction.UpdatePlugin,
     )
 
     return await scheduleUpdate(store)
   }
 
-  const update: UpdateSource = async (
-    createVariables,
-    isAsync = __BROWSER__
-  ) => {
+  const update: UpdateSource = async (createVariables, isAsync = __PLATFORM__ === 'browser') => {
     append(
       store.log,
       {
         createVariables,
         isAsync,
-        type: TypeAction.UpdateSource
+        type: TypeAction.UpdateSource,
       },
-      (value) => value.type === TypeAction.UpdateSource
+      (value) => value.type === TypeAction.UpdateSource,
     )
 
     return await scheduleUpdate(store)
   }
 
-  options.plugins.forEach((plugin) =>
-    plugin[PLUGIN](store.iterators, updatePlugin)
-  )
+  options.plugins.forEach((plugin) => plugin[PLUGIN](store.iterators, updatePlugin))
 
   store.state = TypeState.None
 
@@ -84,13 +79,11 @@ export function createCassiopeia(options: Options): Cassiopeia {
   return {
     [STORE]: store,
     subscribe,
-    update
+    update,
   }
 }
 
-export const renderToString = <T extends CassiopeiaInstance>(
-  cassiopeia: T
-): StyleSheet[] => {
+export const renderToString = <T extends CassiopeiaInstance>(cassiopeia: T): StyleSheet[] => {
   const store = cassiopeia[STORE]
 
   const matcher = createMatcher(store.log, store)
@@ -119,5 +112,5 @@ export type {
   Unsubscribe,
   UpdatePlugin,
   UpdateSource,
-  Variables
+  Variables,
 }

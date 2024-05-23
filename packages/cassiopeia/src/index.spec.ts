@@ -1,11 +1,6 @@
-import { assert } from 'chai'
+import { assert, describe, it } from 'vitest'
 import { PLUGIN, REGEX } from './constants'
-import {
-  createCassiopeia,
-  type Iterator,
-  type Plugin,
-  renderToString
-} from './index'
+import { createCassiopeia, type Iterator, type Plugin, renderToString } from './index'
 import type { Variables } from './types'
 
 export function* fromStrings(strings: string[]): Variables {
@@ -50,14 +45,14 @@ interface State {
 
 const createPlugin = () => {
   const state: State = {
-    i: 0
+    i: 0,
   }
 
   const plugin: Plugin = {
     [PLUGIN]: (iterators: Map<string, () => Iterator>) => {
       iterators.set('abc', () => createIterator('abc', state))
       iterators.set('zxc', () => createIterator('zxc', state))
-    }
+    },
   }
 
   return { plugin, state }
@@ -67,7 +62,7 @@ describe('./src/server.spec.ts', () => {
   it('.', () => {
     const { plugin, state } = createPlugin()
     const instance = createCassiopeia({
-      plugins: [plugin]
+      plugins: [plugin],
     })
 
     // source: ,
@@ -79,11 +74,11 @@ describe('./src/server.spec.ts', () => {
     void instance.update(() => fromStrings(['var(---abc-hello)']))
 
     assert.deepEqual(renderToString(instance), [
-      { content: ':root { ---abc-hello: 2; }', key: 0, name: 'abc' }
+      { content: ':root { ---abc-hello: 2; }', key: 0, name: 'abc' },
     ])
 
     assert.deepEqual(renderToString(instance), [
-      { content: ':root { ---abc-hello: 3; }', key: 0, name: 'abc' }
+      { content: ':root { ---abc-hello: 3; }', key: 0, name: 'abc' },
     ])
 
     // assert.equal(state.i, 0)

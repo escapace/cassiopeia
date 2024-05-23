@@ -28,13 +28,13 @@ export const cacheIterators = (values: Iterators) => {
         cache.set(key, generator)
 
         return generator
-      }
+      },
     })
   }
 
   return {
     entries: () => cache.entries(),
     get: (key: string): RecordsValue => records[key],
-    values: () => cache.values()
+    values: () => cache.values(),
   }
 }
