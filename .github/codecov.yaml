@@ -14,3 +14,17 @@ coverage:
 
 ignore:
   - './coverage/tmp/'
+
+flags:
+  cassiopeia:
+    paths:
+      - ../packages/cassiopeia
+  source-dom:
+    paths:
+      - ../packages/source-dom
+  vite:
+    paths:
+      - ../packages/vite
+  vue:
+    paths:
+      - ../packages/vue
