@@ -59,7 +59,7 @@ const createPlugin = () => {
 }
 
 describe('./src/server.spec.ts', () => {
-  it('.', () => {
+  it('.', async () => {
     const { plugin, state } = createPlugin()
     const instance = createCassiopeia({
       plugins: [plugin],
@@ -71,7 +71,7 @@ describe('./src/server.spec.ts', () => {
     assert.deepEqual(renderToString(instance), [])
     assert.equal(state.i, 0)
 
-    void instance.update(() => fromStrings(['var(---abc-hello)']))
+    await instance.update(() => fromStrings(['var(---abc-hello)']))
 
     assert.deepEqual(renderToString(instance), [
       { content: ':root { ---abc-hello: 2; }', key: 0, name: 'abc' },

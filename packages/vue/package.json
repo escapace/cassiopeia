@@ -19,6 +19,7 @@
     "eslint": "9.3.0",
     "eslint-config-escapace": "5.1.1",
     "esroll": "0.1.1",
+    "jsdom": "24.0.0",
     "prettier": "3.2.5",
     "prettier-config-escapace": "1.2.1",
     "syncpack": "12.3.0",

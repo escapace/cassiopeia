@@ -1,17 +1,13 @@
-import { defineConfig } from 'vitest/config'
-import { version } from './package.json'
+import { configDefaults, defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  define: {
-    __PLATFORM__: JSON.stringify('node'),
-    __VERSION__: JSON.stringify(version),
-  },
   test: {
     coverage: {
-      exclude: ['**/example*.ts'],
+      exclude: ['**/example*.ts', ...(configDefaults.coverage.exclude ?? [])],
       include: ['src/**'],
       provider: 'v8',
     },
+    include: [],
     passWithNoTests: true,
   },
 })
