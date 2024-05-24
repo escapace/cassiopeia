@@ -12,19 +12,16 @@ coverage:
     patch: true
     project: true
 
-ignore:
-  - './coverage/tmp/'
-
 flags:
   cassiopeia:
     paths:
-      - ../packages/cassiopeia
+      - packages/cassiopeia
   source-dom:
     paths:
-      - ../packages/source-dom
+      - packages/source-dom
   vite:
     paths:
-      - ../packages/vite
+      - packages/vite
   vue:
     paths:
-      - ../packages/vue
+      - packages/vue
