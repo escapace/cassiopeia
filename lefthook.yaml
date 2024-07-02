@@ -50,7 +50,7 @@ pre-commit:
       exclude: '^[\/]*(pnpm-lock\.yaml|lib)$'
       glob: '*.{js,mjs,cjs,ts,mts,cts,yml,yaml,json,md}'
       priority: 5
-      run: pnpm exec prettier --write {staged_files}
+      run: bash -c 'for file in packages/*/.prettierignore; do echo "--ignore-path" "$file"; done;' | xargs pnpm exec prettier --ignore-path '.prettierignore' --write {staged_files}
       stage_fixed: true
 
     typecheck:
