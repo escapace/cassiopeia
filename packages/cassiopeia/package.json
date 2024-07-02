@@ -9,22 +9,22 @@
   "bugs": "https://github.com/escapace/cassiopeia/issues",
   "devDependencies": {
     "@ls-lint/ls-lint": "2.2.3",
-    "@types/node": "20.12.3",
+    "@types/node": "20.14.9",
     "@vitest/coverage-v8": "1.6.0",
-    "eslint": "9.3.0",
-    "eslint-config-escapace": "5.1.2",
+    "eslint": "9.6.0",
+    "eslint-config-escapace": "5.1.3",
     "esroll": "0.1.1",
-    "jsdom": "24.0.0",
-    "prettier": "3.2.5",
+    "jsdom": "24.1.0",
+    "prettier": "3.3.2",
     "prettier-config-escapace": "1.2.1",
-    "syncpack": "12.3.0",
-    "tsx": "4.11.0",
-    "typescript": "5.4.3",
+    "syncpack": "12.3.3",
+    "tsx": "4.16.0",
+    "typescript": "5.5.3",
     "vitest": "1.6.0"
   },
   "engines": {
-    "node": ">=20.12.0",
-    "pnpm": ">=9.0.6"
+    "node": ">=20.15.0",
+    "pnpm": ">=9.4.0"
   },
   "exports": {
     ".": {
