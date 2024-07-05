@@ -23,6 +23,10 @@
   "engines": {
     "pnpm": ">=9.4.0"
   },
+  "files": [
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml"
+  ],
   "homepage": "https://github.com/escapace/cassiopeia#readme",
   "license": "MPL-2.0",
   "private": true,
