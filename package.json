@@ -8,17 +8,17 @@
   },
   "bugs": "https://github.com/escapace/cassiopeia/issues",
   "devDependencies": {
-    "@commitlint/cli": "19.3.0",
-    "@commitlint/config-conventional": "19.2.2",
+    "@commitlint/cli": "19.5.0",
+    "@commitlint/config-conventional": "19.5.0",
     "@escapace/pnpm-pack": "0.5.2",
     "@ls-lint/ls-lint": "2.2.3",
-    "eslint": "9.6.0",
+    "eslint": "9.12.0",
     "eslint-config-escapace": "5.2.2",
-    "knip": "5.23.3",
-    "lefthook": "1.6.18",
-    "prettier": "3.3.2",
+    "knip": "5.33.3",
+    "lefthook": "1.7.21",
+    "prettier": "3.3.3",
     "prettier-config-escapace": "1.2.1",
-    "syncpack": "12.3.3"
+    "syncpack": "12.4.0"
   },
   "engines": {
     "pnpm": ">=9.4.0"
