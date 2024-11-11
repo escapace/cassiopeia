@@ -1,6 +1,5 @@
-import { type Action, type MatcherReturn, type Store, TypeState } from './types'
-
 import { createMatcher } from './create-matcher'
+import { type Action, type MatcherReturn, type Store, TypeState } from './types'
 import { filter } from './utilities/filter'
 
 async function reducer(isAsync: boolean, log: Action[], store: Store): Promise<boolean> {

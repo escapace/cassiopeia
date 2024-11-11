@@ -1,11 +1,51 @@
 /* eslint-disable typescript/no-non-null-assertion */
+import { js } from '@ast-grep/napi'
 import { parseVueRequest } from '@vitejs/plugin-vue'
 import { type SFCStyleBlock, parse } from '@vue/compiler-sfc'
 import { REGEX } from 'cassiopeia'
-import { readFile } from 'node:fs/promises'
 import MagicString from 'magic-string'
+import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import type { Plugin, ResolvedConfig } from 'vite'
+
+const ruleSetupClient = {
+  rule: {
+    any: [
+      {
+        pattern: "import _export_sfc from '$$$'",
+      },
+      {
+        pattern: 'import _export_sfc from "$$$"',
+      },
+    ],
+  },
+}
+
+const ruleSetupSSR = {
+  rule: {
+    any: [
+      {
+        any: [
+          {
+            pattern: {
+              context: '_sfc_main.setup = ($$$) => {$$$BODY}',
+              selector: 'statement_block',
+            },
+          },
+        ],
+        inside: {
+          inside: {
+            inside: {
+              regex: '_sfc_main\\.setup',
+            },
+            kind: 'assignment_expression',
+          },
+          kind: 'arrow_function',
+        },
+      },
+    ],
+  },
+}
 
 declare module '@vitejs/plugin-vue' {
   interface VueQuery {
@@ -90,54 +130,98 @@ const createProductionPlugin = (): Plugin[] => {
       },
       name: '@cassiopeia/vite/production',
       transform: {
-        handler(source, id) {
+        handler(source, id, options) {
           if (state.isDevelopment) {
             return
           }
+
+          const isSSR = options?.ssr === true
 
           const { filename, query } = parseVueRequest(id)
 
           if (
             state.variables.has(filename) &&
-            (query.vue === true || query.vue === undefined) &&
-            (query.type === 'script' || query.type === undefined)
+            Object.values(query).filter((value) => value !== undefined).length === 0
           ) {
-            const positionString = 'setup(__props) {'
-            let position = source.indexOf(positionString)
+            if (isSSR) {
+              const found = js.parse(source).root().find(ruleSetupSSR)
+              const match = found?.getMultipleMatches('BODY')
+              const position = match?.at(0)?.range().start.index
 
-            if (position === -1) {
-              // this.warn(
-              //   `[cassiopeia]: unable to update '${filename}', ${JSON.stringify(
-              //     query
-              //   )}`
-              // )
+              if (position === undefined) {
+                this.warn(`Update failed`)
+              } else {
+                const magic = new MagicString(source)
+
+                const variables = Array.from(state.variables.get(filename)!)
+                  .map((value) => `"${value}"`)
+                  .join(', ')
+
+                magic.appendRight(
+                  position,
+                  [
+                    '',
+                    `    const __cassiopeia = __useCassiopeia();`,
+                    `    __cassiopeia.add([${variables}]);`,
+                    `    __cassiopeia.update(false);`,
+                    '',
+                  ].join('\n'),
+                )
+
+                magic.prepend(
+                  `import { useCassiopeia as __useCassiopeia } from "@cassiopeia/vue"\n`,
+                )
+
+                // this.info(`Update successful, ${JSON.stringify(query)}`)
+
+                return state.sourceMap
+                  ? {
+                      code: magic.toString(),
+                      map: magic.generateMap(),
+                    }
+                  : magic.toString()
+              }
             } else {
-              position += positionString.length
+              const found = js.parse(source).root().find(ruleSetupClient)
+              const position = found?.range().start.index
 
-              const magic = new MagicString(source)
+              if (position === undefined) {
+                this.warn(`Update failed`)
+              } else {
+                const magic = new MagicString(source)
 
-              magic.prepend(`import { useCassiopeia as __useCassiopeia } from "@cassiopeia/vue"\n`)
+                const variables = Array.from(state.variables.get(filename)!)
+                  .map((value) => `"${value}"`)
+                  .join(', ')
 
-              const variables = Array.from(state.variables.get(filename)!)
-                .map((value) => `"${value}"`)
-                .join(', ')
+                magic.appendLeft(
+                  position,
+                  [
+                    '',
+                    `const _sfc_setup_cassiopeia = _sfc_main.setup;`,
+                    `_sfc_main.setup = (props, ctx) => {`,
+                    `const __cassiopeia = __useCassiopeia();`,
+                    `__cassiopeia.add([${variables}]);`,
+                    `__cassiopeia.update(false);`,
+                    `return _sfc_setup_cassiopeia ? _sfc_setup_cassiopeia(props, ctx) : void 0;`,
+                    `};`,
+                    '',
+                  ].join('\n'),
+                )
 
-              magic.appendRight(
-                position,
-                [
-                  '',
-                  `    const __cassiopeia = __useCassiopeia()`,
-                  `    __cassiopeia.add([${variables}])`,
-                  `    __cassiopeia.update(false)`,
-                ].join('\n'),
-              )
+                magic.prepend(
+                  `import { useCassiopeia as __useCassiopeia } from "@cassiopeia/vue"\n`,
+                )
 
-              return state.sourceMap
-                ? {
-                    code: magic.toString(),
-                    map: magic.generateMap(),
-                  }
-                : magic.toString()
+                // this.info(`Update successful, ${JSON.stringify(query)}`)
+
+                return state.sourceMap
+                  ? {
+                      code: magic.toString(),
+                      map: magic.generateMap(),
+                    }
+                  : magic.toString()
+              }
             }
           }
 
