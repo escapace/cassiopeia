@@ -8,7 +8,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import type { Plugin, ResolvedConfig } from 'vite'
 
-const ruleSetupClient = {
+const ruleSetupClientImportSFCHelper = {
   rule: {
     any: [
       {
@@ -16,6 +16,16 @@ const ruleSetupClient = {
       },
       {
         pattern: 'import _export_sfc from "$$$"',
+      },
+    ],
+  },
+}
+
+const ruleSetupClientExportSFC = {
+  rule: {
+    any: [
+      {
+        pattern: 'export default _sfc_main',
       },
     ],
   },
@@ -182,11 +192,15 @@ const createProductionPlugin = (): Plugin[] => {
                   : magic.toString()
               }
             } else {
-              const found = js.parse(source).root().find(ruleSetupClient)
-              const position = found?.range().start.index
+              const root = js.parse(source).root()
+              const positions = {
+                exportSFC: root.find(ruleSetupClientExportSFC)?.range().start.index,
+                importSFCHelper: root.find(ruleSetupClientImportSFCHelper)?.range().start.index,
+              }
 
-              if (position === undefined) {
+              if (positions.exportSFC === undefined && positions.importSFCHelper === undefined) {
                 this.warn(`Update failed`)
+                console.log(source)
               } else {
                 const magic = new MagicString(source)
 
@@ -194,20 +208,23 @@ const createProductionPlugin = (): Plugin[] => {
                   .map((value) => `"${value}"`)
                   .join(', ')
 
-                magic.appendLeft(
-                  position,
-                  [
-                    '',
-                    `const _sfc_setup_cassiopeia = _sfc_main.setup;`,
-                    `_sfc_main.setup = (props, ctx) => {`,
-                    `const __cassiopeia = __useCassiopeia();`,
-                    `__cassiopeia.add([${variables}]);`,
-                    `__cassiopeia.update(false);`,
-                    `return _sfc_setup_cassiopeia ? _sfc_setup_cassiopeia(props, ctx) : void 0;`,
-                    `};`,
-                    '',
-                  ].join('\n'),
-                )
+                const content = [
+                  '',
+                  `const _sfc_setup_cassiopeia = _sfc_main.setup;`,
+                  `_sfc_main.setup = (props, ctx) => {`,
+                  `const __cassiopeia = __useCassiopeia();`,
+                  `__cassiopeia.add([${variables}]);`,
+                  `__cassiopeia.update(false);`,
+                  `return _sfc_setup_cassiopeia ? _sfc_setup_cassiopeia(props, ctx) : void 0;`,
+                  `};`,
+                  '',
+                ].join('\n')
+
+                if (positions.importSFCHelper !== undefined) {
+                  magic.appendLeft(positions.importSFCHelper, content)
+                } else {
+                  magic.appendRight(positions.exportSFC!, content)
+                }
 
                 magic.prepend(
                   `import { useCassiopeia as __useCassiopeia } from "@cassiopeia/vue"\n`,
