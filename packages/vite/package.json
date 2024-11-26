@@ -8,16 +8,16 @@
   },
   "bugs": "https://github.com/escapace/cassiopeia/issues",
   "dependencies": {
-    "@ast-grep/napi": "^0.29.0",
-    "@vitejs/plugin-vue": "^5.1.4",
-    "@vue/compiler-sfc": "^3.5.12",
+    "@ast-grep/napi": "^0.30.0",
+    "@vitejs/plugin-vue": "^5.2.0",
+    "@vue/compiler-sfc": "^3.5.13",
     "cassiopeia": "workspace:*",
-    "magic-string": "^0.30.12"
+    "magic-string": "^0.30.13"
   },
   "devDependencies": {
     "@ls-lint/ls-lint": "2.2.3",
-    "@types/node": "22.9.0",
-    "@vitest/coverage-v8": "2.1.4",
+    "@types/node": "22.9.1",
+    "@vitest/coverage-v8": "2.1.5",
     "eslint": "9.14.0",
     "eslint-config-escapace": "5.3.0",
     "esroll": "0.3.0",
@@ -26,9 +26,9 @@
     "syncpack": "13.0.0",
     "tsx": "4.19.2",
     "typescript": "5.6.3",
-    "vite": "5.4.10",
-    "vitest": "2.1.4",
-    "vue": "3.5.12"
+    "vite": "5.4.11",
+    "vitest": "2.1.5",
+    "vue": "3.5.13"
   },
   "engines": {
     "node": ">=20.15.0",
