@@ -13,7 +13,7 @@
     "@escapace/pnpm-pack": "0.5.4",
     "@ls-lint/ls-lint": "2.2.3",
     "eslint": "9.19.0",
-    "eslint-config-escapace": "5.4.2",
+    "eslint-config-escapace": "5.4.4",
     "knip": "5.43.6",
     "lefthook": "1.10.10",
     "prettier": "3.4.2",
