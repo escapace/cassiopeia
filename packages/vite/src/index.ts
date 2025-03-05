@@ -1,5 +1,5 @@
 /* eslint-disable typescript/no-non-null-assertion */
-import { js } from '@ast-grep/napi'
+import { Lang, parse as parseAST } from '@ast-grep/napi'
 import { parseVueRequest } from '@vitejs/plugin-vue'
 import { type SFCStyleBlock, parse } from '@vue/compiler-sfc'
 import { REGEX } from 'cassiopeia'
@@ -154,7 +154,7 @@ const createProductionPlugin = (): Plugin[] => {
             Object.values(query).filter((value) => value !== undefined).length === 0
           ) {
             if (isSSR) {
-              const found = js.parse(source).root().find(ruleSetupSSR)
+              const found = parseAST(Lang.JavaScript, source).root().find(ruleSetupSSR)
               const match = found?.getMultipleMatches('BODY')
               const position = match?.at(0)?.range().start.index
 
@@ -192,7 +192,7 @@ const createProductionPlugin = (): Plugin[] => {
                   : magic.toString()
               }
             } else {
-              const root = js.parse(source).root()
+              const root = parseAST(Lang.JavaScript, source).root()
               const positions = {
                 exportSFC: root.find(ruleSetupClientExportSFC)?.range().start.index,
                 importSFCHelper: root.find(ruleSetupClientImportSFCHelper)?.range().start.index,

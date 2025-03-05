@@ -39,4 +39,5 @@ export type CassiopeiaPlugin = {
 } & CassiopeiaInstance &
   Plugin
 
+// eslint-disable-next-line typescript/no-empty-object-type
 export interface Options extends Omit<CassiopeiaOptions, 'source'> {}

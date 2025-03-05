@@ -66,8 +66,8 @@ export interface ActionUpdateSource {
 
 export type Action = ActionUpdatePlugin | ActionUpdateSource
 
-export type Unsubscribe = () => void
 export type Subscription = (stylesheets: StyleSheet[]) => void
+export type Unsubscribe = () => void
 
 export interface Store extends Required<Pick<Options, 'rate'>> {
   cache: Cache

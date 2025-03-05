@@ -18,9 +18,7 @@ export const useCassiopeia = (): UseCassiopeia => {
     onScopeDispose(scope.dispose)
   }
 
-  const update: (typeof cassiopeia)['update'] = async (
-    isAsync?: boolean | undefined,
-  ): Promise<boolean> =>
+  const update: (typeof cassiopeia)['update'] = async (isAsync?: boolean): Promise<boolean> =>
     // we update only in browser, on SSR renderToString performs the update.
     await (__PLATFORM__ === 'browser' ? cassiopeia.update(isAsync) : Promise.resolve(false))
 

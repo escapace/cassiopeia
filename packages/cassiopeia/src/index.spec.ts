@@ -23,7 +23,7 @@ function* createIterator(name: string, state: State): Iterator {
   while ((cursor = yield) !== true) {
     state.i++
 
-    const string = cursor.match(/^([\da-z-])+$/i)
+    const string = /^([\da-z-])+$/i.exec(cursor)
 
     if (string === null) {
       continue
