@@ -71,7 +71,7 @@ const isValidMutation = (mutation: MutationRecord) => {
 
 function* createVariableIterator(
   root: Document | ShadowRoot,
-): Generator<[string, string, string], void, true | undefined> {
+): Generator<[string, string], void, true | undefined> {
   const elements = root.querySelectorAll('*[style]')
 
   for (const element of elements) {
@@ -79,7 +79,7 @@ function* createVariableIterator(
 
     if (cssText !== undefined) {
       for (const match of cssText.matchAll(REGEX)) {
-        const cancelled = yield match as unknown as [string, string, string]
+        const cancelled = yield match.splice(1) as unknown as [string, string]
 
         if (cancelled) {
           return
@@ -100,7 +100,7 @@ function* createVariableIterator(
       for (const cssRule of cssStyleSheet.cssRules) {
         if (isSupportedCSSRule(cssRule)) {
           for (const match of cssRule.cssText.matchAll(REGEX)) {
-            const cancelled = yield match as unknown as [string, string, string]
+            const cancelled = yield match.splice(1) as unknown as [string, string]
 
             if (cancelled) {
               return

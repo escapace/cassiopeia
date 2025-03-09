@@ -17,7 +17,7 @@ async function reducer(isAsync: boolean, log: Action[], store: Store): Promise<b
           ? await new Promise<IteratorResult<undefined, MatcherReturn>>(
               // eslint-disable-next-line typescript/no-loop-func
               (resolve) => {
-                if (iteration % store.rate === 0) {
+                if (iteration % store.deferEvery === 0) {
                   setTimeout(() => {
                     resolve(matcher.next())
                   }, 0)

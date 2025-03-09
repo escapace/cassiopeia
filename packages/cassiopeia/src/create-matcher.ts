@@ -36,7 +36,9 @@ export function* createMatcher(log: Action[], store: Store): Matcher {
       break
     }
 
-    const [id, name, variable] = entry
+    const [name, variable] = entry
+
+    const id = `---${name}-${variable}`
 
     // deduplicate
     if (seen.has(id)) {
@@ -56,7 +58,7 @@ export function* createMatcher(log: Action[], store: Store): Matcher {
       continue
     }
 
-    iterator.next(variable)
+    iterator.next(id)
 
     cancelled = (yield) === true
   }

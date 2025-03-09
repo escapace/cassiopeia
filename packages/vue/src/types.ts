@@ -6,7 +6,7 @@ import type {
   CassiopeiaInstance,
   Options as CassiopeiaOptions,
 } from 'cassiopeia'
-import type { Plugin } from 'vue'
+import type { MaybeRef, Plugin } from 'vue'
 
 export interface CassiopeiaScope {
   add(variable: string): string
@@ -39,5 +39,7 @@ export type CassiopeiaPlugin = {
 } & CassiopeiaInstance &
   Plugin
 
-// eslint-disable-next-line typescript/no-empty-object-type
-export interface Options extends Omit<CassiopeiaOptions, 'source'> {}
+export interface Options extends Omit<CassiopeiaOptions, 'source'> {
+  /** Defer to the event loop every nth iteration. */
+  deferEvery?: MaybeRef<number | undefined>
+}

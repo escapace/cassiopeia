@@ -22,19 +22,12 @@ import {
 import { append } from './utilities/append'
 
 export function createCassiopeia(options: Options): Cassiopeia {
-  const rate =
-    // eslint-disable-next-line typescript/no-non-null-assertion
-    Number.isInteger(options.rate) && options.rate! > 0
-      ? // eslint-disable-next-line typescript/no-non-null-assertion
-        options.rate!
-      : 8
-
   const store: Store = {
     cache: new Set(),
+    deferEvery: 8,
     iterators: new Map(),
     log: [],
     matcher: undefined,
-    rate,
     state: TypeState.Locked,
     subscriptions: new Set(),
   }

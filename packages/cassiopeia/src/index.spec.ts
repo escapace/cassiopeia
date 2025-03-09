@@ -6,7 +6,7 @@ import type { Variables } from './types'
 export function* fromStrings(strings: string[]): Variables {
   for (const string of strings) {
     for (const match of string.matchAll(REGEX)) {
-      const cancelled = yield match as unknown as [string, string, string]
+      const cancelled = yield match.splice(1) as unknown as [string, string]
 
       if (cancelled) {
         return
@@ -15,7 +15,7 @@ export function* fromStrings(strings: string[]): Variables {
   }
 }
 
-function* createIterator(name: string, state: State): Iterator {
+function* createIterator(_: string, state: State): Iterator {
   const strings: string[] = []
 
   let cursor: string | true
@@ -29,7 +29,7 @@ function* createIterator(name: string, state: State): Iterator {
       continue
     }
 
-    strings.push(`---${name}-${cursor}: ${state.i};`)
+    strings.push(`${cursor}: ${state.i};`)
   }
 
   if (strings.length === 0) {

@@ -29,9 +29,9 @@ export type Iterator = Generator<
 >
 export type Iterators = Map<string, () => Iterator>
 
-export type Cache = Set<[string, string, string]>
+export type Cache = Set<[string, string]>
 
-export type Variables = Generator<[string, string, string], void, true | undefined>
+export type Variables = Generator<[string, string], void, true | undefined>
 
 export type MatcherReturn = StyleSheet[] | undefined
 
@@ -50,7 +50,6 @@ export interface Plugin {
 
 export interface Options {
   plugins: Plugin[]
-  rate?: number
 }
 
 export interface ActionUpdatePlugin {
@@ -69,8 +68,9 @@ export type Action = ActionUpdatePlugin | ActionUpdateSource
 export type Subscription = (stylesheets: StyleSheet[]) => void
 export type Unsubscribe = () => void
 
-export interface Store extends Required<Pick<Options, 'rate'>> {
+export interface Store {
   cache: Cache
+  deferEvery: number
   iterators: Iterators
   log: Action[]
   state: TypeState

@@ -1,5 +1,6 @@
+/* eslint-disable typescript/no-non-null-assertion */
 import { createCassiopeia as cas, STORE, type Variables } from 'cassiopeia'
-import type { App } from 'vue'
+import { computed, toValue, watch, type App } from 'vue'
 import { CASSIOPEIA_VUE_SYMBOL, REGEX } from './constants'
 import type { Cassiopeia, CassiopeiaPlugin, Options } from './types'
 
@@ -9,7 +10,7 @@ function* createVariableIterator(sets: Set<Set<string>>): Variables {
       const match = string.match(REGEX)
 
       if (match?.length === 3) {
-        const cancelled = yield match.slice(0, 3) as [string, string, string]
+        const cancelled = yield match.splice(1) as [string, string]
 
         if (cancelled) {
           return
@@ -88,6 +89,18 @@ const createCassiopeiaScope = (options: Options): Cassiopeia => {
 
 export const createCassiopeia = (options: Options): CassiopeiaPlugin => {
   const scope = createCassiopeiaScope(options)
+
+  const deferEvery = computed(() => toValue(options.deferEvery))
+
+  watch(
+    deferEvery,
+    (deferEvery) => {
+      if (Number.isInteger(deferEvery) && deferEvery! > 0) {
+        scope[STORE].deferEvery = deferEvery!
+      }
+    },
+    { immediate: true },
+  )
 
   return {
     install: (app: App) => {

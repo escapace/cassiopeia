@@ -16,7 +16,7 @@ export const updateStyle = (
     }
   } else {
     const variables = Array.from(__vite__css.matchAll(REGEX)).map((value) =>
-      ['--', ...value.slice(1, 3)].join('-'),
+      ['--', ...value.splice(1)].join('-'),
     )
 
     if (variables.length !== 0) {
