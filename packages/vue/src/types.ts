@@ -1,12 +1,7 @@
 /* eslint-disable typescript/method-signature-style */
 
-import type {
-  STORE,
-  Cassiopeia as _Cassiopeia,
-  CassiopeiaInstance,
-  Options as CassiopeiaOptions,
-} from 'cassiopeia'
-import type { MaybeRef, Plugin } from 'vue'
+import type { Cassiopeia as _Cassiopeia, Options as CassiopeiaOptions } from 'cassiopeia'
+import type { MaybeRef, ObjectPlugin } from 'vue'
 
 export interface CassiopeiaScope {
   add(variable: string): string
@@ -16,13 +11,12 @@ export interface CassiopeiaScope {
   dispose: () => void
 }
 
-export interface Cassiopeia {
+export interface Cassiopeia extends Omit<_Cassiopeia, 'update'> {
   createScope: () => CassiopeiaScope
-  [STORE]: _Cassiopeia[typeof STORE]
-  subscribe: _Cassiopeia['subscribe']
   /**
    * Returns true if the update was successful, i.e. not canceled.
    */
+  dispose: () => void
   update: (isAsync?: boolean) => Promise<boolean>
 }
 
@@ -33,11 +27,7 @@ export interface UseCassiopeia extends CassiopeiaScope {
   update: (isAsync?: boolean) => Promise<boolean>
 }
 
-export type CassiopeiaPlugin = {
-  subscribe: _Cassiopeia['subscribe']
-  update: Cassiopeia['update']
-} & CassiopeiaInstance &
-  Plugin
+export interface CassiopeiaPlugin extends Cassiopeia, ObjectPlugin {}
 
 export interface Options extends Omit<CassiopeiaOptions, 'source'> {
   /** Defer to the event loop every nth iteration. */
