@@ -102,11 +102,14 @@ const createProductionPlugin = (): Plugin[] => {
         state.variables.clear()
       },
       configResolved: (config) => configResolved(config, state),
-      load: {
-        async handler(id) {
+      enforce: 'pre',
+      name: '@cassiopeia/vite/production-pre',
+      transform: {
+        async handler(source, id) {
           if (state.isDevelopment) {
             return
           }
+
           const updateStateVariables = (styles: string) => {
             const set = state.variables.has(filename)
               ? state.variables.get(filename)!
@@ -125,8 +128,6 @@ const createProductionPlugin = (): Plugin[] => {
           const { filename, query } = parseVueRequest(id)
 
           if (filename.endsWith('.vue') && query.vue !== true) {
-            const source = await readFile(filename, 'utf8')
-
             const parseResult = parse(source)
 
             for (const style of parseResult.descriptor.styles) {
@@ -138,7 +139,10 @@ const createProductionPlugin = (): Plugin[] => {
         },
         order: 'pre',
       },
-      name: '@cassiopeia/vite/production',
+    },
+    {
+      enforce: 'post',
+      name: '@cassiopeia/vite/production-post',
       transform: {
         handler(source, id, options) {
           if (state.isDevelopment) {
