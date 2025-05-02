@@ -8,7 +8,7 @@ export interface CassiopeiaScope {
   add(variable: string[]): string[]
   clear: () => void
   delete: (variable: string | string[]) => void
-  dispose: () => void
+  dispose: (update?: boolean) => void
 }
 
 export interface Cassiopeia extends Omit<_Cassiopeia, 'update'> {

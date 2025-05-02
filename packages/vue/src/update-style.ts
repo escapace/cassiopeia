@@ -30,7 +30,7 @@ export const updateStyle = (
 
       onDispose(() => {
         console.warn(`[cassiopeia] disposing scope '${__vite__id}'`)
-        scope.dispose()
+        scope.dispose(false)
       })
     }
   }

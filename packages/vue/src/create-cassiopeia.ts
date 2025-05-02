@@ -71,11 +71,12 @@ const createCassiopeiaVue = (options: Options): Cassiopeia => {
       set.clear()
     }
 
-    const dispose = () => {
+    const dispose = (cassiopeiaUpdate = true) => {
       clear()
-      sets.delete(set)
 
-      void update(__PLATFORM__ === 'browser')
+      if (cassiopeiaUpdate && sets.delete(set)) {
+        void update(__PLATFORM__ === 'browser')
+      }
     }
 
     const del = (value: string | string[]) => {
