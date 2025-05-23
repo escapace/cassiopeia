@@ -24,7 +24,6 @@
     "syncpack": "13.0.4",
     "tsx": "4.19.4",
     "typescript": "5.8.3",
-    "vite": "6.3.5",
     "vitest": "3.1.4"
   },
   "engines": {
@@ -46,7 +45,8 @@
   "module": "./lib/node/index.js",
   "peerDependencies": {
     "@vitejs/plugin-vue": ">=5.2.4",
-    "@vue/compiler-sfc": ">=3.5.14"
+    "vite": ">=6.3.5",
+    "vue": ">=3.5.14"
   },
   "private": false,
   "publishConfig": {
