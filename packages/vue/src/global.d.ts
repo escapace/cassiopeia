@@ -1,7 +1,6 @@
+/* eslint-disable no-var */
 import type { Cassiopeia } from './types'
 
 declare global {
-  interface Window {
-    __CASSIOPEIA_VUE__: Cassiopeia | undefined
-  }
+  var __CASSIOPEIA_VUE__: Cassiopeia | undefined
 }

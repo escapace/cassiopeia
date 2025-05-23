@@ -22,8 +22,8 @@ function* createVariableIterator(sets: Set<Set<string>>): Variables {
 
 const createCassiopeiaVue = (options: Options): Cassiopeia => {
   if (__PLATFORM__ === 'browser') {
-    if (window.__CASSIOPEIA_VUE__ !== undefined) {
-      return window.__CASSIOPEIA_VUE__
+    if (globalThis.__CASSIOPEIA_VUE__ !== undefined) {
+      return globalThis.__CASSIOPEIA_VUE__
     }
   }
 
@@ -93,7 +93,7 @@ const createCassiopeiaVue = (options: Options): Cassiopeia => {
     sets.clear()
 
     if (__PLATFORM__ === 'browser') {
-      window.__CASSIOPEIA_VUE__ = undefined
+      globalThis.__CASSIOPEIA_VUE__ = undefined
     }
     cassiopeia[STORE].subscriptions.clear()
     cassiopeia[STORE].iterators.clear()
@@ -108,7 +108,7 @@ const createCassiopeiaVue = (options: Options): Cassiopeia => {
   }
 
   if (__PLATFORM__ === 'browser') {
-    window.__CASSIOPEIA_VUE__ = cassiopeiaVue
+    globalThis.__CASSIOPEIA_VUE__ = cassiopeiaVue
   }
 
   return cassiopeiaVue

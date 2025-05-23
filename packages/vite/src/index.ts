@@ -155,6 +155,7 @@ const createProductionPlugin = (): Plugin[] => {
 
           if (
             state.variables.has(filename) &&
+            state.variables.get(filename)?.size !== 0 &&
             Object.values(query).filter((value) => value !== undefined).length === 0
           ) {
             if (isSSR) {

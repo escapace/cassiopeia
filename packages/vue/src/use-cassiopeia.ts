@@ -5,7 +5,7 @@ import type { UseCassiopeia } from './types'
 export const useCassiopeia = (): UseCassiopeia => {
   const cassiopeia = inject(
     CASSIOPEIA_VUE_SYMBOL,
-    __PLATFORM__ === 'browser' ? window.__CASSIOPEIA_VUE__ : undefined,
+    __PLATFORM__ === 'browser' ? globalThis.__CASSIOPEIA_VUE__ : undefined,
   )
 
   if (cassiopeia === undefined) {

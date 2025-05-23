@@ -7,7 +7,7 @@ export const updateStyle = (
   onDispose: (callback: () => void) => void,
   index = 0,
 ) => {
-  if (window.__CASSIOPEIA_VUE__ === undefined) {
+  if (globalThis.__CASSIOPEIA_VUE__ === undefined) {
     // 3 seconds
     if (index === 30) {
       console.warn(`[cassiopeia] update failed for '${__vite__id}'`)
@@ -20,7 +20,7 @@ export const updateStyle = (
     )
 
     if (variables.length !== 0) {
-      const cassiopeia = window.__CASSIOPEIA_VUE__
+      const cassiopeia = globalThis.__CASSIOPEIA_VUE__
 
       const scope = cassiopeia.createScope()
 
