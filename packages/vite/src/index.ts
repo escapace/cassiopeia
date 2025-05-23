@@ -200,7 +200,7 @@ const createDevelopmentPlugins = (properties: ShallowRef<Properties | undefined>
     enforce: 'post',
     name: '@cassiopeia/vite:development',
 
-    apply: (_, { command, isPreview }) => command === 'serve' && isPreview === false,
+    apply: (_, { command, isPreview }) => command === 'serve' && isPreview !== true,
 
     transform: {
       handler(source, id, options) {
