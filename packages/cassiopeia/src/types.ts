@@ -48,10 +48,6 @@ export interface Plugin {
   [PLUGIN]: (iterators: Iterators, update: UpdatePlugin) => void
 }
 
-export interface Options {
-  plugins: Plugin[]
-}
-
 export interface ActionUpdatePlugin {
   isAsync: boolean
   type: TypeAction.UpdatePlugin
@@ -85,4 +81,5 @@ export interface CassiopeiaInstance {
 export interface Cassiopeia extends CassiopeiaInstance {
   subscribe: (subscription: Subscription) => Unsubscribe
   update: UpdateSource
+  use: (...plugins: Plugin[]) => Cassiopeia
 }

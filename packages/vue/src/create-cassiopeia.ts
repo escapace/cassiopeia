@@ -1,8 +1,13 @@
 /* eslint-disable typescript/no-non-null-assertion */
-import { createCassiopeia as _cassiopeia, STORE, type Variables } from 'cassiopeia'
+import {
+  createCassiopeia as createCassiopeiaInstance,
+  STORE,
+  type Plugin,
+  type Variables,
+} from 'cassiopeia'
 import { computed, effectScope, toValue, watch, type App } from 'vue'
-import { CASSIOPEIA_VUE_SYMBOL, REGEX } from './constants'
-import type { Cassiopeia, CassiopeiaPlugin, CassiopeiaScope, Options } from './types'
+import { CASSIOPEIA_INJECTION_KEY, REGEX } from './constants'
+import type { Cassiopeia, CassiopeiaScope, Options } from './types'
 
 function* createVariableIterator(sets: Set<Set<string>>): Variables {
   for (const set of sets) {
@@ -20,10 +25,10 @@ function* createVariableIterator(sets: Set<Set<string>>): Variables {
   }
 }
 
-const createCassiopeiaVue = (options: Options): Cassiopeia => {
+export const createCassiopeia = (options: Options = {}): Cassiopeia => {
   if (__PLATFORM__ === 'browser') {
-    if (globalThis.__CASSIOPEIA_VUE__ !== undefined) {
-      return globalThis.__CASSIOPEIA_VUE__
+    if (globalThis.__CASSIOPEIA__ !== undefined) {
+      return globalThis.__CASSIOPEIA__
     }
   }
 
@@ -33,7 +38,7 @@ const createCassiopeiaVue = (options: Options): Cassiopeia => {
 
   const createVariables = () => createVariableIterator(sets)
 
-  const cassiopeia = _cassiopeia({ ...options })
+  const instance = createCassiopeiaInstance()
 
   scope.run(() => {
     const deferEvery = computed(() => toValue(options.deferEvery))
@@ -42,14 +47,14 @@ const createCassiopeiaVue = (options: Options): Cassiopeia => {
       deferEvery,
       (deferEvery) => {
         if (Number.isInteger(deferEvery) && deferEvery! > 0) {
-          cassiopeia[STORE].deferEvery = deferEvery!
+          instance[STORE].deferEvery = deferEvery!
         }
       },
       { immediate: true },
     )
   })
 
-  const update = async (isAsync?: boolean) => await cassiopeia.update(createVariables, isAsync)
+  const update = async (isAsync?: boolean) => await instance.update(createVariables, isAsync)
 
   const createScope = (): CassiopeiaScope => {
     const set = new Set<string>()
@@ -93,35 +98,32 @@ const createCassiopeiaVue = (options: Options): Cassiopeia => {
     sets.clear()
 
     if (__PLATFORM__ === 'browser') {
-      globalThis.__CASSIOPEIA_VUE__ = undefined
+      globalThis.__CASSIOPEIA__ = undefined
     }
-    cassiopeia[STORE].subscriptions.clear()
-    cassiopeia[STORE].iterators.clear()
-    cassiopeia[STORE].cache.clear()
+    instance[STORE].subscriptions.clear()
+    instance[STORE].iterators.clear()
+    instance[STORE].cache.clear()
   }
 
-  const cassiopeiaVue: Cassiopeia = {
-    ...cassiopeia,
+  const cassiopeia: Cassiopeia = {
+    ...instance,
     createScope,
     dispose,
+    install: (app: App) => {
+      app.provide(CASSIOPEIA_INJECTION_KEY, cassiopeia)
+      app.onUnmount(cassiopeia.dispose)
+    },
     update,
+    use: (...plugins: Plugin[]) => {
+      instance.use(...plugins)
+
+      return cassiopeia
+    },
   }
 
   if (__PLATFORM__ === 'browser') {
-    globalThis.__CASSIOPEIA_VUE__ = cassiopeiaVue
+    globalThis.__CASSIOPEIA__ = cassiopeia
   }
 
-  return cassiopeiaVue
-}
-
-export const createCassiopeia = (options: Options): CassiopeiaPlugin => {
-  const value = createCassiopeiaVue(options)
-
-  return {
-    ...value,
-    install: (app: App) => {
-      app.provide(CASSIOPEIA_VUE_SYMBOL, value)
-      app.onUnmount(value.dispose)
-    },
-  }
+  return cassiopeia
 }

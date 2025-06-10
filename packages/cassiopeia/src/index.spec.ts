@@ -61,11 +61,9 @@ const createPlugin = () => {
 describe('./src/server.spec.ts', () => {
   it('.', async () => {
     const { plugin, state } = createPlugin()
-    const instance = createCassiopeia({
-      plugins: [plugin],
-    })
+    const instance = createCassiopeia()
 
-    // source: ,
+    instance.use(plugin)
 
     assert.equal(state.i, 0)
     assert.deepEqual(renderToString(instance), [])

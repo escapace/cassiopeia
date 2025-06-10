@@ -11,7 +11,7 @@
     "src/types.ts"
   ],
   "ignore": ["**/*.d.+([a-zA-Z0-9]).ts", "**/*.d.ts", "lib/**"],
-  "ignoreBinaries": ["ncu"],
+  "ignoreBinaries": ["ncu", "taze"],
   "ignoreDependencies": [
     "@commitlint/cli",
     "@microsoft/api-extractor",

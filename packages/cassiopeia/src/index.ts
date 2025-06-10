@@ -6,7 +6,6 @@ import {
   type CassiopeiaInstance,
   type Iterator,
   type Iterators,
-  type Options,
   type Plugin,
   type Store,
   type StyleSheet,
@@ -21,7 +20,7 @@ import {
 } from './types'
 import { append } from './utilities/append'
 
-export function createCassiopeia(options: Options): Cassiopeia {
+export function createCassiopeia(): Cassiopeia {
   const store: Store = {
     cache: new Set(),
     deferEvery: 8,
@@ -31,6 +30,8 @@ export function createCassiopeia(options: Options): Cassiopeia {
     state: TypeState.Locked,
     subscriptions: new Set(),
   }
+
+  const plugins: Plugin[] = []
 
   const updatePlugin: UpdatePlugin = async (isAsync = __PLATFORM__ === 'browser') => {
     append(
@@ -59,8 +60,6 @@ export function createCassiopeia(options: Options): Cassiopeia {
     return await scheduleUpdate(store)
   }
 
-  options.plugins.forEach((plugin) => plugin[PLUGIN](store.iterators, updatePlugin))
-
   store.state = TypeState.None
 
   const subscribe = (subscription: Subscription): Unsubscribe => {
@@ -69,11 +68,28 @@ export function createCassiopeia(options: Options): Cassiopeia {
     return () => store.subscriptions.delete(subscription)
   }
 
-  return {
+  const cassiopeia: Cassiopeia = {
     [STORE]: store,
     subscribe,
     update,
+    use: (...values: Plugin[]) => {
+      let changed = false
+
+      for (const value of values) {
+        if (!plugins.includes(value)) {
+          plugins.push(value)
+
+          changed ||= true
+        }
+      }
+
+      plugins.forEach((plugin) => plugin[PLUGIN](store.iterators, updatePlugin))
+
+      return cassiopeia
+    },
   }
+
+  return cassiopeia
 }
 
 export const renderToString = <T extends CassiopeiaInstance>(cassiopeia: T): StyleSheet[] => {
@@ -96,7 +112,6 @@ export type {
   CassiopeiaInstance,
   Iterator,
   Iterators,
-  Options,
   Plugin,
   Store,
   StyleSheet,

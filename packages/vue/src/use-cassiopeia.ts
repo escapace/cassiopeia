@@ -1,11 +1,11 @@
 import { getCurrentScope, inject, onScopeDispose } from 'vue'
-import { CASSIOPEIA_VUE_SYMBOL } from './constants'
+import { CASSIOPEIA_INJECTION_KEY } from './constants'
 import type { UseCassiopeia } from './types'
 
 export const useCassiopeia = (): UseCassiopeia => {
   const cassiopeia = inject(
-    CASSIOPEIA_VUE_SYMBOL,
-    __PLATFORM__ === 'browser' ? globalThis.__CASSIOPEIA_VUE__ : undefined,
+    CASSIOPEIA_INJECTION_KEY,
+    __PLATFORM__ === 'browser' ? globalThis.__CASSIOPEIA__ : undefined,
   )
 
   if (cassiopeia === undefined) {
