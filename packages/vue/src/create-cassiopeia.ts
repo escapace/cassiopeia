@@ -101,7 +101,11 @@ export const createCassiopeia = (options: Options = {}): Cassiopeia => {
       globalThis.__CASSIOPEIA__ = undefined
     }
     instance[STORE].subscriptions.clear()
-    instance[STORE].iterators.clear()
+
+    for (const property of Object.keys(instance[STORE].iterators)) {
+      Reflect.deleteProperty(instance[STORE].iterators, property)
+    }
+
     instance[STORE].cache.clear()
   }
 
