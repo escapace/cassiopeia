@@ -24,7 +24,7 @@ export function createCassiopeia(): Cassiopeia {
   const store: Store = {
     cache: new Set(),
     deferEvery: 8,
-    iterators: new Map(),
+    iterators: {},
     log: [],
     matcher: undefined,
     state: TypeState.Locked,

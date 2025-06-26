@@ -4,19 +4,18 @@ type RecordsValue = Iterator | undefined
 
 export const cacheIterators = (values: Iterators) => {
   const records: Record<string, RecordsValue> = {}
-  const cache = new Map<string, Iterator | undefined>()
+  const cache: Record<string, Iterator | undefined> = {}
 
-  for (const key of values.keys()) {
+  for (const [key, value] of Object.entries(values)) {
     Object.defineProperty(records, key, {
       get(): RecordsValue {
-        if (cache.has(key)) {
-          return cache.get(key)
+        const cacheValue = cache[key]
+        if (cacheValue !== undefined) {
+          return cacheValue
         }
 
-        const value = values.get(key)
-
         if (value === undefined) {
-          cache.set(key, undefined)
+          cache[key] = undefined
           return
         }
 
@@ -25,7 +24,7 @@ export const cacheIterators = (values: Iterators) => {
         // A value passed to the first invocation of next() is always ignored.
         generator.next()
 
-        cache.set(key, generator)
+        cache[key] = generator
 
         return generator
       },
@@ -33,8 +32,8 @@ export const cacheIterators = (values: Iterators) => {
   }
 
   return {
-    entries: () => cache.entries(),
+    entries: () => Object.entries(cache),
     get: (key: string): RecordsValue => records[key],
-    values: () => cache.values(),
+    values: () => Object.values(cache),
   }
 }

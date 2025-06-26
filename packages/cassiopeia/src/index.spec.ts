@@ -49,9 +49,9 @@ const createPlugin = () => {
   }
 
   const plugin: Plugin = {
-    [PLUGIN]: (iterators: Map<string, () => Iterator>) => {
-      iterators.set('abc', () => createIterator('abc', state))
-      iterators.set('zxc', () => createIterator('zxc', state))
+    [PLUGIN]: (iterators: Record<string, () => Iterator>) => {
+      iterators.abc = () => createIterator('abc', state)
+      iterators.zxc = () => createIterator('zxc', state)
     },
   }
 

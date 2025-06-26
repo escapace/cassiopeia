@@ -27,7 +27,7 @@ export type Iterator = Generator<
   StyleSheetPartial | StyleSheetPartial[] | undefined,
   string | true
 >
-export type Iterators = Map<string, () => Iterator>
+export type Iterators = Record<string, () => Iterator>
 
 export type Cache = Set<[string, string]>
 
