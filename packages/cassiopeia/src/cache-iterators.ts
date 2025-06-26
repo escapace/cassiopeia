@@ -1,14 +1,12 @@
 import type { Iterator, Iterators } from './types'
 
-type RecordsValue = Iterator | undefined
-
 export const cacheIterators = (values: Iterators) => {
-  const records: Record<string, RecordsValue> = {}
+  const records: Record<string, Iterator | undefined> = {}
   const cache: Record<string, Iterator | undefined> = {}
 
   for (const [key, value] of Object.entries(values)) {
     Object.defineProperty(records, key, {
-      get(): RecordsValue {
+      get(): Iterator | undefined  {
         const cacheValue = cache[key]
         if (cacheValue !== undefined) {
           return cacheValue
@@ -33,7 +31,7 @@ export const cacheIterators = (values: Iterators) => {
 
   return {
     entries: () => Object.entries(cache),
-    get: (key: string): RecordsValue => records[key],
+    get: (key: string): Iterator | undefined => records[key],
     values: () => Object.values(cache),
   }
 }
