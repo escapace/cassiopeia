@@ -100,7 +100,7 @@ export const createCassiopeia = (options: Options = {}): Cassiopeia => {
     if (__PLATFORM__ === 'browser') {
       globalThis.__CASSIOPEIA__ = undefined
     }
-    instance[STORE].subscriptions.clear()
+    instance[STORE].subscriptions.splice(0)
 
     for (const property of Object.keys(instance[STORE].iterators)) {
       Reflect.deleteProperty(instance[STORE].iterators, property)
