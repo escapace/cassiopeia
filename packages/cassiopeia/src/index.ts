@@ -1,4 +1,4 @@
-import { PLUGIN, REGEX, STORE } from './constants'
+import { CASSIOPEIA_PLUGIN, CASSIOPEIA_REGEX, CASSIOPEIA_STORE } from './constants'
 import { createMatcher } from './create-matcher'
 import { scheduleUpdate } from './schedule-update'
 import {
@@ -74,7 +74,7 @@ export function createCassiopeia(): Cassiopeia {
   }
 
   const cassiopeia: Cassiopeia = {
-    [STORE]: store,
+    [CASSIOPEIA_STORE]: store,
     subscribe,
     update,
     use: (...values: Plugin[]) => {
@@ -88,7 +88,7 @@ export function createCassiopeia(): Cassiopeia {
         }
       }
 
-      plugins.forEach((plugin) => plugin[PLUGIN](store.iterators, updatePlugin))
+      plugins.forEach((plugin) => plugin[CASSIOPEIA_PLUGIN](store.iterators, updatePlugin))
 
       return cassiopeia
     },
@@ -98,7 +98,7 @@ export function createCassiopeia(): Cassiopeia {
 }
 
 export const renderToString = <T extends CassiopeiaInstance>(cassiopeia: T): StyleSheet[] => {
-  const store = cassiopeia[STORE]
+  const store = cassiopeia[CASSIOPEIA_STORE]
 
   const matcher = createMatcher(store.log, store)
 
@@ -111,7 +111,7 @@ export const renderToString = <T extends CassiopeiaInstance>(cassiopeia: T): Sty
   return cursor.value ?? []
 }
 
-export { PLUGIN, REGEX, STORE }
+export { CASSIOPEIA_PLUGIN, CASSIOPEIA_REGEX, CASSIOPEIA_STORE }
 export type {
   Cassiopeia,
   CassiopeiaInstance,
@@ -127,3 +127,4 @@ export type {
   UpdateSource,
   Variables,
 }
+

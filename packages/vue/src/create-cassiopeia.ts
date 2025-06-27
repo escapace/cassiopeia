@@ -1,7 +1,7 @@
 /* eslint-disable typescript/no-non-null-assertion */
 import {
   createCassiopeia as createCassiopeiaInstance,
-  STORE,
+  CASSIOPEIA_STORE,
   type Plugin,
   type Variables,
 } from 'cassiopeia'
@@ -47,7 +47,7 @@ export const createCassiopeia = (options: Options = {}): Cassiopeia => {
       deferEvery,
       (deferEvery) => {
         if (Number.isInteger(deferEvery) && deferEvery! > 0) {
-          instance[STORE].deferEvery = deferEvery!
+          instance[CASSIOPEIA_STORE].deferEvery = deferEvery!
         }
       },
       { immediate: true },
@@ -100,13 +100,13 @@ export const createCassiopeia = (options: Options = {}): Cassiopeia => {
     if (__PLATFORM__ === 'browser') {
       globalThis.__CASSIOPEIA__ = undefined
     }
-    instance[STORE].subscriptions.splice(0)
+    instance[CASSIOPEIA_STORE].subscriptions.splice(0)
 
-    for (const property of Object.keys(instance[STORE].iterators)) {
-      Reflect.deleteProperty(instance[STORE].iterators, property)
+    for (const property of Object.keys(instance[CASSIOPEIA_STORE].iterators)) {
+      Reflect.deleteProperty(instance[CASSIOPEIA_STORE].iterators, property)
     }
 
-    instance[STORE].cache.clear()
+    instance[CASSIOPEIA_STORE].cache.clear()
   }
 
   const cassiopeia: Cassiopeia = {

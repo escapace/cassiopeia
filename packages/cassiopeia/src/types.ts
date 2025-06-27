@@ -1,4 +1,4 @@
-import type { PLUGIN, STORE } from './constants'
+import type { CASSIOPEIA_PLUGIN, CASSIOPEIA_STORE } from './constants'
 
 export const enum TypeAction {
   UpdatePlugin,
@@ -45,7 +45,7 @@ export type UpdateSource = (
 ) => Promise<boolean>
 
 export interface Plugin {
-  [PLUGIN]: (iterators: Iterators, update: UpdatePlugin) => void
+  [CASSIOPEIA_PLUGIN]: (iterators: Iterators, update: UpdatePlugin) => void
 }
 
 export interface ActionUpdatePlugin {
@@ -75,7 +75,7 @@ export interface Store {
 }
 
 export interface CassiopeiaInstance {
-  [STORE]: Store
+  [CASSIOPEIA_STORE]: Store
 }
 
 export interface Cassiopeia extends CassiopeiaInstance {

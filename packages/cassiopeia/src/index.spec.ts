@@ -1,11 +1,11 @@
 import { assert, describe, it } from 'vitest'
-import { PLUGIN, REGEX } from './constants'
+import { CASSIOPEIA_PLUGIN, CASSIOPEIA_REGEX } from './constants'
 import { createCassiopeia, type Iterator, type Plugin, renderToString } from './index'
 import type { Variables } from './types'
 
 export function* fromStrings(strings: string[]): Variables {
   for (const string of strings) {
-    for (const match of string.matchAll(REGEX)) {
+    for (const match of string.matchAll(CASSIOPEIA_REGEX)) {
       const cancelled = yield match.splice(1) as unknown as [string, string]
 
       if (cancelled) {
@@ -49,7 +49,7 @@ const createPlugin = () => {
   }
 
   const plugin: Plugin = {
-    [PLUGIN]: (iterators: Record<string, () => Iterator>) => {
+    [CASSIOPEIA_PLUGIN]: (iterators: Record<string, () => Iterator>) => {
       iterators.abc = () => createIterator('abc', state)
       iterators.zxc = () => createIterator('zxc', state)
     },

@@ -1,5 +1,5 @@
 /* eslint-disable typescript/naming-convention */
-import { REGEX } from 'cassiopeia'
+import { CASSIOPEIA_REGEX } from 'cassiopeia'
 
 export const updateStyle = (
   __vite__id: string,
@@ -15,7 +15,7 @@ export const updateStyle = (
       setTimeout(() => updateStyle(__vite__id, __vite__css, onDispose, index + 1), 100)
     }
   } else {
-    const variables = Array.from(__vite__css.matchAll(REGEX)).map((value) =>
+    const variables = Array.from(__vite__css.matchAll(CASSIOPEIA_REGEX)).map((value) =>
       ['--', ...value.splice(1)].join('-'),
     )
 

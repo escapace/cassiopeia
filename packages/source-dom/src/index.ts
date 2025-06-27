@@ -1,5 +1,5 @@
 import type { Cassiopeia } from 'cassiopeia'
-import { REGEX } from 'cassiopeia'
+import { CASSIOPEIA_REGEX } from 'cassiopeia'
 
 const isSameDomain = (styleSheet: CSSStyleSheet): boolean => {
   if (styleSheet.href === null) {
@@ -78,7 +78,7 @@ function* createVariableIterator(
     const cssText = element.attributes.getNamedItem('style')?.value
 
     if (cssText !== undefined) {
-      for (const match of cssText.matchAll(REGEX)) {
+      for (const match of cssText.matchAll(CASSIOPEIA_REGEX)) {
         const cancelled = yield match.splice(1) as unknown as [string, string]
 
         if (cancelled) {
@@ -99,7 +99,7 @@ function* createVariableIterator(
     if (isSameDomain(cssStyleSheet)) {
       for (const cssRule of cssStyleSheet.cssRules) {
         if (isSupportedCSSRule(cssRule)) {
-          for (const match of cssRule.cssText.matchAll(REGEX)) {
+          for (const match of cssRule.cssText.matchAll(CASSIOPEIA_REGEX)) {
             const cancelled = yield match.splice(1) as unknown as [string, string]
 
             if (cancelled) {
