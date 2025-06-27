@@ -70,7 +70,7 @@ export interface Store {
   iterators: Iterators
   log: Action[]
   state: TypeState
-  subscriptions: Set<Subscription>
+  subscriptions: Subscription[]
   matcher?: Matcher
 }
 

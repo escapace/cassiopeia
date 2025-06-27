@@ -19,6 +19,7 @@ import {
   type Variables,
 } from './types'
 import { append } from './utilities/append'
+import { filter } from './utilities/filter'
 
 export function createCassiopeia(): Cassiopeia {
   const store: Store = {
@@ -28,7 +29,7 @@ export function createCassiopeia(): Cassiopeia {
     log: [],
     matcher: undefined,
     state: TypeState.Locked,
-    subscriptions: new Set(),
+    subscriptions: [],
   }
 
   const plugins: Plugin[] = []
@@ -63,9 +64,13 @@ export function createCassiopeia(): Cassiopeia {
   store.state = TypeState.None
 
   const subscribe = (subscription: Subscription): Unsubscribe => {
-    store.subscriptions.add(subscription)
+    if (!store.subscriptions.includes(subscription)) {
+      store.subscriptions.push(subscription)
+    }
 
-    return () => store.subscriptions.delete(subscription)
+    return () => {
+      filter(store.subscriptions, (value) => value !== subscription)
+    }
   }
 
   const cassiopeia: Cassiopeia = {
