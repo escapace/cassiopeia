@@ -12,7 +12,7 @@
     "@commitlint/config-conventional": "19.8.1",
     "@escapace/pnpm-pack": "0.6.0",
     "@ls-lint/ls-lint": "2.3.1",
-    "eslint": "9.31.0",
+    "eslint": "9.32.0",
     "eslint-config-escapace": "5.8.0",
     "knip": "5.62.0",
     "lefthook": "1.12.2",
@@ -21,7 +21,7 @@
     "syncpack": "13.0.4"
   },
   "engines": {
-    "pnpm": ">=10.10.0"
+    "pnpm": "^10.10.0"
   },
   "files": [
     "pnpm-lock.yaml",
@@ -32,7 +32,8 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
-      "lefthook"
+      "lefthook",
+      "oxc-resolver"
     ]
   },
   "private": true,
@@ -53,7 +54,7 @@
     "workspace:ls-lint": "pnpm run --if-present --workspace-concurrency=4 -r --filter '*' ls-lint",
     "workspace:test": "pnpm run --if-present --workspace-concurrency=4 -r --filter '*' test",
     "workspace:typecheck": "pnpm run --if-present --workspace-concurrency=4 -r --filter '*' typecheck",
-    "workspace:update": "taze major -r --peer -w --force && pnpm run syncpack"
+    "workspace:update": "pnpm -rw --filter '*' --workspace-concurrency=4 exec ncu -u --peer --dep dev,peer,prod,optional && pnpm run syncpack"
   },
   "sideEffects": false,
   "type": "module"

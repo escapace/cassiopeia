@@ -1,6 +1,6 @@
+import { remove } from 'coastal'
 import { createMatcher } from './create-matcher'
 import { type Action, type MatcherReturn, type Store, TypeState } from './types'
-import { filter } from './utilities/filter'
 
 async function reducer(isAsync: boolean, log: Action[], store: Store): Promise<boolean> {
   if (store.state === TypeState.Scheduled) {
@@ -39,7 +39,7 @@ async function reducer(isAsync: boolean, log: Action[], store: Store): Promise<b
             })
 
             // remove processed actions from log
-            filter(store.log, (action) => !log.includes(action))
+            remove(store.log, (action) => log.includes(action))
           }
 
           store.state = TypeState.None

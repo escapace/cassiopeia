@@ -18,8 +18,7 @@ import {
   type UpdateSource,
   type Variables,
 } from './types'
-import { append } from './utilities/append'
-import { filter } from './utilities/filter'
+import { upsert, remove } from 'coastal'
 
 export function createCassiopeia(): Cassiopeia {
   const store: Store = {
@@ -35,7 +34,7 @@ export function createCassiopeia(): Cassiopeia {
   const plugins: Plugin[] = []
 
   const updatePlugin: UpdatePlugin = async (isAsync = __PLATFORM__ === 'browser') => {
-    append(
+    upsert(
       store.log,
       {
         isAsync,
@@ -48,7 +47,7 @@ export function createCassiopeia(): Cassiopeia {
   }
 
   const update: UpdateSource = async (createVariables, isAsync = __PLATFORM__ === 'browser') => {
-    append(
+    upsert(
       store.log,
       {
         createVariables,
@@ -69,7 +68,7 @@ export function createCassiopeia(): Cassiopeia {
     }
 
     return () => {
-      filter(store.subscriptions, (value) => value !== subscription)
+      remove(store.subscriptions, (value) => value === subscription)
     }
   }
 

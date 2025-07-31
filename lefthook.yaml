@@ -78,7 +78,7 @@ pre-commit:
             done
 
             if [[ ${#local_files[@]} -gt 0 ]]; then
-              pnpm exec eslint --flag unstable_config_lookup_from_file --no-warn-ignored --fix "${local_files[@]}"
+              pnpm exec eslint --flag v10_config_lookup_from_file --no-warn-ignored --fix "${local_files[@]}"
             fi
           done
         ' -- {staged_files}

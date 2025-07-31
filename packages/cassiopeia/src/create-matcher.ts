@@ -7,13 +7,12 @@ import {
   type StyleSheet,
   TypeAction,
 } from './types'
-import { findLastIndex } from './utilities/find-last-index'
 
 export function* createMatcher(log: Action[], store: Store): Matcher {
   const seen = new Set<string>()
 
   // check if log has source update
-  const sourceIndex = findLastIndex(log, (value) => value.type === TypeAction.UpdateSource)
+  const sourceIndex = log.findLastIndex((value) => value.type === TypeAction.UpdateSource)
 
   const createVariables =
     sourceIndex === -1 ? undefined : (log[sourceIndex] as ActionUpdateSource).createVariables
