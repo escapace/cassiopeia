@@ -12,16 +12,16 @@
     "@commitlint/config-conventional": "19.8.1",
     "@escapace/pnpm-pack": "0.6.0",
     "@ls-lint/ls-lint": "2.3.1",
-    "eslint": "9.32.0",
-    "eslint-config-escapace": "5.9.0",
-    "knip": "5.62.0",
-    "lefthook": "1.12.2",
+    "eslint": "9.34.0",
+    "eslint-config-escapace": "5.9.2",
+    "knip": "5.63.0",
+    "lefthook": "1.12.3",
     "prettier": "3.6.2",
     "prettier-config-escapace": "1.2.1",
     "syncpack": "13.0.4"
   },
   "engines": {
-    "pnpm": "^10.10.0"
+    "pnpm": "^10.14.0"
   },
   "files": [
     "pnpm-lock.yaml",
@@ -29,13 +29,6 @@
   ],
   "homepage": "https://github.com/escapace/cassiopeia#readme",
   "license": "MPL-2.0",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "lefthook",
-      "oxc-resolver"
-    ]
-  },
   "private": true,
   "repository": "escapace/cassiopeia",
   "scripts": {

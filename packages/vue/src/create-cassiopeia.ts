@@ -1,4 +1,3 @@
-/* eslint-disable typescript/no-non-null-assertion */
 import {
   createCassiopeia as createCassiopeiaInstance,
   CASSIOPEIA_STORE,

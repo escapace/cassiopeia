@@ -6,7 +6,7 @@ export const cacheIterators = (values: Iterators) => {
 
   for (const [key, value] of Object.entries(values)) {
     Object.defineProperty(records, key, {
-      get(): Iterator | undefined  {
+      get(): Iterator | undefined {
         const cacheValue = cache[key]
         if (cacheValue !== undefined) {
           return cacheValue

@@ -1,5 +1,5 @@
 /* eslint-disable typescript/no-unnecessary-boolean-literal-compare */
-/* eslint-disable typescript/no-non-null-assertion */
+
 import { Lang, parse as parseAST } from '@ast-grep/napi'
 import type { Api as VuePluginApi } from '@vitejs/plugin-vue'
 import { parseVueRequest } from '@vitejs/plugin-vue'
