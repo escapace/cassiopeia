@@ -26,7 +26,7 @@ export const updateStyle = (
 
       scope.add(variables)
 
-      void cassiopeia.update(false)
+      void cassiopeia.update()
 
       onDispose(() => {
         console.warn(`[cassiopeia] disposing scope '${__vite__id}'`)

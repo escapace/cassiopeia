@@ -1,8 +1,8 @@
 import { getCurrentScope, inject, onScopeDispose } from 'vue'
 import { CASSIOPEIA_INJECTION_KEY } from './constants'
-import type { UseCassiopeia } from './types'
+import type { CassiopeiaScope } from './types'
 
-export const useCassiopeia = (): UseCassiopeia => {
+export const useCassiopeia = (): CassiopeiaScope => {
   const cassiopeia = inject(
     CASSIOPEIA_INJECTION_KEY,
     __PLATFORM__ === 'browser' ? globalThis.__CASSIOPEIA__ : undefined,
@@ -18,12 +18,5 @@ export const useCassiopeia = (): UseCassiopeia => {
     onScopeDispose(scope.dispose)
   }
 
-  const update: (typeof cassiopeia)['update'] = async (isAsync?: boolean): Promise<boolean> =>
-    // we update only in browser, on SSR renderToString performs the update.
-    await (__PLATFORM__ === 'browser' ? cassiopeia.update(isAsync) : Promise.resolve(false))
-
-  return {
-    update,
-    ...scope,
-  }
+  return scope
 }

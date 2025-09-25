@@ -12,6 +12,7 @@
   "workspaces": {
     "packages/*": {
       "entry": ["src/index.ts!"],
+      "ignore": ["**/*.bench.ts"],
       "project": ["{src,scripts}/**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx,vue}"]
     }
   }

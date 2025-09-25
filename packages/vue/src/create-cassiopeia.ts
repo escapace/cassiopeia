@@ -1,22 +1,22 @@
 import {
-  createCassiopeia as createCassiopeiaInstance,
-  CASSIOPEIA_STORE,
-  type Plugin,
-  type Variables,
+  CASSIOPEIA_CONTEXT,
+  createCassiopeia as createCassiopeiaCore,
+  TERMINATING_REDUCER_CANCEL,
+  type CassiopeiaGenerator,
 } from 'cassiopeia'
-import { computed, effectScope, toValue, watch, type App } from 'vue'
-import { CASSIOPEIA_INJECTION_KEY, REGEX } from './constants'
-import type { Cassiopeia, CassiopeiaScope, Options } from './types'
+import { computed, effectScope as createEffectScope, unref, watch, type App } from 'vue'
+import { CASSIOPEIA_INJECTION_KEY, CASSIOPEIA_REGEX } from './constants'
+import type { Cassiopeia, CassiopeiaOptions, CassiopeiaScope } from './types'
 
-function* createVariableIterator(sets: Set<Set<string>>): Variables {
-  for (const set of sets) {
-    for (const string of set) {
-      const match = string.match(REGEX)
+function* createGenerator(scopes: Set<Set<string>>): CassiopeiaGenerator {
+  for (const scope of scopes) {
+    for (const string of scope) {
+      const match = string.match(CASSIOPEIA_REGEX)
 
       if (match?.length === 3) {
         const cancelled = yield match.splice(1) as [string, string]
 
-        if (cancelled) {
+        if (cancelled === TERMINATING_REDUCER_CANCEL) {
           return
         }
       }
@@ -24,104 +24,99 @@ function* createVariableIterator(sets: Set<Set<string>>): Variables {
   }
 }
 
-export const createCassiopeia = (options: Options = {}): Cassiopeia => {
+export const createCassiopeia = (options: CassiopeiaOptions = {}): Cassiopeia => {
   if (__PLATFORM__ === 'browser') {
     if (globalThis.__CASSIOPEIA__ !== undefined) {
       return globalThis.__CASSIOPEIA__
     }
   }
 
-  const scope = effectScope(true)
+  const core = createCassiopeiaCore()
+  const scopes = new Set<Set<string>>()
+  const createVariables = () => createGenerator(scopes)
 
-  const sets = new Set<Set<string>>()
+  const effectScope = createEffectScope(true)
+  effectScope.run(() => {
+    const deferEvery = computed(() => unref(options.deferEvery))
+    const defer = computed(() => unref(options.defer))
 
-  const createVariables = () => createVariableIterator(sets)
-
-  const instance = createCassiopeiaInstance()
-
-  scope.run(() => {
-    const deferEvery = computed(() => toValue(options.deferEvery))
+    watch(
+      defer,
+      (defer) => {
+        if (typeof defer === 'function') {
+          core[CASSIOPEIA_CONTEXT].defer = defer
+        }
+      },
+      { immediate: true },
+    )
 
     watch(
       deferEvery,
       (deferEvery) => {
         if (Number.isInteger(deferEvery) && deferEvery! > 0) {
-          instance[CASSIOPEIA_STORE].deferEvery = deferEvery!
+          core[CASSIOPEIA_CONTEXT].deferEvery = deferEvery!
         }
       },
       { immediate: true },
     )
   })
 
-  const update = async (isAsync?: boolean) => await instance.update(createVariables, isAsync)
+  const update = async () => await core.update(createVariables)
+  const updateSync = async () => await core.updateSync(createVariables)
 
   const createScope = (): CassiopeiaScope => {
-    const set = new Set<string>()
-    sets.add(set)
+    const scope = new Set<string>()
+    scopes.add(scope)
 
     function add(value: string): string
     function add(value: string[]): string[]
     function add(value: string | string[]): string | string[] {
       ;(Array.isArray(value) ? value : [value]).forEach((value) => {
-        if (!set.has(value)) {
-          set.add(value)
+        if (!scope.has(value)) {
+          scope.add(value)
         }
       })
 
       return value
     }
 
-    const clear = () => {
-      set.clear()
-    }
+    const clear = () => scope.clear()
 
-    const dispose = (cassiopeiaUpdate = true) => {
+    const dispose = (triggerUpdate = true) => {
       clear()
 
-      if (cassiopeiaUpdate && sets.delete(set)) {
-        void update(__PLATFORM__ === 'browser')
+      if (triggerUpdate && scopes.delete(scope)) {
+        void update()
       }
     }
 
     const del = (value: string | string[]) => {
       ;(Array.isArray(value) ? value : [value]).forEach((value) => {
-        set.delete(value)
+        scope.delete(value)
       })
     }
 
-    return { add, clear, delete: del, dispose }
-  }
-
-  const dispose = () => {
-    scope.stop()
-    sets.clear()
-
-    if (__PLATFORM__ === 'browser') {
-      globalThis.__CASSIOPEIA__ = undefined
-    }
-    instance[CASSIOPEIA_STORE].subscriptions.splice(0)
-
-    for (const property of Object.keys(instance[CASSIOPEIA_STORE].iterators)) {
-      Reflect.deleteProperty(instance[CASSIOPEIA_STORE].iterators, property)
-    }
-
-    instance[CASSIOPEIA_STORE].cache.clear()
+    return { add, clear, delete: del, dispose, update, updateSync }
   }
 
   const cassiopeia: Cassiopeia = {
-    ...instance,
+    ...core,
     createScope,
-    dispose,
+    dispose: () => {
+      effectScope.stop()
+      scopes.clear()
+
+      if (__PLATFORM__ === 'browser') {
+        globalThis.__CASSIOPEIA__ = undefined
+      }
+      core.dispose()
+    },
     install: (app: App) => {
       app.provide(CASSIOPEIA_INJECTION_KEY, cassiopeia)
       app.onUnmount(cassiopeia.dispose)
     },
     update,
-    use: (...plugins: Plugin[]) => {
-      instance.use(...plugins)
-
-      return cassiopeia
-    },
+    updateSync,
   }
 
   if (__PLATFORM__ === 'browser') {

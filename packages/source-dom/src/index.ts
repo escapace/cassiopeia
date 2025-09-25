@@ -1,5 +1,5 @@
-import type { Cassiopeia } from 'cassiopeia'
-import { CASSIOPEIA_REGEX } from 'cassiopeia'
+import type { Cassiopeia, CassiopeiaGenerator } from 'cassiopeia'
+import { CASSIOPEIA_REGEX, isTerminatingReducerTerminated } from 'cassiopeia'
 
 const isSameDomain = (styleSheet: CSSStyleSheet): boolean => {
   if (styleSheet.href === null) {
@@ -69,9 +69,7 @@ const isValidMutation = (mutation: MutationRecord) => {
   return false
 }
 
-function* createVariableIterator(
-  root: Document | ShadowRoot,
-): Generator<[string, string], void, true | undefined> {
+function* createVariableIterator(root: Document | ShadowRoot): CassiopeiaGenerator {
   const elements = root.querySelectorAll('*[style]')
 
   for (const element of elements) {
@@ -79,9 +77,7 @@ function* createVariableIterator(
 
     if (cssText !== undefined) {
       for (const match of cssText.matchAll(CASSIOPEIA_REGEX)) {
-        const cancelled = yield match.splice(1) as unknown as [string, string]
-
-        if (cancelled) {
+        if (isTerminatingReducerTerminated(yield match.splice(1) as unknown as [string, string])) {
           return
         }
       }
@@ -100,9 +96,9 @@ function* createVariableIterator(
       for (const cssRule of cssStyleSheet.cssRules) {
         if (isSupportedCSSRule(cssRule)) {
           for (const match of cssRule.cssText.matchAll(CASSIOPEIA_REGEX)) {
-            const cancelled = yield match.splice(1) as unknown as [string, string]
-
-            if (cancelled) {
+            if (
+              isTerminatingReducerTerminated(yield match.splice(1) as unknown as [string, string])
+            ) {
               return
             }
           }
@@ -118,7 +114,7 @@ interface Options {
 
 export const createSourceDOM = (options: Options = {}, cassiopeia: Cassiopeia) => {
   const root = options.root ?? document
-  const createVariables = () => createVariableIterator(root)
+  const createGenerator = () => createVariableIterator(root)
   let isActive = false
 
   const mutationObserver = new MutationObserver((mutations) => {
@@ -128,7 +124,7 @@ export const createSourceDOM = (options: Options = {}, cassiopeia: Cassiopeia) =
 
     // TODO: timeout unused iterators
     if (mutations.some((mutation) => isValidMutation(mutation))) {
-      void cassiopeia.update(createVariables)
+      void cassiopeia.update(createGenerator)
     }
   })
 
@@ -139,7 +135,7 @@ export const createSourceDOM = (options: Options = {}, cassiopeia: Cassiopeia) =
 
     isActive = true
 
-    void cassiopeia.update(createVariables)
+    void cassiopeia.update(createGenerator)
 
     mutationObserver.observe(root, {
       attributeFilter: ['style'],

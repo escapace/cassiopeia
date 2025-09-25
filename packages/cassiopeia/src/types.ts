@@ -1,85 +1,135 @@
-import type { CASSIOPEIA_PLUGIN, CASSIOPEIA_STORE } from './constants'
+import type { CASSIOPEIA_CONTEXT, CASSIOPEIA_PLUGIN, CASSIOPEIA_STATE } from './constants'
+import type { CachedIterable } from './create-cached-iterable'
+import type {
+  TerminatingReducer,
+  TerminatingReducerCancel,
+  TerminatingReducerFactories,
+  TerminatingReducers,
+} from './create-terminating-reducers'
+import type $ from '@escapace/typelevel'
 
-export const enum TypeAction {
-  UpdatePlugin,
-  UpdateSource,
-}
-
-export const enum TypeState {
-  Locked,
-  None,
-  Scheduled,
-  Running,
-}
-
-export interface StyleSheetPartial {
-  [key: string]: number | string | undefined
+export interface CassiopeiaPartialStyleSheet {
+  [index: string]: number | string | undefined
   content: string
 }
 
-export interface StyleSheet extends StyleSheetPartial {
-  key: number
-  name: string
+export interface CassiopeiaStyleSheet extends CassiopeiaPartialStyleSheet {
+  index: number
+  key: string
 }
 
-export type Iterator = Generator<
+export interface CassiopeiaStyleSheets {
+  keys: string[]
+  values: CassiopeiaStyleSheet[]
+}
+
+/**
+ * Terminating reducer that coordinates stylesheet collection from multiple custom property processing reducers.
+ */
+export type CassiopeiaOrchestrator = TerminatingReducer<CassiopeiaStyleSheets, never>
+/**
+ * Generator that yields custom property key-suffix pairs.
+ * Processes CSS custom property references with triple-dash prefixes and extracts
+ * the key-suffix segments from the custom property identifier. The triple-dash pattern follows CSS
+ * custom property naming conventions but uses an extended prefix for key-based
+ * organization. For example, `var(---foo-bar)` yields the pair `['foo', 'bar']`.
+ */
+export type CassiopeiaGenerator = Generator<
+  [string, string],
   undefined,
-  StyleSheetPartial | StyleSheetPartial[] | undefined,
-  string | true
+  TerminatingReducerCancel | undefined
 >
-export type Iterators = Record<string, () => Iterator>
+/**
+ * Terminating reducer that processes custom property key-suffix strings and generates CSS
+ * stylesheets. Reduces triple-dash custom properties into stylesheet objects or arrays, with
+ * implementation-specific processing logic.
+ */
+export type CassiopeiaReducer = TerminatingReducer<
+  CassiopeiaPartialStyleSheet | CassiopeiaPartialStyleSheet[],
+  string
+>
+/**
+ * Factory functions for creating triple-dash custom property processing reducers with lazy
+ * initialization.
+ */
+export type CassiopeiaReducerFactories = TerminatingReducerFactories<
+  Record<string, CassiopeiaReducer>
+>
+/**
+ * Cached terminating reducers providing lazy access to triple-dash custom property processing instances.
+ */
+export type CassiopeiaReducers = TerminatingReducers<Record<string, CassiopeiaReducer>>
 
-export type Cache = Set<[string, string]>
+export type CassiopeiaGeneratorUpdate = (
+  createGenerator?: () => CassiopeiaGenerator,
+) => Promise<void>
+export type CassiopeiaReducerUpdate = (keys?: string[]) => Promise<void>
 
-export type Variables = Generator<[string, string], void, true | undefined>
-
-export type MatcherReturn = StyleSheet[] | undefined
-
-export type Matcher = Generator<undefined, MatcherReturn, true | undefined>
-
-export type UpdatePlugin = (isAsync?: boolean) => Promise<boolean>
-
-export type UpdateSource = (
-  createVariables: (() => Variables) | undefined,
-  isAsync?: boolean,
-) => Promise<boolean>
-
-export interface Plugin {
-  [CASSIOPEIA_PLUGIN]: (iterators: Iterators, update: UpdatePlugin) => void
+export interface CassiopeiaPluginContext {
+  dispose: () => void
+  reducerFactories: CassiopeiaReducerFactories
+  reducerKeys: readonly string[]
+  update: CassiopeiaReducerUpdate
+  updateSync: CassiopeiaReducerUpdate
 }
 
-export interface ActionUpdatePlugin {
-  isAsync: boolean
-  type: TypeAction.UpdatePlugin
+export interface CassiopeiaPlugin {
+  [CASSIOPEIA_PLUGIN]: (context: CassiopeiaPluginContext) => void
 }
 
-export interface ActionUpdateSource {
-  isAsync: boolean
-  type: TypeAction.UpdateSource
-  createVariables?: () => Variables
-}
-
-export type Action = ActionUpdatePlugin | ActionUpdateSource
-
-export type Subscription = (stylesheets: StyleSheet[]) => void
-export type Unsubscribe = () => void
-
-export interface Store {
-  cache: Cache
-  deferEvery: number
-  iterators: Iterators
-  log: Action[]
-  state: TypeState
-  subscriptions: Subscription[]
-  matcher?: Matcher
-}
+export type CassiopeiaSubscription = (styleSheets: CassiopeiaStyleSheets) => void
+export type CassiopeiaUnsubscribe = () => void
 
 export interface CassiopeiaInstance {
-  [CASSIOPEIA_STORE]: Store
+  [CASSIOPEIA_CONTEXT]: CassiopeiaStateMachineContext
+  [CASSIOPEIA_STATE]: CassiopeiaStateMachineState
 }
 
 export interface Cassiopeia extends CassiopeiaInstance {
-  subscribe: (subscription: Subscription) => Unsubscribe
-  update: UpdateSource
-  use: (...plugins: Plugin[]) => Cassiopeia
+  dispose: () => void
+  subscribe: (subscription: CassiopeiaSubscription) => CassiopeiaUnsubscribe
+  update: CassiopeiaGeneratorUpdate
+  updateSync: CassiopeiaGeneratorUpdate
+  use: (...plugins: CassiopeiaPlugin[]) => Cassiopeia
 }
+
+export enum CassiopeiaStateMachineState {
+  Idle,
+  PreFlight,
+  InFlight,
+}
+
+export enum CassiopeiaStateMachineAction {
+  Done,
+  Reduce,
+  Update,
+}
+
+export enum CassiopeiaStateMachineActionUpdateType {
+  None = 0,
+
+  Generator = 1 << 0,
+  Reducer = 1 << 1,
+  Both = Generator | Reducer,
+}
+
+export interface CassiopeiaStateMachineContext {
+  defer: (callback: () => void) => void
+  deferEvery: number
+  reducers: CassiopeiaReducers
+
+  generator?: CachedIterable<[string, string], undefined>
+  orchestrator?: CassiopeiaOrchestrator
+
+  updateIsAsync: boolean
+  updateType: CassiopeiaStateMachineActionUpdateType
+  updateGenerator?: () => CassiopeiaGenerator
+  updateReducerKeys?: string[]
+}
+
+export type CassiopeiaStateMachineActionUpdateOptions = $.Prettify<
+  {
+    updateReducerKeys?: readonly string[]
+  } & Partial<Pick<CassiopeiaStateMachineContext, 'updateGenerator'>> &
+    Pick<CassiopeiaStateMachineContext, 'updateIsAsync' | 'updateType'>
+>
