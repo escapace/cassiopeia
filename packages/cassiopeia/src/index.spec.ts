@@ -1,212 +1,20 @@
 import { assert, describe, expect, it, vi } from 'vitest'
 import {
   CASSIOPEIA_CONTEXT,
-  CASSIOPEIA_PLUGIN,
-  CASSIOPEIA_REGEX,
   CASSIOPEIA_STATE,
   CassiopeiaStateMachineState,
   createCassiopeia,
-  isTerminatingReducerNotTerminated,
   renderStyleSheets,
-  TERMINATING_REDUCER_CANCEL,
-  type CassiopeiaGenerator,
-  type CassiopeiaPlugin,
-  type CassiopeiaPluginContext,
-  type CassiopeiaReducer,
   type CassiopeiaStyleSheets,
-  type TerminatingReducerCancel,
-  type TerminatingReducerNext,
 } from './index'
+import {
+  createCountingGenerator,
+  createManyPropertiesGenerator,
+} from './test-helpers/create-counting-generator'
+import { createDeferController } from './test-helpers/create-defer-controller'
+import { createTracePlugin } from './test-helpers/create-trace-plugin'
 
 const IS_BROWSER = __PLATFORM__ === 'browser'
-
-interface TracePluginState {
-  receivedMarkers: string[]
-  wasCancelled: boolean
-  wasCompleted: boolean
-}
-
-function createTracePlugin(key: string, shouldAbort?: (value: string) => boolean) {
-  const history: TracePluginState[] = []
-
-  let context: CassiopeiaPluginContext | undefined
-
-  const plugin: CassiopeiaPlugin = {
-    [CASSIOPEIA_PLUGIN]: (context_) => {
-      context = context_
-
-      context.reducerFactories[key] = () => {
-        const state: TracePluginState = {
-          receivedMarkers: [],
-          wasCancelled: false,
-          wasCompleted: false,
-        }
-
-        history.push(state)
-
-        // eslint-disable-next-line stylistic/wrap-iife
-        return (function* createTraceReducer(): CassiopeiaReducer {
-          const markers: string[] = []
-          let localIndex = 0
-
-          let token: TerminatingReducerNext<string>
-
-          while (isTerminatingReducerNotTerminated((token = yield))) {
-            // The token already includes the full ---key-suffix format
-            state.receivedMarkers.push(token)
-            markers.push(token.replace(`---${key}-`, ''))
-
-            if (shouldAbort?.(token) === true) {
-              break
-            }
-          }
-
-          if (token === TERMINATING_REDUCER_CANCEL) {
-            state.wasCancelled = true
-            return undefined
-          }
-
-          state.wasCompleted = true
-
-          if (markers.length === 0) {
-            return undefined
-          }
-
-          return {
-            content: `:root { ${markers.map((marker) => `---${key}-${marker}: ${++localIndex};`).join(' ')} }`,
-          }
-        })()
-      }
-    },
-  }
-
-  return {
-    dispose: () => {
-      context?.dispose?.()
-    },
-    history,
-    plugin,
-    get state() {
-      return history.at(-1)
-    },
-    triggerDelete: () => {
-      if (context !== undefined) {
-        Reflect.deleteProperty(context.reducerFactories, key)
-      }
-    },
-    triggerSet: () => {
-      if (context !== undefined) {
-        const value = context.reducerFactories[key]
-        context.reducerFactories[key] = value
-      }
-    },
-    update: async (keys?: string[]) => {
-      await context?.update?.(keys)
-    },
-    updateSync: async (keys?: string[]) => {
-      await context?.updateSync?.(keys)
-    },
-  }
-}
-
-interface CountingGeneratorState {
-  pullCount: number
-  wasCancelled: boolean
-  wasCompleted: boolean
-}
-
-function createCountingGenerator(...strings: string[]) {
-  const history: CountingGeneratorState[] = []
-
-  function* countingGenerator(): CassiopeiaGenerator {
-    const state: CountingGeneratorState = {
-      pullCount: 0,
-      wasCancelled: false,
-      wasCompleted: false,
-    }
-    history.push(state)
-
-    let token: TerminatingReducerCancel | undefined
-
-    for (const string of strings) {
-      state.pullCount++
-
-      for (const match of string.matchAll(CASSIOPEIA_REGEX)) {
-        const pair = match.splice(1) as unknown as [string, string]
-        token = yield pair
-
-        if (token === TERMINATING_REDUCER_CANCEL) {
-          state.wasCancelled = true
-          return
-        }
-      }
-    }
-
-    state.wasCompleted = true
-    return
-  }
-
-  return {
-    generator: countingGenerator,
-    history,
-    get state() {
-      return history.at(-1)
-    },
-  }
-}
-
-function createManyPropertiesGenerator(count: number, keyPrefix: string) {
-  const properties = Array(count)
-    .fill(0)
-    .map((_, index) => `var(---${keyPrefix}-prop${index})`)
-  // .join(' ')
-  return createCountingGenerator(...properties)
-}
-
-function createDeferController() {
-  const queue: Array<() => void> = []
-  let manual = true // Default to manual control
-
-  return {
-    get count() {
-      return queue.length
-    },
-    defer: (callback: () => void) => {
-      if (manual) {
-        // Manual mode: queue callback for later execution
-        queue.push(callback)
-      } else {
-        // Automatic mode: execute immediately, transparently
-        callback()
-      }
-    },
-    executeAll: () => {
-      while (queue.length > 0) {
-        queue.shift()!()
-      }
-    },
-    executeNext: () => {
-      const callback = queue.shift()
-      if (callback !== undefined) {
-        callback()
-        return true
-      }
-      return false
-    },
-    hasQueued: () => queue.length > 0,
-    isManual: () => manual,
-    queue,
-    setManual: (value: boolean) => {
-      manual = value
-      if (!manual) {
-        // When switching to automatic, execute all queued callbacks
-        while (queue.length > 0) {
-          queue.shift()!()
-        }
-      }
-    },
-  }
-}
 
 describe('routing & composition correctness', () => {
   for (const updateType of ['reducer', 'generator'] as const) {
@@ -316,26 +124,29 @@ describe('routing & composition correctness', () => {
   })
 
   it('multi-plugin routing: plugin can abort and return early', async () => {
-    const traceA = createTracePlugin('a', (value) => value === '---a-x')
+    const traceA = createTracePlugin('a', (value) => value === '---a-y')
     const traceB = createTracePlugin('b')
 
     const instance = createCassiopeia()
+    const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
+    instance.subscribe((subscription) => spy(subscription))
 
     instance.use(traceA.plugin, traceB.plugin)
 
     const generator = createCountingGenerator(
       'var(---a-x)',
       'var(---b-x)',
-      'var(---a-z)',
+      'var(---a-y)',
       'var(---c-ignored)',
       'var(---b-y)',
+      'var(---a-z)',
     )
 
     await instance.updateSync(generator.generator)
 
     if (IS_BROWSER) {
       // Each plugin should receive only its own markers
-      assert.deepEqual(traceA.state?.receivedMarkers, ['---a-x'])
+      assert.deepEqual(traceA.state?.receivedMarkers, ['---a-x', '---a-y'])
       assert.deepEqual(traceB.state?.receivedMarkers, ['---b-x', '---b-y'])
 
       assert.equal(traceA.state?.wasCompleted, true)
@@ -359,12 +170,33 @@ describe('routing & composition correctness', () => {
     expect(generator.history).toMatchInlineSnapshot(`
       [
         {
-          "pullCount": 5,
+          "pullCount": 6,
           "wasCancelled": false,
           "wasCompleted": true,
         },
       ]
     `)
+    if (IS_BROWSER) {
+      expect(spy.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          {
+            "keys": [
+              "a",
+              "b",
+            ],
+            "values": [
+              {
+                "content": ":root { ---b-x: 1; ---b-y: 2; }",
+                "index": 0,
+                "key": "b",
+              },
+            ],
+          },
+        ],
+      ]
+    `)
+    }
   })
 
   it('order stability: identical inputs produce deterministic stylesheet ordering across runs', async () => {

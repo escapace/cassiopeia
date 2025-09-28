@@ -23,7 +23,7 @@ export const stateMachine = createStateMachine()
   .context<CassiopeiaStateMachineContext>(
     () =>
       ({
-        defer: setTimeout,
+        defer: setTimeout.bind(globalThis),
         deferEvery: 8,
         updateIsAsync: true,
         updateType: CassiopeiaStateMachineActionUpdateType.None,

@@ -8,7 +8,7 @@ import type { CassiopeiaStateMachineContext } from './types'
  * tight-loop execution and asynchronous cooperative multitasking based on platform requirements.
  *
  * Async mode implements cooperative multitasking by yielding control to the event loop every
- * `deferEvery` iterations using `setTimeout`.
+ * `deferEvery` iterations using `setTimeout` (default).
  *
  * @param context - Execution context containing orchestrator instance, iteration yield frequency, and async mode flag
  * @returns Stylesheet array on completion, undefined on cancellation or empty result

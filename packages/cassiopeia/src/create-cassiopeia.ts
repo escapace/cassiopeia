@@ -22,6 +22,10 @@ import {
 } from './types'
 import { createScheduler } from './create-scheduler'
 
+// TODO: updateSync is a bad name
+// TODO: keys can be a set?
+// TODO: promise returning reducers?
+
 export function createCassiopeia(): Cassiopeia {
   const subscriptions: CassiopeiaSubscription[] = []
   const plugins = new Map<CassiopeiaPlugin, CassiopeiaPluginContext>()

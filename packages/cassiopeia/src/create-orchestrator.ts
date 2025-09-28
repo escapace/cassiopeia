@@ -67,7 +67,6 @@ export function* createOrchestrator(
     }
   }
 
-  // TODO: use a pool?
   const values: CassiopeiaStyleSheet[] = []
 
   const isCancel = token === TERMINATING_REDUCER_CANCEL
@@ -85,9 +84,19 @@ export function* createOrchestrator(
 
       if (done === true && value !== undefined) {
         // Transform partial stylesheets into complete CassiopeiaStyleSheet objects
-        Array.isArray(value)
-          ? values.push(...value.map((value, index) => ({ index, ...value, key })))
-          : values.push({ index: 0, ...value, key })
+        if (Array.isArray(value)) {
+          values.push(...value.map((value, index) => {
+            value.key = key
+            value.index ??= index
+
+            return value as CassiopeiaStyleSheet
+          }))
+        } else {
+          value.key = key
+          value.index ??= 0
+
+          values.push(value as CassiopeiaStyleSheet)
+        }
       }
     }
   }

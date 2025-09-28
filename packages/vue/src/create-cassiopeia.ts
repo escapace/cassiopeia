@@ -1,5 +1,6 @@
 import {
   CASSIOPEIA_CONTEXT,
+  CASSIOPEIA_STATE,
   createCassiopeia as createCassiopeiaCore,
   TERMINATING_REDUCER_CANCEL,
   type CassiopeiaGenerator,
@@ -101,6 +102,9 @@ export const createCassiopeia = (options: CassiopeiaOptions = {}): Cassiopeia =>
 
   const cassiopeia: Cassiopeia = {
     ...core,
+    get [CASSIOPEIA_STATE]() {
+      return core[CASSIOPEIA_STATE]
+    },
     createScope,
     dispose: () => {
       effectScope.stop()
