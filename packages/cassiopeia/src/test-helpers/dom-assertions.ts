@@ -13,28 +13,29 @@ export function getStyleElements(
   namespace?: string,
 ): StyleElementInfo[] {
   const qualifierKey = namespace !== undefined ? `cassiopeia-key-${namespace}` : 'cassiopeia-key'
-  const qualifierIndex = namespace !== undefined ? `cassiopeia-index-${namespace}` : 'cassiopeia-index'
+  const qualifierIndex =
+    namespace !== undefined ? `cassiopeia-index-${namespace}` : 'cassiopeia-index'
 
-  return Array.from(
-    container.querySelectorAll(`style[${qualifierKey}][${qualifierIndex}]`),
-  ).map((element) => {
-    const styleElement = element as HTMLStyleElement
-    const key = styleElement.getAttribute(qualifierKey)
-    const indexString = styleElement.getAttribute(qualifierIndex)
-    const media = styleElement.getAttribute('media')
+  return Array.from(container.querySelectorAll(`style[${qualifierKey}][${qualifierIndex}]`)).map(
+    (element) => {
+      const styleElement = element as HTMLStyleElement
+      const key = styleElement.getAttribute(qualifierKey)
+      const indexString = styleElement.getAttribute(qualifierIndex)
+      const media = styleElement.getAttribute('media')
 
-    if (key === null || indexString === null) {
-      throw new Error('Style element is missing required attributes')
-    }
+      if (key === null || indexString === null) {
+        throw new Error('Style element is missing required attributes')
+      }
 
-    return {
-      content: styleElement.innerHTML,
-      element: styleElement,
-      index: parseInt(indexString),
-      key,
-      media: media ?? undefined,
-    }
-  })
+      return {
+        content: styleElement.innerHTML,
+        element: styleElement,
+        index: parseInt(indexString),
+        key,
+        media: media ?? undefined,
+      }
+    },
+  )
 }
 
 export function assertStyleElementExists(
@@ -45,7 +46,9 @@ export function assertStyleElementExists(
   namespace?: string,
 ) {
   const elements = getStyleElements(container, namespace)
-  const element = elements.find((elementInfo) => elementInfo.key === key && elementInfo.index === index)
+  const element = elements.find(
+    (elementInfo) => elementInfo.key === key && elementInfo.index === index,
+  )
 
   assert.isDefined(element, `Style element with key="${key}" index=${index} should exist`)
   assert.equal(element.content, expectedContent, 'Style element content should match')
@@ -71,7 +74,9 @@ export function assertStyleElementNotExists(
   namespace?: string,
 ) {
   const elements = getStyleElements(container, namespace)
-  const element = elements.find((elementInfo) => elementInfo.key === key && elementInfo.index === index)
+  const element = elements.find(
+    (elementInfo) => elementInfo.key === key && elementInfo.index === index,
+  )
 
   assert.isUndefined(element, `Style element with key="${key}" index=${index} should not exist`)
 }
@@ -84,7 +89,9 @@ export function assertStyleElementHasMedia(
   namespace?: string,
 ) {
   const elements = getStyleElements(container, namespace)
-  const element = elements.find((elementInfo) => elementInfo.key === key && elementInfo.index === index)
+  const element = elements.find(
+    (elementInfo) => elementInfo.key === key && elementInfo.index === index,
+  )
 
   assert.isDefined(element, `Style element with key="${key}" index=${index} should exist`)
   assert.equal(element.media, expectedMedia, 'Style element media attribute should match')
@@ -97,7 +104,9 @@ export function assertStyleElementHasNoMedia(
   namespace?: string,
 ) {
   const elements = getStyleElements(container, namespace)
-  const element = elements.find((elementInfo) => elementInfo.key === key && elementInfo.index === index)
+  const element = elements.find(
+    (elementInfo) => elementInfo.key === key && elementInfo.index === index,
+  )
 
   assert.isDefined(element, `Style element with key="${key}" index=${index} should exist`)
   assert.isUndefined(element.media, 'Style element should not have media attribute')

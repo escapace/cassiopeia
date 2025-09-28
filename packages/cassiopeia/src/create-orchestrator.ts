@@ -85,12 +85,14 @@ export function* createOrchestrator(
       if (done === true && value !== undefined) {
         // Transform partial stylesheets into complete CassiopeiaStyleSheet objects
         if (Array.isArray(value)) {
-          values.push(...value.map((value, index) => {
-            value.key = key
-            value.index ??= index
+          values.push(
+            ...value.map((value, index) => {
+              value.key = key
+              value.index ??= index
 
-            return value as CassiopeiaStyleSheet
-          }))
+              return value as CassiopeiaStyleSheet
+            }),
+          )
         } else {
           value.key = key
           value.index ??= 0

@@ -115,7 +115,7 @@ export function createCassiopeia(): Cassiopeia {
     subscriptions.length = 0
 
     for (const metadata of plugins.values()) {
-      metadata.dispose()
+      void metadata.dispose()
     }
     plugins.clear()
 
@@ -193,7 +193,7 @@ export function createCassiopeia(): Cassiopeia {
               onDispose: () => {
                 plugins.delete(plugin)
                 // reducerKeys are already cleared by dispose()
-                void update()
+                return update()
               },
               onSet: () => void update(),
             }),

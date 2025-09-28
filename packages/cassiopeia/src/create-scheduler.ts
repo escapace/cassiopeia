@@ -1,4 +1,3 @@
-/* eslint-disable typescript/promise-function-async */
 import type { CassiopeiaStateMachineContext } from './types'
 
 /**

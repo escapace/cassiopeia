@@ -1134,7 +1134,7 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
       if (action === 'delete') {
         traceA.triggerDelete()
       } else {
-        traceA.dispose()
+        void traceA.dispose()
       }
 
       assert.equal(deferController.count, 2)

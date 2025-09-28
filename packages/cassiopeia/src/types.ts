@@ -75,7 +75,7 @@ export type CassiopeiaReducerUpdate = (keys?: string[]) => Promise<void>
 
 export interface CassiopeiaPluginContext {
   /** Cleanup function to remove plugin and trigger update */
-  dispose: () => void
+  dispose: () => Promise<void>
   /** Proxy for registering reducer factory functions with automatic change detection */
   reducerFactories: CassiopeiaReducerFactories
   /** Read-only array of currently registered reducer keys */

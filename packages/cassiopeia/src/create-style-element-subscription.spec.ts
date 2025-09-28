@@ -119,10 +119,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       assertStyleElementExists(document.head, 'b', 0, ':root { ---b-test: 1; }')
 
       // Remove plugin B - this should remove its reducer factory
-      pluginB.dispose()
-
-      // Update with only 'a' keys present - this should remove B's element
-      await pluginA.updateSync()
+      await pluginB.dispose()
 
       assertStyleElementCount(document.head, 1)
       assertStyleElementExists(document.head, 'a', 0, ':root { ---a-test: 1; }')

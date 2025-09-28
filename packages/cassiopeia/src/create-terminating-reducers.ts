@@ -182,15 +182,15 @@ export function cloneTerminatingReducers<T extends object = {}>(
  * @param options - Optional configuration object
  * @returns Object containing dispose method, properties tracking array, and the revocable proxy
  */
-export function createTerminatingReducerFactoriesProxy<T extends object = {}>(
+export function createTerminatingReducerFactoriesProxy<T extends object = {}, U = unknown>(
   reducers: TerminatingReducers<T>,
-  options?: {
-    onDelete?: (key: keyof T) => void
-    onDispose?: () => void
-    onSet?: (key: keyof T) => void
+  options: {
+    onDelete: (key: keyof T) => void
+    onDispose: () => U
+    onSet: (key: keyof T) => void
   },
 ): {
-  dispose: () => void
+  dispose: () => U
   reducerFactories: TerminatingReducerFactories<T>
   reducerKeys: ReadonlyArray<keyof T>
 } {
@@ -231,7 +231,7 @@ export function createTerminatingReducerFactoriesProxy<T extends object = {}>(
       Reflect.deleteProperty(reducerFactoriesTarget, key)
     }
     reducerKeys.length = 0
-    options?.onDispose?.()
+    return options?.onDispose?.()
   }
 
   return { dispose, reducerFactories, reducerKeys }
