@@ -1,5 +1,5 @@
 import {
-  cloneTerminatingReducers,
+  createTerminatingReducers,
   isTerminatingReducerNotTerminated,
   TERMINATING_REDUCER_CANCEL,
   TERMINATING_REDUCER_COMPLETE,
@@ -24,16 +24,14 @@ import type {
  * objects with metadata.
  */
 export function* createOrchestrator(
-  context: Pick<CassiopeiaStateMachineContext, 'generator' | 'reducers' | 'updateReducerKeys'>,
+  context: Pick<
+    CassiopeiaStateMachineContext,
+    'generator' | 'reducerFactories' | 'updateReducerKeys'
+  >,
 ): CassiopeiaOrchestrator {
-  const { generator, updateReducerKeys } = context
+  const { generator, reducerFactories, updateReducerKeys } = context
 
-  // clone target reducers to fresh state for new processing cycle
-  const reducers = cloneTerminatingReducers(context.reducers)
-
-  let token: TerminatingReducerNext<undefined>
-
-  const keys = Object.keys(reducers)
+  const keys = Object.keys(reducerFactories)
 
   // Determine target reducer keys - either all keys or filtered subset (UpdateType.Reducer)
   const keysIncluded = new Set(
@@ -41,6 +39,11 @@ export function* createOrchestrator(
       ? keys
       : keys.filter((value) => updateReducerKeys.includes(value)),
   )
+
+  // clone target reducers to fresh state for new processing cycle
+  const reducers = createTerminatingReducers(reducerFactories, keysIncluded)
+
+  let token: TerminatingReducerNext<undefined>
 
   const iterator = generator![Symbol.iterator]()
 
@@ -72,7 +75,7 @@ export function* createOrchestrator(
   const isCancel = token === TERMINATING_REDUCER_CANCEL
 
   // Finalize reducers and collect stylesheet results
-  for (const key of keysIncluded) {
+  for (const key of Object.keys(reducers)) {
     const reducer = reducers[key]
 
     if (isCancel) {

@@ -255,7 +255,7 @@ describe('routing & composition correctness', () => {
 
 describe('laziness', () => {
   for (const isAsync of [true, false]) {
-    it(`no inputs → empty results: plugins invoked but produce no styleSheets when no markers present (${JSON.stringify({ isAsync })})`, async () => {
+    it(`no inputs → empty results: produce no styleSheets when no markers present (${JSON.stringify({ isAsync })})`, async () => {
       const traceA = createTracePlugin('a')
       const traceB = createTracePlugin('b')
       const instance = createCassiopeia()
@@ -279,13 +279,13 @@ describe('laziness', () => {
         // Generator should have been pulled to scan content
         assert.equal(generator.state?.pullCount, 3)
 
-        // Plugins are invoked but receive no markers
-        assert.deepEqual(traceA.state?.receivedMarkers, [])
-        assert.deepEqual(traceB.state?.receivedMarkers, [])
-        assert.equal(traceA.state?.wasCompleted, true)
-        assert.equal(traceB.state?.wasCompleted, true)
-        assert.equal(traceA.state?.wasCancelled, false)
-        assert.equal(traceB.state?.wasCancelled, false)
+        // Plugins but receive no markers
+        assert.deepEqual(traceA.state?.receivedMarkers, undefined)
+        assert.deepEqual(traceB.state?.receivedMarkers, undefined)
+        assert.equal(traceA.state?.wasCompleted, undefined)
+        assert.equal(traceB.state?.wasCompleted, undefined)
+        assert.equal(traceA.state?.wasCancelled, undefined)
+        assert.equal(traceB.state?.wasCancelled, undefined)
 
         // Subscription should have been called with empty results
         assert.equal(spy.mock.calls.length, 1)
@@ -310,7 +310,7 @@ describe('laziness', () => {
       `)
     })
 
-    it(`key absence → no relevant work: plugins invoked but only matching ones receive markers (${JSON.stringify({ isAsync })})`, async () => {
+    it(`key absence → no relevant work: only matching ones receive markers (${JSON.stringify({ isAsync })})`, async () => {
       const traceA = createTracePlugin('a')
       const traceB = createTracePlugin('b')
       const traceC = createTracePlugin('c')
@@ -335,13 +335,13 @@ describe('laziness', () => {
         assert.equal(traceA.state?.wasCompleted, true)
         assert.equal(traceA.state?.wasCancelled, false)
 
-        // Plugins B and C should receive no markers but still be invoked
-        assert.deepEqual(traceB.state?.receivedMarkers, [])
-        assert.deepEqual(traceC.state?.receivedMarkers, [])
-        assert.equal(traceB.state?.wasCompleted, true)
-        assert.equal(traceC.state?.wasCompleted, true)
-        assert.equal(traceB.state?.wasCancelled, false)
-        assert.equal(traceC.state?.wasCancelled, false)
+        // Plugins B and C should receive no markers
+        assert.deepEqual(traceB.state?.receivedMarkers, undefined)
+        assert.deepEqual(traceC.state?.receivedMarkers, undefined)
+        assert.equal(traceB.state?.wasCompleted, undefined)
+        assert.equal(traceC.state?.wasCompleted, undefined)
+        assert.equal(traceB.state?.wasCancelled, undefined)
+        assert.equal(traceC.state?.wasCancelled, undefined)
       } else {
         assert.isEmpty(traceA.history)
         assert.isEmpty(traceB.history)
@@ -435,16 +435,16 @@ describe('laziness', () => {
 
         instance.use(traceA.plugin, traceB.plugin, traceC.plugin)
 
-        // Initial full update - all plugins invoked
+        // Initial full update - relevant plugins invoked
         const generator = createCountingGenerator('var(---a-test)', 'var(---b-test)')
         await (isAsync
           ? instance.update(generator.generator)
           : instance.updateSync(generator.generator))
 
-        // Baseline: all plugins should have been invoked once
+        // Baseline: relevant plugins should have been invoked once
         assert.equal(traceA.history.length, 1)
         assert.equal(traceB.history.length, 1)
-        assert.equal(traceC.history.length, 1)
+        assert.equal(traceC.history.length, 0)
 
         assert.equal(spy.mock.calls.length, 1)
         expect(spy.mock.calls[0]).toMatchInlineSnapshot(`
@@ -477,7 +477,7 @@ describe('laziness', () => {
         // Only plugin A should have been invoked again
         assert.equal(traceA.history.length, 2) // +1
         assert.equal(traceB.history.length, 1) // unchanged
-        assert.equal(traceC.history.length, 1) // unchanged
+        assert.equal(traceC.history.length, 0) // unchanged
 
         assert.equal(spy.mock.calls.length, 2)
         expect(spy.mock.calls[1]).toMatchInlineSnapshot(`
@@ -505,7 +505,7 @@ describe('laziness', () => {
         // Only plugin B should have been invoked again
         assert.equal(traceA.history.length, 2) // unchanged
         assert.equal(traceB.history.length, 2) // +1
-        assert.equal(traceC.history.length, 1) // unchanged
+        assert.equal(traceC.history.length, 0) // unchanged
 
         assert.equal(spy.mock.calls.length, 3)
         expect(spy.mock.calls[2]).toMatchInlineSnapshot(`
@@ -527,13 +527,13 @@ describe('laziness', () => {
           ]
         `)
 
-        // Full update should invoke all plugins again
+        // Full update should invoke relevant plugins again
         await (isAsync ? instance.update() : instance.updateSync())
 
-        // All plugins should be invoked again
+        // relevant plugins should be invoked again
         assert.equal(traceA.history.length, 3) // +1
         assert.equal(traceB.history.length, 3) // +1
-        assert.equal(traceC.history.length, 2) // +1
+        assert.equal(traceC.history.length, 0) // 0
 
         expect(generator.history).toMatchInlineSnapshot(`
           [

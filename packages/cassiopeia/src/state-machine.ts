@@ -20,19 +20,14 @@ export const stateMachine = createStateMachine()
   )
   .action<CassiopeiaStateMachineAction.Reduce>(CassiopeiaStateMachineAction.Reduce)
   .action<CassiopeiaStateMachineAction.Done>(CassiopeiaStateMachineAction.Done)
-  .context<CassiopeiaStateMachineContext>(
-    () =>
-      ({
-        defer: setTimeout.bind(globalThis),
-        deferCancel: clearTimeout.bind(globalThis),
-        deferEvery: 8,
-        updateIsAsync: true,
-        updateType: CassiopeiaStateMachineActionUpdateType.None,
-      }) satisfies Omit<
-        CassiopeiaStateMachineContext,
-        'reducers'
-      > as unknown as CassiopeiaStateMachineContext,
-  )
+  .context<CassiopeiaStateMachineContext>(() => ({
+    defer: setTimeout.bind(globalThis),
+    deferCancel: clearTimeout.bind(globalThis),
+    deferEvery: 8,
+    reducerFactories: {},
+    updateIsAsync: true,
+    updateType: CassiopeiaStateMachineActionUpdateType.None,
+  }))
 
   .transition(
     [

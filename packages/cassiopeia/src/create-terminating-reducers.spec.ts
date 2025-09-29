@@ -12,7 +12,7 @@ describe('createTerminatingReducers', () => {
   describe('basic functionality', () => {
     it('should create lazy getters that return cached instances', () => {
       let factoryCallCount = 0
-      const reducers = createTerminatingReducers({
+      const factories = {
         *test(): TerminatingReducer<string, string> {
           factoryCallCount++
           const results: string[] = []
@@ -28,7 +28,8 @@ describe('createTerminatingReducers', () => {
 
           return 'result'
         },
-      })
+      }
+      const reducers = createTerminatingReducers(factories, ['test'])
 
       expect(factoryCallCount).toBe(0)
 
@@ -42,8 +43,8 @@ describe('createTerminatingReducers', () => {
 
     it('should eager-prime reducers on first access', () => {
       const primeSteps: string[] = []
-      const reducers = createTerminatingReducers({
-        *test() {
+      const factories = {
+        *test(): TerminatingReducer<string, string> {
           primeSteps.push('started')
           const results: string[] = []
           let input: TerminatingReducerNext<string>
@@ -56,7 +57,8 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return 'result'
         },
-      })
+      }
+      const reducers = createTerminatingReducers(factories, ['test'])
       expect(primeSteps).toEqual([])
 
       const reducer = reducers.test
@@ -69,8 +71,8 @@ describe('createTerminatingReducers', () => {
 
     it('should work with string keys', () => {
       let factoryCallCount = 0
-      const reducers = createTerminatingReducers({
-        *stringKey() {
+      const factories = {
+        *stringKey(): TerminatingReducer<string, string> {
           factoryCallCount++
           const results: string[] = []
           let input: TerminatingReducerNext<string>
@@ -82,7 +84,8 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return 'string result'
         },
-      })
+      }
+      const reducers = createTerminatingReducers(factories, ['stringKey'])
       expect(factoryCallCount).toBe(0)
 
       expect(reducers.stringKey.next(TERMINATING_REDUCER_COMPLETE).value).toBe('string result')
@@ -91,8 +94,8 @@ describe('createTerminatingReducers', () => {
 
     it('should work with number keys', () => {
       let factoryCallCount = 0
-      const reducers = createTerminatingReducers({
-        *42() {
+      const factories = {
+        *42(): TerminatingReducer<number, number> {
           factoryCallCount++
           const results: number[] = []
           let input: TerminatingReducerNext<number>
@@ -104,41 +107,19 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return 42
         },
-      })
+      }
+      const reducers = createTerminatingReducers(factories, ['42'])
       expect(factoryCallCount).toBe(0)
 
       expect(reducers[42].next(TERMINATING_REDUCER_COMPLETE).value).toBe(42)
-      expect(factoryCallCount).toBe(1)
-    })
-
-    it('should work with symbol keys', () => {
-      const sym = Symbol('test')
-      let factoryCallCount = 0
-      const reducers = createTerminatingReducers({
-        *[sym]() {
-          factoryCallCount++
-          const results: symbol[] = []
-          let input: TerminatingReducerNext<symbol>
-
-          while (isTerminatingReducerNotTerminated((input = yield))) {
-            results.push(input)
-          }
-
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
-          return sym
-        },
-      })
-      expect(factoryCallCount).toBe(0)
-
-      expect(reducers[sym].next(TERMINATING_REDUCER_COMPLETE).value).toBe(sym)
       expect(factoryCallCount).toBe(1)
     })
   })
 
   describe('reducer lifecycle', () => {
     it('should handle FINISH token correctly', () => {
-      const reducers = createTerminatingReducers({
-        *test() {
+      const factories = {
+        *test(): TerminatingReducer<string, string> {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
@@ -149,7 +130,8 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return 'finished'
         },
-      })
+      }
+      const reducers = createTerminatingReducers(factories, ['test'])
       const result = reducers.test.next(TERMINATING_REDUCER_COMPLETE)
 
       expect(result.done).toBe(true)
@@ -157,8 +139,8 @@ describe('createTerminatingReducers', () => {
     })
 
     it('should handle CANCEL token correctly', () => {
-      const reducers = createTerminatingReducers({
-        *test() {
+      const factories = {
+        *test(): TerminatingReducer<string, string> {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
@@ -169,7 +151,8 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return 'not cancelled'
         },
-      })
+      }
+      const reducers = createTerminatingReducers(factories, ['test'])
       const result = reducers.test.next(TERMINATING_REDUCER_CANCEL)
 
       expect(result.done).toBe(true)
@@ -178,8 +161,8 @@ describe('createTerminatingReducers', () => {
 
     it('should handle promise return values', () => {
       const promise = Promise.resolve('async result')
-      const reducers = createTerminatingReducers({
-        *test() {
+      const factories = {
+        *test(): TerminatingReducer<Promise<string>, string> {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
@@ -190,7 +173,8 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return promise
         },
-      })
+      }
+      const reducers = createTerminatingReducers(factories, ['test'])
       const result = reducers.test.next(TERMINATING_REDUCER_COMPLETE)
 
       expect(result.done).toBe(true)
@@ -198,8 +182,8 @@ describe('createTerminatingReducers', () => {
     })
 
     it('should propagate errors from generators', () => {
-      const reducers = createTerminatingReducers({
-        *test() {
+      const factories = {
+        *test(): TerminatingReducer<string, string> {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
@@ -210,7 +194,8 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           throw new Error('generator error')
         },
-      })
+      }
+      const reducers = createTerminatingReducers(factories, ['test'])
 
       expect(() => {
         reducers.test.next(TERMINATING_REDUCER_COMPLETE)
@@ -218,8 +203,8 @@ describe('createTerminatingReducers', () => {
     })
 
     it('should handle user keys correctly', () => {
-      const reducers = createTerminatingReducers({
-        *test() {
+      const factories = {
+        *test(): TerminatingReducer<string, 'customKey'> {
           const inputs: Array<'customKey'> = []
           let input: TerminatingReducerNext<'customKey'>
 
@@ -230,7 +215,8 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return inputs.includes('customKey') ? 'custom key received' : 'something else'
         },
-      })
+      }
+      const reducers = createTerminatingReducers(factories, ['test'])
 
       const result = reducers.test.next('customKey')
       expect(result.done).toBe(false)
@@ -239,10 +225,10 @@ describe('createTerminatingReducers', () => {
   })
 
   describe('enumeration behavior', () => {
-    it('Object.keys should return all keys without triggering initialization', () => {
+    it('Object.keys should return only enumerable (accessed) keys without triggering initialization', () => {
       let factoryCallCount = 0
-      const reducers = createTerminatingReducers({
-        *test1() {
+      const factories = {
+        *test1(): TerminatingReducer<string, string> {
           factoryCallCount++
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
@@ -254,7 +240,7 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return 'result1'
         },
-        *test2() {
+        *test2(): TerminatingReducer<string, string> {
           factoryCallCount++
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
@@ -266,28 +252,30 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return 'result2'
         },
-      })
-      const keys = Object.keys(reducers)
+      }
+      const reducers = createTerminatingReducers(factories, ['test1', 'test2'])
 
-      expect(keys).toEqual(['test1', 'test2'])
+      // Initially no enumerable keys (properties are non-enumerable getters)
+      const keys = Object.keys(reducers)
+      expect(keys).toEqual([])
       expect(factoryCallCount).toBe(0)
 
-      // Initialize one key
+      // Initialize one key - this makes it enumerable
       expect(() => reducers.test1).to.not.throw()
       expect(factoryCallCount).toBe(1)
 
-      // Keys should still return all keys
+      // Keys should now return the accessed key
       const keysAfter = Object.keys(reducers)
-      expect(keysAfter).toEqual(['test1', 'test2'])
+      expect(keysAfter).toEqual(['test1'])
       expect(factoryCallCount).toBe(1) // No additional calls
     })
 
-    it('Object.values should trigger initialization of all string keys', () => {
+    it('Object.values should only include already accessed properties', () => {
       let factoryCallCount1 = 0
       let factoryCallCount2 = 0
 
-      const reducers = createTerminatingReducers({
-        *key1() {
+      const factories = {
+        *key1(): TerminatingReducer<string, string> {
           factoryCallCount1++
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
@@ -299,7 +287,7 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return 'value1'
         },
-        *key2() {
+        *key2(): TerminatingReducer<string, string> {
           factoryCallCount2++
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
@@ -311,34 +299,36 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return 'value2'
         },
-      })
+      }
+      const reducers = createTerminatingReducers(factories, ['key1', 'key2'])
       expect(factoryCallCount1).toBe(0)
       expect(factoryCallCount2).toBe(0)
 
-      // Object.values will trigger initialization of all enumerable properties
-      const values = Object.values(reducers)
-      expect(values).toHaveLength(2)
+      // Object.values should initially be empty (no enumerable properties)
+      const initialValues = Object.values(reducers)
+      expect(initialValues).toHaveLength(0)
+      expect(factoryCallCount1).toBe(0)
+      expect(factoryCallCount2).toBe(0)
+
+      // Access one property to make it enumerable
+      const key1Reducer = reducers.key1
       expect(factoryCallCount1).toBe(1)
-      expect(factoryCallCount2).toBe(1)
+      expect(factoryCallCount2).toBe(0)
 
-      // Values should be the cached instances
-      expect(values[0] === reducers.key1).toBe(true)
-      expect(values[1] === reducers.key2).toBe(true)
-
-      // Second call should not trigger additional initialization
-      const values2 = Object.values(reducers)
+      // Object.values should now include the accessed property
+      const valuesAfterAccess = Object.values(reducers)
+      expect(valuesAfterAccess).toHaveLength(1)
+      expect(valuesAfterAccess[0] === key1Reducer).toBe(true)
       expect(factoryCallCount1).toBe(1) // Still 1
-      expect(factoryCallCount2).toBe(1) // Still 1
-      expect(values2[0] === values[0]).toBe(true) // Same instances
-      expect(values2[1] === values[1]).toBe(true)
+      expect(factoryCallCount2).toBe(0) // Still 0
     })
 
-    it('Object.entries should trigger initialization of all string keys', () => {
+    it('Object.entries should only include already accessed properties', () => {
       let factoryCallCount1 = 0
       let factoryCallCount2 = 0
 
-      const reducers = createTerminatingReducers({
-        *key1() {
+      const factories = {
+        *key1(): TerminatingReducer<string, string> {
           factoryCallCount1++
           let input: TerminatingReducerNext<string>
 
@@ -349,7 +339,7 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return 'value1'
         },
-        *key2() {
+        *key2(): TerminatingReducer<string, string> {
           factoryCallCount2++
           let input: TerminatingReducerNext<string>
 
@@ -360,58 +350,32 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return 'value2'
         },
-      })
+      }
+      const reducers = createTerminatingReducers(factories, ['key1', 'key2'])
       expect(factoryCallCount1).toBe(0)
       expect(factoryCallCount2).toBe(0)
 
-      // Object.entries will trigger initialization of all enumerable properties
-      const entries = Object.entries(reducers)
-      expect(entries).toHaveLength(2)
+      // Object.entries should initially be empty (no enumerable properties)
+      const initialEntries = Object.entries(reducers)
+      expect(initialEntries).toHaveLength(0)
+      expect(factoryCallCount1).toBe(0)
+      expect(factoryCallCount2).toBe(0)
+
+      // Access both properties to make them enumerable
+      const key1Reducer = reducers.key1
+      const key2Reducer = reducers.key2
       expect(factoryCallCount1).toBe(1)
       expect(factoryCallCount2).toBe(1)
 
-      // Entries should be key-value pairs with cached instances
-      expect(entries[0][0]).toEqual('key1')
-      expect(entries[0][1] === reducers.key1).toBe(true)
-      expect(entries[1][0]).toEqual('key2')
-      expect(entries[1][1] === reducers.key2).toBe(true)
-
-      // Second call should not trigger additional initialization
-      const entries2 = Object.entries(reducers)
+      // Object.entries should now include both accessed properties
+      const entriesAfterAccess = Object.entries(reducers)
+      expect(entriesAfterAccess).toHaveLength(2)
+      expect(entriesAfterAccess[0][0]).toEqual('key1')
+      expect(entriesAfterAccess[0][1] === key1Reducer).toBe(true)
+      expect(entriesAfterAccess[1][0]).toEqual('key2')
+      expect(entriesAfterAccess[1][1] === key2Reducer).toBe(true)
       expect(factoryCallCount1).toBe(1) // Still 1
       expect(factoryCallCount2).toBe(1) // Still 1
-      expect(entries2[0][1] === entries[0][1]).toBe(true) // Same instances
-      expect(entries2[1][1] === entries[1][1]).toBe(true)
-    })
-
-    it('should handle symbol keys correctly but not enumerate them', () => {
-      const sym = Symbol('test')
-      let symbolCallCount = 0
-
-      const reducers = createTerminatingReducers({
-        *[sym]() {
-          symbolCallCount++
-          const inputs: symbol[] = []
-          let input: TerminatingReducerNext<symbol>
-
-          while (isTerminatingReducerNotTerminated((input = yield))) {
-            inputs.push(input)
-          }
-
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
-          return sym
-        },
-      })
-
-      expect(Object.keys(reducers)).toEqual([])
-      expect(symbolCallCount).toBe(0)
-
-      // Symbol key should work via direct access
-      expect(reducers[sym].next(TERMINATING_REDUCER_COMPLETE).value).toBe(sym)
-      expect(symbolCallCount).toBe(1)
-
-      // But still not enumerable
-      expect(Object.keys(reducers)).toEqual([])
     })
   })
 
@@ -421,8 +385,8 @@ describe('createTerminatingReducers', () => {
       let call2 = 0
       let call3 = 0
 
-      const reducers = createTerminatingReducers({
-        *unused1() {
+      const factories = {
+        *unused1(): TerminatingReducer<string, string> {
           call2++
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
@@ -434,7 +398,7 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return 'unused1'
         },
-        *unused2() {
+        *unused2(): TerminatingReducer<string, string> {
           call3++
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
@@ -446,7 +410,7 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return 'unused2'
         },
-        *used() {
+        *used(): TerminatingReducer<string, string> {
           call1++
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
@@ -458,7 +422,8 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return 'used'
         },
-      })
+      }
+      const reducers = createTerminatingReducers(factories, ['used'])
 
       expect(reducers.used.next(TERMINATING_REDUCER_COMPLETE).value).toBe('used')
       expect(call1).toBe(1)
@@ -468,8 +433,8 @@ describe('createTerminatingReducers', () => {
 
     it('should preserve completed reducers in cache', () => {
       let factoryCallCount = 0
-      const reducers = createTerminatingReducers({
-        *test() {
+      const factories = {
+        *test(): TerminatingReducer<string, string> {
           factoryCallCount++
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
@@ -481,7 +446,8 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return 'completed'
         },
-      })
+      }
+      const reducers = createTerminatingReducers(factories, ['test'])
       const reducer = reducers.test
 
       // Complete the reducer
@@ -497,16 +463,47 @@ describe('createTerminatingReducers', () => {
     })
 
     it('should work with empty factory map', () => {
-      const reducers = createTerminatingReducers({})
+      const reducers = createTerminatingReducers({}, [])
 
       expect(Object.keys(reducers)).toEqual([])
       expect(Object.values(reducers)).toEqual([])
       expect(Object.entries(reducers)).toEqual([])
     })
 
+    it('should delete property and return undefined when factory is undefined', () => {
+      const factories = {
+        *existingFactory(): TerminatingReducer<string, string> {
+          let input: TerminatingReducerNext<string>
+          while (isTerminatingReducerNotTerminated((input = yield))) {
+            // ignore inputs
+          }
+          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          return 'exists'
+        },
+      }
+      const reducers = createTerminatingReducers(factories, [
+        'existingFactory',
+        'missingFactory',
+      ] as unknown as Array<keyof typeof factories>)
+
+      // Verify the missing factory key exists initially as a property descriptor
+      expect(Object.getOwnPropertyDescriptor(reducers, 'missingFactory')).toBeDefined()
+
+      // Access the missing factory - should delete property and return undefined
+      // @ts-expect-error wrong key
+      expect(reducers.missingFactory).toBeUndefined()
+
+      // Verify the property has been deleted
+      expect(Object.getOwnPropertyDescriptor(reducers, 'missingFactory')).toBeUndefined()
+      expect('missingFactory' in reducers).toBe(false)
+
+      // Verify existing factory still works normally
+      expect(reducers.existingFactory.next(TERMINATING_REDUCER_COMPLETE).value).toBe('exists')
+    })
+
     it('should handle mixed completion states', () => {
-      const reducers = createTerminatingReducers({
-        *cancelled() {
+      const factories = {
+        *cancelled(): TerminatingReducer<string, string> {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
@@ -517,7 +514,7 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return 'not cancelled'
         },
-        *finished() {
+        *finished(): TerminatingReducer<string, string> {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
@@ -528,7 +525,7 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return inputs.length > 0 ? 'not finished' : 'finished'
         },
-        *pending() {
+        *pending(): TerminatingReducer<string, string> {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
@@ -550,7 +547,8 @@ describe('createTerminatingReducers', () => {
           if (input === TERMINATING_REDUCER_CANCEL) return undefined
           return 'pending'
         },
-      })
+      }
+      const reducers = createTerminatingReducers(factories, ['cancelled', 'finished', 'pending'])
 
       expect(reducers.finished.next(TERMINATING_REDUCER_COMPLETE).value).toBe('finished')
       expect(reducers.cancelled.next(TERMINATING_REDUCER_CANCEL).value).toBe(undefined)

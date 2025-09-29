@@ -4,7 +4,6 @@ import { CASSIOPEIA_CONTEXT, CASSIOPEIA_PLUGIN, CASSIOPEIA_STATE } from './const
 import { createScheduler } from './create-scheduler'
 import {
   createTerminatingReducerFactoriesProxy,
-  createTerminatingReducers,
   TERMINATING_REDUCER_CANCEL,
 } from './create-terminating-reducers'
 import { stateMachine } from './state-machine'
@@ -16,7 +15,6 @@ import {
   type CassiopeiaGenerator,
   type CassiopeiaPlugin,
   type CassiopeiaPluginContext,
-  type CassiopeiaReducer,
   type CassiopeiaReducerUpdate,
   type CassiopeiaReducerUpdateSync,
   type CassiopeiaStateMachineActionUpdateOptions,
@@ -31,8 +29,7 @@ export function createCassiopeia(): Cassiopeia {
   const plugins = new Map<CassiopeiaPlugin, CassiopeiaPluginContext>()
   const machine = interpret(stateMachine)
   const { context } = machine
-  const reducers = createTerminatingReducers<Record<string, CassiopeiaReducer>>()
-  context.reducers = reducers
+
   const updateCallbacks: Array<() => void> = []
 
   let deferCancellationIdentifier: number | undefined
@@ -147,7 +144,7 @@ export function createCassiopeia(): Cassiopeia {
     context.generator?.[TERMINATING_REDUCER_CANCEL]()
     context.orchestrator?.next(TERMINATING_REDUCER_CANCEL)
     context.orchestrator = undefined
-    context.reducers = createTerminatingReducers<Record<string, CassiopeiaReducer>>()
+    context.reducerFactories = {}
     context.updateIsAsync = true
     context.updateType = CassiopeiaStateMachineActionUpdateType.None
     context.updateGenerator = undefined
@@ -201,10 +198,10 @@ export function createCassiopeia(): Cassiopeia {
               keys ?? reducerKeys,
             )
 
-          const context: CassiopeiaPluginContext = {
+          const pluginContext: CassiopeiaPluginContext = {
             update,
             updateSync,
-            ...createTerminatingReducerFactoriesProxy(reducers, {
+            ...createTerminatingReducerFactoriesProxy(context.reducerFactories, {
               onDelete: () => void update(),
               onDispose: () => {
                 plugins.delete(plugin)
@@ -214,10 +211,10 @@ export function createCassiopeia(): Cassiopeia {
               onSet: () => void update(),
             }),
           }
-          const { reducerKeys } = context
+          const { reducerKeys } = pluginContext
 
-          plugins.set(plugin, context)
-          install(context)
+          plugins.set(plugin, pluginContext)
+          install(pluginContext)
         }
       }
 

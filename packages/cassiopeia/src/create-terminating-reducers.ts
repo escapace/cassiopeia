@@ -14,10 +14,6 @@ export const TERMINATING_REDUCER_CANCEL: unique symbol = Symbol.for(
   'cassiopeia/terminating-reducer/cancel',
 )
 
-export const TERMINATING_REDUCER_FACTORIES: unique symbol = Symbol.for(
-  'cassiopeia/terminating-reducer/factories',
-)
-
 /**
  * Type alias for the cancel control token symbol.
  */
@@ -48,8 +44,9 @@ export type TerminatingReducerReturn<GeneratorReturn = unknown> = GeneratorRetur
  * @typeParam GeneratorNext - The type of data values accepted as input during processing
  *
  * Terminating reducers are synchronous generators that implement a controlled processing
- * pattern where they yield nothing during execution, accept typed input through `.next()`,
- * and return either a final computed value or `TerminatingReducerCancel` when cancelled.
+ * pattern where they yield nothing during execution, accept typed input through `.next()`
+ * including control tokens, and return either a final computed value or `undefined` when
+ * processing completes or is cancelled.
  */
 export type TerminatingReducer<
   GeneratorReturn = unknown,
@@ -63,97 +60,78 @@ export type TerminatingReducer<
  * @typeParam T - Object type where each property value extends `TerminatingReducer`
  *
  * Maps each property key to a factory function that returns a `TerminatingReducer` for that key.
- * Factory functions are called exactly once per key upon first access to the corresponding
- * property getter in the returned `TerminatingReducersMap`.
+ * Factory functions are invoked exactly once per property upon first access, after which
+ * the getter is replaced with the static reducer instance for direct access.
  */
 export type TerminatingReducerFactories<T extends object = {}> = {
   [K in keyof T]: () => T[K] extends TerminatingReducer ? T[K] : never
 }
 
 /**
- * Return type from `createTerminatingReducers()` providing lazy, cached access to reducer instances.
+ * Return type from `createTerminatingReducers()` with implicit caching through getter replacement.
  *
  * @typeParam T - Object type where each property value extends `TerminatingReducer`
  *
- * An intersection type that combines property getters for each reducer key with an update method
- * for cache management. Each property getter implements lazy initialization with eager priming
- * and caching semantics.
+ * Properties provide lazy initialization with implicit caching behavior: first access triggers
+ * factory invocation and getter replacement with the static value, eliminating subsequent
+ * factory calls for the same property.
  */
 export type TerminatingReducers<T extends object = {}> = {
-  readonly [TERMINATING_REDUCER_FACTORIES]: TerminatingReducerFactories<T>
-} & Omit<
-  {
-    readonly [K in keyof T]: T[K] extends TerminatingReducer ? T[K] : never
-  },
-  typeof TERMINATING_REDUCER_FACTORIES
->
+  readonly [K in keyof T]: T[K] extends TerminatingReducer ? T[K] : never
+}
+
 /**
- * Creates a terminating reducers with lazy, cached property getters.
+ * Creates terminating reducers with implicit caching through getter replacement.
  *
- * Transforms factory functions into a map object where each property provides lazy access
- * to cached terminating reducer instances. Property getters create instances only on first
- * access, with exactly-once factory invocation and eager priming for immediate readiness.
- * The returned object includes symbol-keyed methods for cache management and factory access.
+ * Sets up property getters for the specified keys that provide lazy initialization with
+ * implicit caching behavior. Upon first access, each getter invokes the corresponding
+ * factory function exactly once, eagerly primes the returned reducer instance, then
+ * replaces itself with a static property containing the primed reducer. This eliminates
+ * subsequent factory calls and getter overhead for the same property.
  *
  * @typeParam T - Object type where each property value extends `TerminatingReducer`
- * @param factories - Record mapping each key to a factory function that returns a terminating reducer
- * @returns Object with lazy property getters for reducer instances and cache management methods
+ * @param reducerFactories - Record mapping each key to a factory function that returns a terminating reducer
+ * @param keys - Iterable of keys from the factories record to set up as lazy properties
+ * @returns Object with specified keys providing lazy initialization and implicit caching
  *
- * Property enumeration behavior on the returned map follows standard JavaScript conventions:
- * - String and number keys are enumerable and appear in `Object.keys/values/entries`
- * - Symbol keys are non-enumerable and excluded from standard enumeration methods
- * - `Object.keys()` returns all keys without triggering initialization
- * - `Object.values()` and `Object.entries()` trigger initialization of all enumerable properties
+ * Property enumeration behavior reflects the getter-to-value transformation:
+ * - Initially all properties are non-enumerable getters, excluded from `Object.keys/values/entries`
+ * - After first access, properties become enumerable static values included in enumeration
+ * - `Object.keys()` reflects only currently enumerable (accessed) properties
+ * - `Object.values()` and `Object.entries()` trigger initialization of accessed properties only
  */
 export function createTerminatingReducers<T extends object>(
-  factories?: TerminatingReducerFactories<T>,
+  reducerFactories: TerminatingReducerFactories<T>,
+  keys: Iterable<keyof T>,
 ): TerminatingReducers<T> {
-  const reducerFactories = (factories ?? {}) as TerminatingReducerFactories<T>
-  const cache = new Map<keyof T, TerminatingReducer>()
   // eslint-disable-next-line typescript/consistent-type-assertions
   const reducers = {} as TerminatingReducers<T>
 
-  // Helper function to define a property with the correct enumerable setting
-  const definePropertyGetter = (key: keyof T) => {
-    Object.defineProperty(reducers, key, {
+  for (const key of keys) {
+    Reflect.defineProperty(reducers, key, {
       configurable: true,
-      enumerable: typeof key !== 'symbol',
+      enumerable: false,
       get() {
-        if (cache.has(key)) {
-          return cache.get(key)
-        }
-
         const factory = reducerFactories[key]
 
         if (factory === undefined) {
+          Reflect.deleteProperty(reducers, key)
           return
         }
 
-        const reducer = factory()
+        const value = factory()
 
         // Eager prime the reducer with no argument
-        reducer.next()
+        value.next()
 
-        cache.set(key, reducer)
+        Reflect.defineProperty(reducers, key, {
+          configurable: false,
+          enumerable: true,
+          value,
+        })
 
-        return reducer
+        return value
       },
-    })
-  }
-
-  for (const key of [
-    ...(Object.keys(reducerFactories) as Array<keyof T>),
-    ...(Object.getOwnPropertySymbols(reducerFactories) as Array<keyof T>),
-  ]) {
-    definePropertyGetter(key)
-  }
-
-  for (const [key, value] of [[TERMINATING_REDUCER_FACTORIES, reducerFactories]] as const) {
-    Object.defineProperty(reducers, key, {
-      configurable: true,
-      enumerable: false,
-      value,
-      writable: false,
     })
   }
 
@@ -161,29 +139,22 @@ export function createTerminatingReducers<T extends object>(
 }
 
 /**
- * Creates a shallow clone of a terminating reducers with independent state.
- *
- * @typeParam T - Object type where each property value extends `TerminatingReducer`
- * @param reducers - The terminating reducers to clone
- * @returns New terminating reducers with fresh cache and independent state
- */
-export function cloneTerminatingReducers<T extends object = {}>(
-  reducers: TerminatingReducers<T>,
-): TerminatingReducers<T> {
-  const reducerFactories = reducers[TERMINATING_REDUCER_FACTORIES]
-  return createTerminatingReducers({ ...reducerFactories })
-}
-
-/**
  * Creates a revocable proxy that intercepts factory modifications with lifecycle callbacks.
  *
+ * Wraps terminating reducer factories in a proxy that tracks property modifications,
+ * maintains a synchronized array of reducer keys, and provides controlled disposal.
+ * The proxy intercepts set and delete operations, calling corresponding lifecycle
+ * callbacks and updating the key array. Disposal revokes the proxy, clears all
+ * factory properties, and empties the key tracking array.
+ *
  * @typeParam T - Object type where each property value extends `TerminatingReducer`
- * @param reducers - Terminating reducers object
- * @param options - Optional configuration object
- * @returns Object containing dispose method, properties tracking array, and the revocable proxy
+ * @typeParam U - Return type of the disposal callback
+ * @param reducerFactories - Reducer factory functions to wrap with proxy behavior
+ * @param options - Lifecycle callbacks and disposal handler
+ * @returns Object containing the proxied factories, current keys array, and dispose method
  */
 export function createTerminatingReducerFactoriesProxy<T extends object = {}, U = unknown>(
-  reducers: TerminatingReducers<T>,
+  reducerFactories: TerminatingReducerFactories<T>,
   options: {
     onDelete: (key: keyof T) => void
     onDispose: () => U
@@ -197,9 +168,8 @@ export function createTerminatingReducerFactoriesProxy<T extends object = {}, U 
   const onSet = options?.onSet
   const onDelete = options?.onDelete
   const reducerKeys: Array<keyof T> = []
-  const reducerFactoriesTarget = reducers[TERMINATING_REDUCER_FACTORIES]
 
-  const { proxy: reducerFactories, revoke } = Proxy.revocable(reducerFactoriesTarget, {
+  const { proxy, revoke } = Proxy.revocable(reducerFactories, {
     set(target, key, value, receiver) {
       const success = Reflect.set(target, key, value, receiver)
 
@@ -228,13 +198,13 @@ export function createTerminatingReducerFactoriesProxy<T extends object = {}, U 
   const dispose = () => {
     revoke()
     for (const key of reducerKeys) {
-      Reflect.deleteProperty(reducerFactoriesTarget, key)
+      Reflect.deleteProperty(reducerFactories, key)
     }
     reducerKeys.length = 0
     return options?.onDispose?.()
   }
 
-  return { dispose, reducerFactories, reducerKeys }
+  return { dispose, reducerFactories: proxy, reducerKeys }
 }
 
 /**
@@ -256,19 +226,19 @@ export function isTerminatingReducerNotTerminated<U = unknown>(
 }
 
 /**
- * Type guard that filters out termination control tokens from reducer inputs.
+ * Type guard that identifies termination control tokens in reducer inputs.
  *
  * @typeParam U - The expected user data type (defaults to `unknown`)
  * @param value - Input value that could be user data or a control token
- * @returns `true` when the value is user data of type `U`, `false` for control tokens
+ * @returns `true` when the value is a control token, `false` for user data
  *
- * Checks whether a reducer input value is actual user data rather than a control
- * token. When this function returns `true`, TypeScript narrows the value type from
- * `TerminatingReducerNextInput<U>` to `U`, enabling type-safe processing of user data
- * while excluding `TERMINATING_REDUCER_CANCEL` and `TERMINATING_REDUCER_COMPLETE` tokens.
+ * Checks whether a reducer input value is a termination control token rather than
+ * user data. When this function returns `true`, TypeScript narrows the value type from
+ * `TerminatingReducerNext<U>` to `TerminatingReducerCancel | TerminatingReducerComplete`,
+ * enabling type-safe handling of control tokens.
  */
 export function isTerminatingReducerTerminated<U = unknown>(
   value: TerminatingReducerNext<U>,
-): value is U {
+): value is TerminatingReducerCancel | TerminatingReducerComplete {
   return value === TERMINATING_REDUCER_CANCEL || value === TERMINATING_REDUCER_COMPLETE
 }

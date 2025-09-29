@@ -4,3 +4,4 @@ packages:
 onlyBuiltDependencies:
   - lefthook
   - oxc-resolver
+  - esbuild
