@@ -32,20 +32,10 @@ export function* createOrchestrator(
   const { generator, reducerFactories, updateReducerKeys } = context
 
   const keys = Object.keys(reducerFactories)
-
-  // Determine target reducer keys - either all keys or filtered subset (UpdateType.Reducer)
-  const keysIncluded = new Set(
-    updateReducerKeys === undefined
-      ? keys
-      : keys.filter((value) => updateReducerKeys.includes(value)),
-  )
-
-  // clone target reducers to fresh state for new processing cycle
-  const reducers = createTerminatingReducers(reducerFactories, keysIncluded)
+  const reducers = createTerminatingReducers(reducerFactories, updateReducerKeys ?? keys)
+  const iterator = generator![Symbol.iterator]()
 
   let token: TerminatingReducerNext<undefined>
-
-  const iterator = generator![Symbol.iterator]()
 
   while (isTerminatingReducerNotTerminated((token = yield))) {
     const { done, value } = iterator.next()
@@ -56,8 +46,10 @@ export function* createOrchestrator(
 
     const [key, suffix] = value
 
-    // Skip if reducer key not in target set
-    if (!keysIncluded.has(key)) {
+    const reducer = reducers[key]
+
+    // Skip if reducer key not present
+    if (reducer === undefined) {
       continue
     }
 
@@ -66,7 +58,7 @@ export function* createOrchestrator(
 
     // Feed custom property to target reducer, remove if completed
     if (reducers[key].next(customProperty).done === true) {
-      keysIncluded.delete(key)
+      Reflect.deleteProperty(reducers, key)
     }
   }
 

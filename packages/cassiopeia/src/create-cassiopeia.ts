@@ -22,7 +22,7 @@ import {
 } from './types'
 
 // TODO: keys can be a set?
-// TODO: promise returning reducers?
+// TODO: helper function to build style elements from renderStyleSheets
 
 export function createCassiopeia(): Cassiopeia {
   const subscriptions: CassiopeiaSubscription[] = []
@@ -140,6 +140,7 @@ export function createCassiopeia(): Cassiopeia {
       resolve()
     }
     updateCallbacks.length = 0
+    deferCancellationIdentifier = undefined
 
     context.generator?.[TERMINATING_REDUCER_CANCEL]()
     context.orchestrator?.next(TERMINATING_REDUCER_CANCEL)
@@ -149,9 +150,7 @@ export function createCassiopeia(): Cassiopeia {
     context.updateType = CassiopeiaStateMachineActionUpdateType.None
     context.updateGenerator = undefined
     context.generator = undefined
-    if (context.updateReducerKeys !== undefined) {
-      context.updateReducerKeys.length = 0
-    }
+    context.updateReducerKeys = undefined
   }
 
   const cassiopeia: Cassiopeia = {
