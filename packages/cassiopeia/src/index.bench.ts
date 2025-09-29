@@ -1,29 +1,25 @@
-import { beforeAll, bench, describe } from 'vitest'
+import { remove } from 'coastal'
+import { bench, describe } from 'vitest'
 import {
   CASSIOPEIA_PLUGIN,
   createCassiopeia,
   isTerminatingReducerNotTerminated,
   TERMINATING_REDUCER_CANCEL,
+  type Cassiopeia,
   type CassiopeiaGenerator,
   type CassiopeiaPlugin,
   type CassiopeiaPluginContext,
   type CassiopeiaReducer,
-  type CassiopeiaStyleSheet,
+  type CassiopeiaStyleSheets,
+  type CassiopeiaSubscription,
   type TerminatingReducerCancel,
   type TerminatingReducerNext,
 } from './index'
 
-// eslint-disable-next-line typescript/require-await
-async function createSimpleCountingStylesheet(
-  NUMBER_PROPERTIES: Array<[string, string]>,
-): Promise<CassiopeiaStyleSheet[]> {
-  function* simpleGenerator() {
-    for (const property of NUMBER_PROPERTIES) {
-      yield property
-    }
-  }
-
-  const generator = simpleGenerator()
+const simpleCountingStylesheetOrchastrator = (
+  createGenerator: () => CassiopeiaGenerator,
+): CassiopeiaStyleSheets => {
+  const generator = createGenerator()
   let stylesheet = ':root { '
   let localIndex = -1
 
@@ -37,15 +33,42 @@ async function createSimpleCountingStylesheet(
   }
 
   stylesheet += '}'
-  // return stylesheet
 
-  return [
-    {
-      content: stylesheet,
-      index: 0,
-      key: 'number',
+  return {
+    keys: ['number'],
+    values: [
+      {
+        content: stylesheet,
+        index: 0,
+        key: 'number',
+      },
+    ],
+  }
+}
+
+function createSimpleCountingStylesheet() {
+  const subscriptions: CassiopeiaSubscription[] = []
+
+  const updateSync = (generator: () => CassiopeiaGenerator) => {
+    const value = simpleCountingStylesheetOrchastrator(generator)
+
+    for (const subscription of subscriptions) {
+      subscription(value)
+    }
+  }
+
+  return {
+    subscribe: (subscription: CassiopeiaSubscription) => {
+      if (!subscriptions.includes(subscription)) {
+        subscriptions.push(subscription)
+      }
+
+      return () => {
+        remove(subscriptions, (value) => value === subscription)
+      }
     },
-  ]
+    updateSync,
+  }
 }
 
 function createCountingGenerator(properties: Array<[string, string]>) {
@@ -106,31 +129,61 @@ function createNumberProperties(COUNT: number): Array<[string, string]> {
   return properties
 }
 
-// eslint-disable-next-line typescript/no-empty-function
-const noop = (_: unknown) => {}
-const instance = createCassiopeia()
-const plugin = createNumberPlugin()
-instance.use(plugin)
-instance.subscribe((value) => {
-  noop(value)
-})
-
-for (const count of [100, 1000, 10_000, 100_000]) {
-  // warmup
-  beforeAll(async () => {
-    await createSimpleCountingStylesheet(createNumberProperties(10))
-    await instance.updateSync(createCountingGenerator(createNumberProperties(10)))
-  })
-
+for (const count of [100, 1000, 10_000, 50_000]) {
   const NUMBER_PROPERTIES = createNumberProperties(count)
+  let cassiopeia: Cassiopeia
+  let simple: ReturnType<typeof createSimpleCountingStylesheet>
 
   describe(`CSS Generation Performance (${count} items)`, () => {
-    bench('simple counting generator with while loop', async () => {
-      await createSimpleCountingStylesheet(NUMBER_PROPERTIES)
-    })
+    bench(
+      'simple counting generator with while loop',
+      async () => {
+        let resolve: (value: CassiopeiaStyleSheets) => void
+        const promise = new Promise<CassiopeiaStyleSheets>((value) => {
+          resolve = value
+        })
+        const unsubscribe = simple.subscribe((value) => {
+          resolve(value)
+        })
+        simple.updateSync(createCountingGenerator(NUMBER_PROPERTIES))
 
-    bench('cassiopeia generator with plugin', async () => {
-      await instance.updateSync(createCountingGenerator(NUMBER_PROPERTIES))
-    })
+        await promise.finally(() => unsubscribe())
+        return
+      },
+      {
+        iterations: 100,
+        setup: () => {
+          simple = createSimpleCountingStylesheet()
+        },
+        warmupIterations: 10,
+      },
+    )
+
+    bench(
+      'cassiopeia generator with plugin',
+      async () => {
+        let resolve: (value: CassiopeiaStyleSheets) => void
+        const promise = new Promise<CassiopeiaStyleSheets>((value) => {
+          resolve = value
+        })
+        const unsubscribe = cassiopeia.subscribe((value) => {
+          resolve(value)
+        })
+
+        cassiopeia.updateSync(createCountingGenerator(NUMBER_PROPERTIES))
+
+        await promise.finally(() => unsubscribe())
+        return
+      },
+      {
+        iterations: 100,
+        setup: () => {
+          cassiopeia = createCassiopeia()
+          const plugin = createNumberPlugin()
+          cassiopeia.use(plugin)
+        },
+        warmupIterations: 10,
+      },
+    )
   })
 }

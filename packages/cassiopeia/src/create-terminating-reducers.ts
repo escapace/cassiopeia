@@ -1,5 +1,4 @@
 /* eslint-disable typescript/no-empty-object-type */
-import { remove } from 'coastal'
 
 /**
  * Control token signaling a terminating reducer to complete and return its final value.
@@ -163,20 +162,18 @@ export function createTerminatingReducerFactoriesProxy<T extends object = {}, U 
 ): {
   dispose: () => U
   reducerFactories: TerminatingReducerFactories<T>
-  reducerKeys: ReadonlyArray<keyof T>
+  reducerKeys: ReadonlySet<keyof T>
 } {
   const onSet = options?.onSet
   const onDelete = options?.onDelete
-  const reducerKeys: Array<keyof T> = []
+  const reducerKeys = new Set<keyof T>()
 
   const { proxy, revoke } = Proxy.revocable(reducerFactories, {
     set(target, key, value, receiver) {
       const success = Reflect.set(target, key, value, receiver)
 
       if (success) {
-        if (!reducerKeys.includes(key as keyof T)) {
-          reducerKeys.push(key as keyof T)
-        }
+        reducerKeys.add(key as keyof T)
         onSet?.(key as keyof T)
       }
 
@@ -187,7 +184,7 @@ export function createTerminatingReducerFactoriesProxy<T extends object = {}, U 
       const success = Reflect.deleteProperty(target, key)
 
       if (success) {
-        remove(reducerKeys, (value) => value === key)
+        reducerKeys.delete(key as keyof T)
         onDelete?.(key as keyof T)
       }
 
@@ -200,7 +197,7 @@ export function createTerminatingReducerFactoriesProxy<T extends object = {}, U 
     for (const key of reducerKeys) {
       Reflect.deleteProperty(reducerFactories, key)
     }
-    reducerKeys.length = 0
+    reducerKeys.clear()
     return options?.onDispose?.()
   }
 

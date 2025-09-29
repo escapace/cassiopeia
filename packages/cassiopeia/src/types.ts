@@ -76,17 +76,17 @@ export type CassiopeiaGeneratorUpdateSync = (
 ) => void
 
 /** Update function that accepts optional reducer keys for targeted plugin updates */
-export type CassiopeiaReducerUpdate = (keys?: string[]) => Promise<void>
+export type CassiopeiaReducerUpdate = (keys?: Iterable<string>) => Promise<void>
 /** Update function that accepts optional reducer keys for targeted plugin updates */
-export type CassiopeiaReducerUpdateSync = (keys?: string[]) => void
+export type CassiopeiaReducerUpdateSync = (keys?: Iterable<string>) => void
 
 export interface CassiopeiaPluginContext {
   /** Cleanup function to remove plugin and trigger update */
   dispose: () => Promise<void>
   /** Proxy for registering reducer factory functions with automatic change detection */
   reducerFactories: CassiopeiaReducerFactories
-  /** Read-only array of currently registered reducer keys */
-  reducerKeys: readonly string[]
+  /** Read-only set of currently registered reducer keys */
+  reducerKeys: ReadonlySet<string>
   /** Trigger async reducer-only update for this plugin's keys */
   update: CassiopeiaReducerUpdate
   /** Trigger synchronous reducer-only update for this plugin's keys */
@@ -154,12 +154,12 @@ export interface CassiopeiaStateMachineContext {
   updateIsAsync: boolean
   updateType: CassiopeiaStateMachineActionUpdateType
   updateGenerator?: () => CassiopeiaGenerator
-  updateReducerKeys?: string[]
+  updateReducerKeys?: Set<string>
 }
 
 export type CassiopeiaStateMachineActionUpdateOptions = $.Prettify<
   {
-    updateReducerKeys?: readonly string[]
+    updateReducerKeys?: Iterable<string>
   } & Partial<Pick<CassiopeiaStateMachineContext, 'updateGenerator'>> &
     Pick<CassiopeiaStateMachineContext, 'updateIsAsync' | 'updateType'>
 >

@@ -62,13 +62,11 @@ export const stateMachine = createStateMachine()
       if (updateType === CassiopeiaStateMachineActionUpdateType.Reducer) {
         const updateReducerKeys = payload.updateReducerKeys
 
-        if (updateReducerKeys !== undefined && updateReducerKeys.length !== 0) {
-          const contextReducerKeys = (context.updateReducerKeys ??= [])
+        if (updateReducerKeys !== undefined) {
+          const contextReducerKeys = (context.updateReducerKeys ??= new Set())
 
           for (const updateReducerKey of updateReducerKeys) {
-            if (!contextReducerKeys.includes(updateReducerKey)) {
-              contextReducerKeys.push(updateReducerKey)
-            }
+            contextReducerKeys.add(updateReducerKey)
           }
         }
       } else {
@@ -110,9 +108,7 @@ export const stateMachine = createStateMachine()
       context.orchestrator = undefined
       context.updateType = CassiopeiaStateMachineActionUpdateType.None
       context.updateGenerator = undefined
-      if (context.updateReducerKeys !== undefined) {
-        context.updateReducerKeys.length = 0
-      }
+      context.updateReducerKeys = undefined
 
       return context
     },

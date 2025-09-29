@@ -73,28 +73,31 @@ export function* createOrchestrator(
     if (isCancel) {
       // Send cancellation signal to remaining reducers
       reducer.next(TERMINATING_REDUCER_CANCEL)
-    } else {
-      // Send completion signal and collect results
-      const { done, value } = reducer.next(TERMINATING_REDUCER_COMPLETE)
+      continue
+    }
 
-      if (done === true && value !== undefined) {
-        // Transform partial stylesheets into complete CassiopeiaStyleSheet objects
-        if (Array.isArray(value)) {
-          values.push(
-            ...value.map((value, index) => {
-              value.key = key
-              value.index ??= index
+    // Send completion signal and collect results
+    const { done, value } = reducer.next(TERMINATING_REDUCER_COMPLETE)
 
-              return value as CassiopeiaStyleSheet
-            }),
-          )
-        } else {
+    if (done !== true || value === undefined) {
+      continue
+    }
+
+    // Transform partial stylesheets into complete CassiopeiaStyleSheet objects
+    if (Array.isArray(value)) {
+      values.push(
+        ...value.map((value, index) => {
           value.key = key
-          value.index ??= 0
+          value.index ??= index
 
-          values.push(value as CassiopeiaStyleSheet)
-        }
-      }
+          return value as CassiopeiaStyleSheet
+        }),
+      )
+    } else {
+      value.key = key
+      value.index ??= 0
+
+      values.push(value as CassiopeiaStyleSheet)
     }
   }
 

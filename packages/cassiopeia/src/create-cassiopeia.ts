@@ -96,19 +96,19 @@ export function createCassiopeia(): Cassiopeia {
     updateIsAsync: true,
     updateType: CassiopeiaStateMachineActionUpdateType,
     updateGenerator?: () => CassiopeiaGenerator,
-    updateReducerKeys?: readonly string[],
+    updateReducerKeys?: Iterable<string>,
   ): Promise<void>
   function machineActionUpdate(
     updateIsAsync: false,
     updateType: CassiopeiaStateMachineActionUpdateType,
     updateGenerator?: () => CassiopeiaGenerator,
-    updateReducerKeys?: readonly string[],
+    updateReducerKeys?: Iterable<string>,
   ): void
   function machineActionUpdate(
     updateIsAsync: boolean,
     updateType: CassiopeiaStateMachineActionUpdateType,
     updateGenerator?: () => CassiopeiaGenerator,
-    updateReducerKeys?: readonly string[],
+    updateReducerKeys?: Iterable<string>,
   ): Promise<void> | void {
     const commit = () => {
       updateOptions.updateType = updateType
