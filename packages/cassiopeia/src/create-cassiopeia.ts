@@ -1,12 +1,13 @@
 import { interpret } from '@escapace/fsm'
 import { remove } from 'coastal'
 import { CASSIOPEIA_CONTEXT, CASSIOPEIA_PLUGIN, CASSIOPEIA_STATE } from './constants'
-import { stateMachine } from './state-machine'
+import { createScheduler } from './create-scheduler'
 import {
   createTerminatingReducerFactoriesProxy,
   createTerminatingReducers,
   TERMINATING_REDUCER_CANCEL,
 } from './create-terminating-reducers'
+import { stateMachine } from './state-machine'
 import {
   CassiopeiaStateMachineAction,
   CassiopeiaStateMachineActionUpdateType,
@@ -17,12 +18,11 @@ import {
   type CassiopeiaPluginContext,
   type CassiopeiaReducer,
   type CassiopeiaReducerUpdate,
+  type CassiopeiaReducerUpdateSync,
   type CassiopeiaStateMachineActionUpdateOptions,
   type CassiopeiaSubscription,
 } from './types'
-import { createScheduler } from './create-scheduler'
 
-// TODO: updateSync is a bad name
 // TODO: keys can be a set?
 // TODO: promise returning reducers?
 
@@ -35,20 +35,22 @@ export function createCassiopeia(): Cassiopeia {
   context.reducers = reducers
   const updateCallbacks: Array<() => void> = []
 
-  let reduceQueued = false
+  let deferCancellationIdentifier: number | undefined
 
   const unsubscribe = machine.subscribe((state) => {
     if (state.action.type === CassiopeiaStateMachineAction.Update) {
-      if (!reduceQueued) {
-        if (state.action.payload.updateIsAsync) {
-          reduceQueued = true
-          context.defer(() => {
-            reduceQueued = false
-            machine.do(CassiopeiaStateMachineAction.Reduce)
-          })
-        } else {
+      if (state.context.updateIsAsync) {
+        deferCancellationIdentifier ??= context.defer(() => {
+          deferCancellationIdentifier = undefined
           machine.do(CassiopeiaStateMachineAction.Reduce)
+        })
+      } else {
+        if (deferCancellationIdentifier !== undefined) {
+          context.deferCancel(deferCancellationIdentifier)
+          deferCancellationIdentifier = undefined
         }
+
+        machine.do(CassiopeiaStateMachineAction.Reduce)
       }
     } else if (
       state.action.source === CassiopeiaStateMachineState.PreFlight &&
@@ -93,22 +95,40 @@ export function createCassiopeia(): Cassiopeia {
   const updateOptions: CassiopeiaStateMachineActionUpdateOptions =
     {} as unknown as CassiopeiaStateMachineActionUpdateOptions
 
-  const machineActionUpdate = async (
+  function machineActionUpdate(
+    updateIsAsync: true,
     updateType: CassiopeiaStateMachineActionUpdateType,
-    updateIsAsync: boolean,
     updateGenerator?: () => CassiopeiaGenerator,
     updateReducerKeys?: readonly string[],
-  ): Promise<void> =>
-    await new Promise<void>((resolve) => {
-      updateCallbacks.push(resolve)
-
+  ): Promise<void>
+  function machineActionUpdate(
+    updateIsAsync: false,
+    updateType: CassiopeiaStateMachineActionUpdateType,
+    updateGenerator?: () => CassiopeiaGenerator,
+    updateReducerKeys?: readonly string[],
+  ): void
+  function machineActionUpdate(
+    updateIsAsync: boolean,
+    updateType: CassiopeiaStateMachineActionUpdateType,
+    updateGenerator?: () => CassiopeiaGenerator,
+    updateReducerKeys?: readonly string[],
+  ): Promise<void> | void {
+    const commit = () => {
       updateOptions.updateType = updateType
       updateOptions.updateGenerator = updateGenerator
       updateOptions.updateIsAsync = updateIsAsync
       updateOptions.updateReducerKeys = updateReducerKeys
 
       machine.do(CassiopeiaStateMachineAction.Update, updateOptions)
-    })
+    }
+
+    return updateIsAsync
+      ? new Promise<void>((resolve) => {
+          updateCallbacks.push(resolve)
+          commit()
+        })
+      : commit()
+  }
 
   const dispose = () => {
     unsubscribe()
@@ -154,16 +174,12 @@ export function createCassiopeia(): Cassiopeia {
     },
     update: async (updateGenerator) =>
       await machineActionUpdate(
-        CassiopeiaStateMachineActionUpdateType.Generator,
         true,
-        updateGenerator,
-      ),
-    updateSync: async (updateGenerator) =>
-      await machineActionUpdate(
         CassiopeiaStateMachineActionUpdateType.Generator,
-        false,
         updateGenerator,
       ),
+    updateSync: (updateGenerator) =>
+      machineActionUpdate(false, CassiopeiaStateMachineActionUpdateType.Generator, updateGenerator),
     use: (...values) => {
       for (const plugin of values) {
         const install = plugin[CASSIOPEIA_PLUGIN]
@@ -171,16 +187,16 @@ export function createCassiopeia(): Cassiopeia {
         if (!plugins.has(plugin)) {
           const update: CassiopeiaReducerUpdate = async (keys) =>
             await machineActionUpdate(
-              CassiopeiaStateMachineActionUpdateType.Reducer,
               true,
+              CassiopeiaStateMachineActionUpdateType.Reducer,
               undefined,
               keys ?? reducerKeys,
             )
 
-          const updateSync: CassiopeiaReducerUpdate = async (keys) =>
-            await machineActionUpdate(
-              CassiopeiaStateMachineActionUpdateType.Reducer,
+          const updateSync: CassiopeiaReducerUpdateSync = (keys) =>
+            machineActionUpdate(
               false,
+              CassiopeiaStateMachineActionUpdateType.Reducer,
               undefined,
               keys ?? reducerKeys,
             )

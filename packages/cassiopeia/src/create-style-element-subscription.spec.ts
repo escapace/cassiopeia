@@ -21,7 +21,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
   })
 
   describe('basic DOM integration', () => {
-    it('creates style elements in document.head by default', async () => {
+    it('creates style elements in document.head by default', () => {
       const instance = createCassiopeia()
 
       const subscription = createStyleElementSubscription()
@@ -31,7 +31,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       instance.use(plugin.plugin)
 
       const generator = createCountingGenerator('var(---test-prop1)', 'var(---test-prop2)')
-      await instance.updateSync(generator.generator)
+      instance.updateSync(generator.generator)
 
       assertStyleElementCount(document.head, 1)
       assertStyleElementExists(
@@ -42,7 +42,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       )
     })
 
-    it('updates existing style elements with overwrite method', async () => {
+    it('updates existing style elements with overwrite method', () => {
       const instance = createCassiopeia()
 
       const subscription = createStyleElementSubscription({ method: 'overwrite' })
@@ -53,7 +53,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
 
       // First update
       const generator1 = createCountingGenerator('var(---test-initial)')
-      await instance.updateSync(generator1.generator)
+      instance.updateSync(generator1.generator)
 
       assertStyleElementCount(document.head, 1)
       const elements1 = getStyleElements(document.head)
@@ -61,7 +61,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
 
       // Second update
       const generator2 = createCountingGenerator('var(---test-updated)')
-      await instance.updateSync(generator2.generator)
+      instance.updateSync(generator2.generator)
 
       assertStyleElementCount(document.head, 1)
       const elements2 = getStyleElements(document.head)
@@ -71,7 +71,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       assertStyleElementExists(document.head, 'test', 0, ':root { ---test-updated: 1; }')
     })
 
-    it('replaces style elements with insert-discard method', async () => {
+    it('replaces style elements with insert-discard method', () => {
       const instance = createCassiopeia()
 
       const subscription = createStyleElementSubscription({ method: 'insert-discard' })
@@ -82,7 +82,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
 
       // First update
       const generator1 = createCountingGenerator('var(---test-initial)')
-      await instance.updateSync(generator1.generator)
+      instance.updateSync(generator1.generator)
 
       assertStyleElementCount(document.head, 1)
       const elements1 = getStyleElements(document.head)
@@ -90,7 +90,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
 
       // Second update
       const generator2 = createCountingGenerator('var(---test-updated)')
-      await instance.updateSync(generator2.generator)
+      instance.updateSync(generator2.generator)
 
       assertStyleElementCount(document.head, 1)
       const elements2 = getStyleElements(document.head)
@@ -112,7 +112,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
 
       // Create both elements
       const generator1 = createCountingGenerator('var(---a-test)', 'var(---b-test)')
-      await instance.updateSync(generator1.generator)
+      instance.updateSync(generator1.generator)
 
       assertStyleElementCount(document.head, 2)
       assertStyleElementExists(document.head, 'a', 0, ':root { ---a-test: 1; }')
@@ -128,7 +128,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
   })
 
   describe('container targeting', () => {
-    it('creates style elements in custom element container', async () => {
+    it('creates style elements in custom element container', () => {
       const testContainer = createTestContainer('div')
 
       const instance = createCassiopeia()
@@ -140,7 +140,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       instance.use(plugin.plugin)
 
       const generator = createCountingGenerator('var(---test-prop)')
-      await instance.updateSync(generator.generator)
+      instance.updateSync(generator.generator)
 
       assertStyleElementCount(testContainer.element, 1)
       assertStyleElementExists(testContainer.element, 'test', 0, ':root { ---test-prop: 1; }')
@@ -151,7 +151,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       testContainer.cleanup()
     })
 
-    it('creates style elements in shadow root container', async () => {
+    it('creates style elements in shadow root container', () => {
       const testContainer = createTestContainer('shadow')
 
       const instance = createCassiopeia()
@@ -163,7 +163,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       instance.use(plugin.plugin)
 
       const generator = createCountingGenerator('var(---test-shadow)')
-      await instance.updateSync(generator.generator)
+      instance.updateSync(generator.generator)
 
       assertStyleElementCount(testContainer.element, 1)
       assertStyleElementExists(testContainer.element, 'test', 0, ':root { ---test-shadow: 1; }')
@@ -174,7 +174,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       testContainer.cleanup()
     })
 
-    it('creates style elements using CSS selector', async () => {
+    it('creates style elements using CSS selector', () => {
       const testSelector = createTestSelector()
 
       const instance = createCassiopeia()
@@ -186,7 +186,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       instance.use(plugin.plugin)
 
       const generator = createCountingGenerator('var(---test-selector)')
-      await instance.updateSync(generator.generator)
+      instance.updateSync(generator.generator)
 
       assertStyleElementCount(testSelector.element, 1)
       assertStyleElementExists(testSelector.element, 'test', 0, ':root { ---test-selector: 1; }')
@@ -206,7 +206,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
   })
 
   describe('namespace support', () => {
-    it('creates qualified attributes with namespace', async () => {
+    it('creates qualified attributes with namespace', () => {
       const instance = createCassiopeia()
 
       const subscription = createStyleElementSubscription({ namespace: 'theme' })
@@ -216,7 +216,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       instance.use(plugin.plugin)
 
       const generator = createCountingGenerator('var(---test-prop)')
-      await instance.updateSync(generator.generator)
+      instance.updateSync(generator.generator)
 
       const elements = getStyleElements(document.head, 'theme')
       assert.equal(elements.length, 1)
@@ -229,7 +229,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       assert.equal(element.getAttribute('cassiopeia-index-theme'), '0')
     })
 
-    it('isolates namespaced style elements', async () => {
+    it('isolates namespaced style elements', () => {
       const instance1 = createCassiopeia()
       const instance2 = createCassiopeia()
 
@@ -245,8 +245,8 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
 
       const generator1 = createCountingGenerator('var(---component-app)')
       const generator2 = createCountingGenerator('var(---component-theme)')
-      await instance1.updateSync(generator1.generator)
-      await instance2.updateSync(generator2.generator)
+      instance1.updateSync(generator1.generator)
+      instance2.updateSync(generator2.generator)
 
       // Total elements should be 2
       const allElements = document.head.querySelectorAll(
@@ -318,7 +318,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       assertStyleElementExists(document.head, 'test', 0, ':root { --test: 2; }')
     })
 
-    it('removes media attribute when not provided in updates', async () => {
+    it('removes media attribute when not provided in updates', () => {
       const instance = createCassiopeia()
 
       const subscription = createStyleElementSubscription({ method: 'overwrite' })
@@ -337,14 +337,14 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
 
       // Update without media should remove the attribute
       const generator = createCountingGenerator('var(---test-updated)')
-      await instance.updateSync(generator.generator)
+      instance.updateSync(generator.generator)
 
       assertStyleElementHasNoMedia(document.head, 'test', 0)
     })
   })
 
   describe('multiple plugins and complex scenarios', () => {
-    it('handles multiple plugins with different keys', async () => {
+    it('handles multiple plugins with different keys', () => {
       const instance = createCassiopeia()
 
       const subscription = createStyleElementSubscription()
@@ -356,14 +356,14 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       instance.use(pluginA.plugin, pluginB.plugin)
 
       const generator = createCountingGenerator('var(---multi-prop)', 'var(---second-prop)')
-      await instance.updateSync(generator.generator)
+      instance.updateSync(generator.generator)
 
       assertStyleElementCount(document.head, 2)
       assertStyleElementExists(document.head, 'multi', 0, ':root { ---multi-prop: 1; }')
       assertStyleElementExists(document.head, 'second', 0, ':root { ---second-prop: 1; }')
     })
 
-    it('handles empty updates gracefully', async () => {
+    it('handles empty updates gracefully', () => {
       const instance = createCassiopeia()
 
       const subscription = createStyleElementSubscription()
@@ -374,13 +374,13 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
 
       // Generator with no matching properties
       const generator = createCountingGenerator('some text without vars')
-      await instance.updateSync(generator.generator)
+      instance.updateSync(generator.generator)
 
       // Should have no style elements
       assertStyleElementCount(document.head, 0)
     })
 
-    it('maintains element order consistency', async () => {
+    it('maintains element order consistency', () => {
       const instance = createCassiopeia()
 
       const subscription = createStyleElementSubscription()
@@ -397,7 +397,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
           'var(---b-test)',
           'var(---c-test)',
         )
-        await instance.updateSync(generator.generator)
+        instance.updateSync(generator.generator)
 
         const elements = getStyleElements(document.head)
         const keys = elements.map((element) => element.key)

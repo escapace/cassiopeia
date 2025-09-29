@@ -70,8 +70,15 @@ export type CassiopeiaGeneratorUpdate = (
   createGenerator?: () => CassiopeiaGenerator,
 ) => Promise<void>
 
+/** Update function that accepts optional generator factory for custom property source changes */
+export type CassiopeiaGeneratorUpdateSync = (
+  createGenerator?: () => CassiopeiaGenerator,
+) => void
+
 /** Update function that accepts optional reducer keys for targeted plugin updates */
 export type CassiopeiaReducerUpdate = (keys?: string[]) => Promise<void>
+/** Update function that accepts optional reducer keys for targeted plugin updates */
+export type CassiopeiaReducerUpdateSync = (keys?: string[]) => void
 
 export interface CassiopeiaPluginContext {
   /** Cleanup function to remove plugin and trigger update */
@@ -83,7 +90,7 @@ export interface CassiopeiaPluginContext {
   /** Trigger async reducer-only update for this plugin's keys */
   update: CassiopeiaReducerUpdate
   /** Trigger synchronous reducer-only update for this plugin's keys */
-  updateSync: CassiopeiaReducerUpdate
+  updateSync: CassiopeiaReducerUpdateSync
 }
 
 export interface CassiopeiaPlugin {
@@ -102,7 +109,7 @@ export interface Cassiopeia extends CassiopeiaInstance {
   dispose: () => void
   subscribe: (subscription: CassiopeiaSubscription) => CassiopeiaUnsubscribe
   update: CassiopeiaGeneratorUpdate
-  updateSync: CassiopeiaGeneratorUpdate
+  updateSync: CassiopeiaGeneratorUpdateSync
   use: (...plugins: CassiopeiaPlugin[]) => Cassiopeia
 }
 
@@ -136,7 +143,8 @@ export enum CassiopeiaStateMachineActionUpdateType {
 }
 
 export interface CassiopeiaStateMachineContext {
-  defer: (callback: () => void) => void
+  defer: (callback: () => void) => number
+  deferCancel: (id: number) => void
   deferEvery: number
   reducers: CassiopeiaReducers
 

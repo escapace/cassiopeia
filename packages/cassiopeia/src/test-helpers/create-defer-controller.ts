@@ -10,10 +10,15 @@ export function createDeferController() {
       if (manual) {
         // Manual mode: queue callback for later execution
         queue.push(callback)
+        return queue.length - 1
       } else {
         // Automatic mode: execute immediately, transparently
         callback()
+        return 0
       }
+    },
+    deferCancel: (id: number) => {
+      queue.splice(id, 1)
     },
     executeAll: () => {
       while (queue.length > 0) {

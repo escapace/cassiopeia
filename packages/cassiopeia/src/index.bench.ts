@@ -1,6 +1,5 @@
 import { beforeAll, bench, describe } from 'vitest'
 import {
-  CASSIOPEIA_CONTEXT,
   CASSIOPEIA_PLUGIN,
   createCassiopeia,
   isTerminatingReducerNotTerminated,
@@ -110,7 +109,6 @@ function createNumberProperties(COUNT: number): Array<[string, string]> {
 // eslint-disable-next-line typescript/no-empty-function
 const noop = (_: unknown) => {}
 const instance = createCassiopeia()
-instance[CASSIOPEIA_CONTEXT].defer = (callback) => callback()
 const plugin = createNumberPlugin()
 instance.use(plugin)
 instance.subscribe((value) => {

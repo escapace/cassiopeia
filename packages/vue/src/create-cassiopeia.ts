@@ -39,17 +39,13 @@ export const createCassiopeia = (options: CassiopeiaOptions = {}): Cassiopeia =>
   const effectScope = createEffectScope(true)
   effectScope.run(() => {
     const deferEvery = computed(() => unref(options.deferEvery))
-    const defer = computed(() => unref(options.defer))
+    const defer = unref(options.defer)
+    const deferCancel = unref(options.deferCancel)
 
-    watch(
-      defer,
-      (defer) => {
-        if (typeof defer === 'function') {
-          core[CASSIOPEIA_CONTEXT].defer = defer
-        }
-      },
-      { immediate: true },
-    )
+    if (defer !== undefined && deferCancel !== undefined) {
+      core[CASSIOPEIA_CONTEXT].defer = defer
+      core[CASSIOPEIA_CONTEXT].deferCancel = deferCancel
+    }
 
     watch(
       deferEvery,
@@ -63,7 +59,7 @@ export const createCassiopeia = (options: CassiopeiaOptions = {}): Cassiopeia =>
   })
 
   const update = async () => await core.update(createVariables)
-  const updateSync = async () => await core.updateSync(createVariables)
+  const updateSync = () => core.updateSync(createVariables)
 
   const createScope = (): CassiopeiaScope => {
     const scope = new Set<string>()

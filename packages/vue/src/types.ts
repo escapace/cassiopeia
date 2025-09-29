@@ -1,6 +1,6 @@
 /* eslint-disable typescript/method-signature-style */
 
-import type { Cassiopeia as CassiopeiaCore } from 'cassiopeia'
+import type { Cassiopeia as CassiopeiaCore, CassiopeiaStateMachineContext } from 'cassiopeia'
 import type { MaybeRef, ObjectPlugin } from 'vue'
 
 export interface CassiopeiaScope extends Pick<CassiopeiaCore, 'update' | 'updateSync'> {
@@ -20,7 +20,8 @@ export interface Cassiopeia extends CassiopeiaCore, ObjectPlugin {
 }
 
 export interface CassiopeiaOptions {
-  defer?: MaybeRef<((callback: () => void) => void) | undefined>
+  defer?: CassiopeiaStateMachineContext['defer']
+  deferCancel?: CassiopeiaStateMachineContext['deferCancel']
   /** Defer to the event loop every nth iteration. */
-  deferEvery?: MaybeRef<number | undefined>
+  deferEvery?: MaybeRef<CassiopeiaStateMachineContext['deferEvery'] | undefined>
 }

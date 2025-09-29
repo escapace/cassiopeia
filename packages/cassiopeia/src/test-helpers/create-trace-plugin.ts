@@ -91,8 +91,8 @@ export function createTracePlugin(key: string, shouldAbort?: (value: string) => 
     update: async (keys?: string[]) => {
       await context?.update?.(keys)
     },
-    updateSync: async (keys?: string[]) => {
-      await context?.updateSync?.(keys)
+    updateSync: (keys?: string[]) => {
+      context?.updateSync?.(keys)
     },
   }
 }

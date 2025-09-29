@@ -24,6 +24,7 @@ export const stateMachine = createStateMachine()
     () =>
       ({
         defer: setTimeout.bind(globalThis),
+        deferCancel: clearTimeout.bind(globalThis),
         deferEvery: 8,
         updateIsAsync: true,
         updateType: CassiopeiaStateMachineActionUpdateType.None,
