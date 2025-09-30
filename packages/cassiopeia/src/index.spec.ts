@@ -1625,3 +1625,141 @@ describe('optimization: early return and no orchestrator paths', () => {
     }
   })
 })
+
+describe('instance disposal and recovery', () => {
+  it('disposes instance completely and allows reuse with new plugins and generators', async () => {
+    const instance = createCassiopeia()
+    const spy = vi.fn<(keys: Set<string>, values: CassiopeiaStyleSheets) => void>()
+    instance.subscribe((keys, values) => spy(keys, values))
+
+    // Phase 1: Initial setup with generator and two plugins
+    const traceA = createTracePlugin('a')
+    const traceB = createTracePlugin('b')
+    instance.use(traceA.plugin, traceB.plugin)
+
+    const initialGenerator = createCountingGenerator(
+      'var(---a-first)',
+      'var(---b-first)',
+      'var(---a-second)',
+    )
+
+    instance.updateSync(initialGenerator.generator)
+
+    if (IS_BROWSER) {
+      expect(traceA.history).toMatchInlineSnapshot(`
+        [
+          {
+            "receivedMarkers": [
+              "---a-first",
+              "---a-second",
+            ],
+            "wasCancelled": false,
+            "wasCompleted": true,
+          },
+        ]
+      `)
+      expect(traceB.history).toMatchInlineSnapshot(`
+        [
+          {
+            "receivedMarkers": [
+              "---b-first",
+            ],
+            "wasCancelled": false,
+            "wasCompleted": true,
+          },
+        ]
+      `)
+      expect(spy.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            Set {
+              "a",
+              "b",
+            },
+            [
+              {
+                "content": ":root { ---a-first: 1; ---a-second: 2; }",
+                "index": 0,
+                "key": "a",
+              },
+              {
+                "content": ":root { ---b-first: 1; }",
+                "index": 0,
+                "key": "b",
+              },
+            ],
+          ],
+        ]
+      `)
+
+      expect(initialGenerator.history).toMatchInlineSnapshot(`
+        [
+          {
+            "pullCount": 3,
+            "wasCancelled": false,
+            "wasCompleted": true,
+          },
+        ]
+      `)
+    } else {
+      assert.equal(spy.mock.calls.length, 0)
+    }
+
+    expect(renderStyleSheets(instance)).toMatchInlineSnapshot(`
+      [
+        {
+          "content": ":root { ---a-first: 1; ---a-second: 2; }",
+          "index": 0,
+          "key": "a",
+        },
+        {
+          "content": ":root { ---b-first: 1; }",
+          "index": 0,
+          "key": "b",
+        },
+      ]
+    `)
+
+    // Phase 2: Dispose the instance
+    await instance.dispose()
+
+    assert.equal(instance[CASSIOPEIA_STATE], CassiopeiaStateMachineState.Idle)
+
+    const spyNew = vi.fn<(keys: Set<string>, values: CassiopeiaStyleSheets) => void>()
+    instance.subscribe((keys, values) => spyNew(keys, values))
+
+    const traceC = createTracePlugin('a')
+    const traceD = createTracePlugin('b')
+    instance.use(traceC.plugin, traceD.plugin)
+
+    const newGenerator = createCountingGenerator(
+      'var(---a-first)',
+      'var(---b-first)',
+      'var(---a-second)',
+    )
+
+    instance.updateSync(newGenerator.generator)
+
+    expect(renderStyleSheets(instance)).toMatchInlineSnapshot(`
+      [
+        {
+          "content": ":root { ---a-first: 1; ---a-second: 2; }",
+          "index": 0,
+          "key": "a",
+        },
+        {
+          "content": ":root { ---b-first: 1; }",
+          "index": 0,
+          "key": "b",
+        },
+      ]
+    `)
+
+    if (IS_BROWSER) {
+      assert.deepStrictEqual(newGenerator.history, initialGenerator.history)
+      assert.deepStrictEqual(traceA.history, traceC.history)
+      assert.deepEqual(traceB.history, traceD.history)
+      assert.deepStrictEqual(spyNew.mock.calls, spy.mock.calls)
+    }
+  })
+})

@@ -13,10 +13,6 @@ export interface CassiopeiaScope extends Pick<CassiopeiaCore, 'update' | 'update
 
 export interface Cassiopeia extends CassiopeiaCore, ObjectPlugin {
   createScope: () => CassiopeiaScope
-  /**
-   * Returns true if the update was successful, i.e. not canceled.
-   */
-  dispose: () => void
 }
 
 export interface CassiopeiaOptions {

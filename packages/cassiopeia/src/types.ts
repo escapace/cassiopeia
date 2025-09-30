@@ -115,7 +115,7 @@ export interface CassiopeiaInstance {
 }
 
 export interface Cassiopeia extends CassiopeiaInstance {
-  dispose: () => void
+  dispose: () => Promise<void>
   subscribe: (subscription: CassiopeiaSubscription) => CassiopeiaUnsubscribe
   update: CassiopeiaGeneratorUpdate
   updateSync: CassiopeiaGeneratorUpdateSync

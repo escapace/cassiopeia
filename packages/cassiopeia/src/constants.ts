@@ -49,6 +49,8 @@ export enum CassiopeiaStateMachineAction {
   Reduce,
   /** Initiate new generator or reducer update cycle */
   Update,
+  /** Reset the state machine */
+  Reset,
 }
 
 export enum CassiopeiaStateMachineActionUpdateType {

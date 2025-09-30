@@ -1,5 +1,5 @@
 import type { Cassiopeia, CassiopeiaGenerator } from 'cassiopeia'
-import { CASSIOPEIA_REGEX, isTerminatingReducerTerminated } from 'cassiopeia'
+import { CASSIOPEIA_REGEX, isReducerTerminated } from 'cassiopeia'
 
 const isSameDomain = (styleSheet: CSSStyleSheet): boolean => {
   if (styleSheet.href === null) {
@@ -69,7 +69,7 @@ const isValidMutation = (mutation: MutationRecord) => {
   return false
 }
 
-function* createVariableIterator(root: Document | ShadowRoot): CassiopeiaGenerator {
+function* createCassiopeiaGenerator(root: Document | ShadowRoot): CassiopeiaGenerator {
   const elements = root.querySelectorAll('*[style]')
 
   for (const element of elements) {
@@ -77,7 +77,7 @@ function* createVariableIterator(root: Document | ShadowRoot): CassiopeiaGenerat
 
     if (cssText !== undefined) {
       for (const match of cssText.matchAll(CASSIOPEIA_REGEX)) {
-        if (isTerminatingReducerTerminated(yield match.splice(1) as unknown as [string, string])) {
+        if (isReducerTerminated(yield match.splice(1) as unknown as [string, string])) {
           return
         }
       }
@@ -96,9 +96,7 @@ function* createVariableIterator(root: Document | ShadowRoot): CassiopeiaGenerat
       for (const cssRule of cssStyleSheet.cssRules) {
         if (isSupportedCSSRule(cssRule)) {
           for (const match of cssRule.cssText.matchAll(CASSIOPEIA_REGEX)) {
-            if (
-              isTerminatingReducerTerminated(yield match.splice(1) as unknown as [string, string])
-            ) {
+            if (isReducerTerminated(yield match.splice(1) as unknown as [string, string])) {
               return
             }
           }
@@ -114,7 +112,7 @@ interface Options {
 
 export const createSourceDOM = (options: Options = {}, cassiopeia: Cassiopeia) => {
   const root = options.root ?? document
-  const createGenerator = () => createVariableIterator(root)
+  const createGenerator = () => createCassiopeiaGenerator(root)
   let isActive = false
 
   const mutationObserver = new MutationObserver((mutations) => {

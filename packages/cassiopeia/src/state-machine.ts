@@ -10,7 +10,6 @@ import { createOrchestrator } from './create-orchestrator'
 import type {
   CassiopeiaStateMachineActionUpdateOptions,
   CassiopeiaStateMachineContext,
-  CassiopeiaStyleSheets,
 } from './types'
 
 export const stateMachine = createStateMachine()
@@ -22,9 +21,8 @@ export const stateMachine = createStateMachine()
     CassiopeiaStateMachineAction.Update,
   )
   .action<CassiopeiaStateMachineAction.Reduce>(CassiopeiaStateMachineAction.Reduce)
-  .action<CassiopeiaStateMachineAction.Done, CassiopeiaStyleSheets>(
-    CassiopeiaStateMachineAction.Done,
-  )
+  .action<CassiopeiaStateMachineAction.Done>(CassiopeiaStateMachineAction.Done)
+  .action<CassiopeiaStateMachineAction.Reset>(CassiopeiaStateMachineAction.Reset)
   .context<CassiopeiaStateMachineContext>(() => ({
     defer: setTimeout.bind(globalThis),
     deferCancel: clearTimeout.bind(globalThis),
@@ -140,7 +138,28 @@ export const stateMachine = createStateMachine()
       context.updateType = CassiopeiaStateMachineActionUpdateType.None
       context.updateGenerator = undefined
       context.updateReducerKeys = undefined
-      // context.updateReducerKeys?.clear()
+
+      return context
+    },
+  )
+
+  .transition(
+    [
+      CassiopeiaStateMachineState.Idle,
+      CassiopeiaStateMachineState.PreFlight,
+      CassiopeiaStateMachineState.InFlight,
+    ],
+    CassiopeiaStateMachineAction.Reset,
+    CassiopeiaStateMachineState.Idle,
+    (context) => {
+      context.orchestrator?.next(CASSIOPEIA_CANCEL)
+      context.orchestrator = undefined
+      context.generator?.[CASSIOPEIA_CANCEL]()
+      context.generator = undefined
+      context.updateGenerator = undefined
+      context.reducerKeys.clear()
+      context.updateReducerKeys = undefined
+      context.updateIsAsync = true
 
       return context
     },

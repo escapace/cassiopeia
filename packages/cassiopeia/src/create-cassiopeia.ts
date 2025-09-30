@@ -1,7 +1,6 @@
 import { interpret } from '@escapace/fsm'
 import { remove } from 'coastal'
 import {
-  CASSIOPEIA_CANCEL,
   CASSIOPEIA_CONTEXT,
   CASSIOPEIA_PLUGIN,
   CASSIOPEIA_STATE,
@@ -34,9 +33,11 @@ export function createCassiopeia(): Cassiopeia {
 
   let deferCancellationIdentifier: number | undefined
 
-  const unsubscribe = machine.subscribe((state) => {
-    if (state.action.type === CassiopeiaStateMachineAction.Update) {
-      if (state.context.updateIsAsync) {
+  machine.subscribe(({ action }) => {
+    const actionType = action.type
+
+    if (actionType === CassiopeiaStateMachineAction.Update) {
+      if (context.updateIsAsync) {
         deferCancellationIdentifier ??= context.defer(() => {
           deferCancellationIdentifier = undefined
           machine.do(CassiopeiaStateMachineAction.Reduce)
@@ -49,15 +50,15 @@ export function createCassiopeia(): Cassiopeia {
 
         machine.do(CassiopeiaStateMachineAction.Reduce)
       }
-    } else if (state.action.type === CassiopeiaStateMachineAction.Reduce) {
+    } else if (actionType === CassiopeiaStateMachineAction.Reduce) {
       if (__PLATFORM__ === 'node') {
         machine.do(CassiopeiaStateMachineAction.Done)
-      } else if (state.context.orchestrator === undefined) {
+      } else if (context.orchestrator === undefined) {
         // Optimization path: when state machine skips orchestrator creation due to
         // no plugins registered or empty update reducer keys, notify subscriptions
         // with empty values to maintain consistent behavior
         for (const subscription of subscriptions) {
-          subscription(state.context.reducerKeys, [])
+          subscription(context.reducerKeys, [])
         }
 
         machine.do(CassiopeiaStateMachineAction.Done)
@@ -68,7 +69,7 @@ export function createCassiopeia(): Cassiopeia {
           void Promise.resolve(values).then((values) => {
             if (values !== undefined) {
               for (const subscription of subscriptions) {
-                subscription(state.context.reducerKeys, values)
+                subscription(context.reducerKeys, values)
               }
 
               machine.do(CassiopeiaStateMachineAction.Done)
@@ -76,13 +77,13 @@ export function createCassiopeia(): Cassiopeia {
           })
         } else if (values !== undefined) {
           for (const subscription of subscriptions) {
-            subscription(state.context.reducerKeys, values)
+            subscription(context.reducerKeys, values)
           }
 
           machine.do(CassiopeiaStateMachineAction.Done)
         }
       }
-    } else if (state.action.type === CassiopeiaStateMachineAction.Done) {
+    } else {
       for (const resolve of updateCallbacks) {
         resolve()
       }
@@ -128,31 +129,14 @@ export function createCassiopeia(): Cassiopeia {
       : commit()
   }
 
-  const dispose = () => {
-    unsubscribe()
+  const dispose = async () => {
     subscriptions.length = 0
 
     for (const metadata of plugins.values()) {
-      void metadata.dispose()
+      await metadata.dispose()
     }
-    plugins.clear()
 
-    for (const resolve of updateCallbacks) {
-      resolve()
-    }
-    updateCallbacks.length = 0
-    deferCancellationIdentifier = undefined
-
-    context.generator?.[CASSIOPEIA_CANCEL]()
-    context.orchestrator?.next(CASSIOPEIA_CANCEL)
-    context.orchestrator = undefined
-    context.reducerFactories = {}
-    context.reducerKeys.clear()
-    context.updateIsAsync = true
-    context.updateType = CassiopeiaStateMachineActionUpdateType.None
-    context.updateGenerator = undefined
-    context.generator = undefined
-    context.updateReducerKeys = undefined
+    machine.do(CassiopeiaStateMachineAction.Reset)
   }
 
   const cassiopeia: Cassiopeia = {

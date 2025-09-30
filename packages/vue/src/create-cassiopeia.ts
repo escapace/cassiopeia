@@ -2,7 +2,7 @@ import {
   CASSIOPEIA_CONTEXT,
   CASSIOPEIA_STATE,
   createCassiopeia as createCassiopeiaCore,
-  TERMINATING_REDUCER_CANCEL,
+  CASSIOPEIA_CANCEL,
   type CassiopeiaGenerator,
 } from 'cassiopeia'
 import { computed, effectScope as createEffectScope, unref, watch, type App } from 'vue'
@@ -17,7 +17,7 @@ function* createGenerator(scopes: Set<Set<string>>): CassiopeiaGenerator {
       if (match?.length === 3) {
         const cancelled = yield match.splice(1) as [string, string]
 
-        if (cancelled === TERMINATING_REDUCER_CANCEL) {
+        if (cancelled === CASSIOPEIA_CANCEL) {
           return
         }
       }
@@ -102,18 +102,18 @@ export const createCassiopeia = (options: CassiopeiaOptions = {}): Cassiopeia =>
       return core[CASSIOPEIA_STATE]
     },
     createScope,
-    dispose: () => {
+    dispose: async () => {
       effectScope.stop()
       scopes.clear()
 
       if (__PLATFORM__ === 'browser') {
         globalThis.__CASSIOPEIA__ = undefined
       }
-      core.dispose()
+      await core.dispose()
     },
     install: (app: App) => {
       app.provide(CASSIOPEIA_INJECTION_KEY, cassiopeia)
-      app.onUnmount(cassiopeia.dispose)
+      app.onUnmount(() => void cassiopeia.dispose)
     },
     update,
     updateSync,
