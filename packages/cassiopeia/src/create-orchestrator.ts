@@ -14,7 +14,7 @@ import type {
 /**
  * Orchestrates stylesheet generation by coordinating cached and new custom property key-suffix pairs across multiple reducers.
  *
- * @param context - State machine context containing cache, optional generator, reducers, and target reducer keys
+ * @param context - State machine context containing cache, optional generator, reducerFactories, and target reducer keys
  * @returns Terminating reducer that collects complete stylesheets from all participating reducers
  *
  * Processes custom property key-suffix pairs. Each pair is reconstructed into a triple-dash custom
@@ -26,13 +26,15 @@ import type {
 export function* createOrchestrator(
   context: Pick<
     CassiopeiaStateMachineContext,
-    'generator' | 'reducerFactories' | 'updateReducerKeys'
+    'generator' | 'reducerFactories' | 'reducerKeys' | 'updateReducerKeys'
   >,
 ): CassiopeiaOrchestrator {
-  const { generator, reducerFactories, updateReducerKeys } = context
+  const { generator, reducerFactories, reducerKeys, updateReducerKeys } = context
 
-  const keys = Object.keys(reducerFactories)
+  const keys = Array.from(reducerKeys)
+
   const reducers = createTerminatingReducers(reducerFactories, updateReducerKeys ?? keys)
+
   const iterator = generator![Symbol.iterator]()
 
   let token: TerminatingReducerNext<undefined>
@@ -62,22 +64,21 @@ export function* createOrchestrator(
     }
   }
 
-  const values: CassiopeiaStyleSheet[] = []
+  if (token === TERMINATING_REDUCER_CANCEL) {
+    for (const key of Object.keys(reducers)) {
+      // Send cancellation signal to remaining reducers
+      reducers[key].next(TERMINATING_REDUCER_CANCEL)
+    }
 
-  const isCancel = token === TERMINATING_REDUCER_CANCEL
+    return undefined
+  }
+
+  const styleSheets: CassiopeiaStyleSheet[] = []
 
   // Finalize reducers and collect stylesheet results
   for (const key of Object.keys(reducers)) {
-    const reducer = reducers[key]
-
-    if (isCancel) {
-      // Send cancellation signal to remaining reducers
-      reducer.next(TERMINATING_REDUCER_CANCEL)
-      continue
-    }
-
     // Send completion signal and collect results
-    const { done, value } = reducer.next(TERMINATING_REDUCER_COMPLETE)
+    const { done, value } = reducers[key].next(TERMINATING_REDUCER_COMPLETE)
 
     if (done !== true || value === undefined) {
       continue
@@ -85,7 +86,7 @@ export function* createOrchestrator(
 
     // Transform partial stylesheets into complete CassiopeiaStyleSheet objects
     if (Array.isArray(value)) {
-      values.push(
+      styleSheets.push(
         ...value.map((value, index) => {
           value.key = key
           value.index ??= index
@@ -97,14 +98,12 @@ export function* createOrchestrator(
       value.key = key
       value.index ??= 0
 
-      values.push(value as CassiopeiaStyleSheet)
+      styleSheets.push(value as CassiopeiaStyleSheet)
     }
   }
 
-  return isCancel
-    ? undefined
-    : {
-        keys,
-        values,
-      }
+  return {
+    keys,
+    values: styleSheets,
+  }
 }

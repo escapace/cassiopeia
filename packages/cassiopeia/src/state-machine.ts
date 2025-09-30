@@ -1,5 +1,6 @@
 import { stateMachine as createStateMachine } from '@escapace/fsm'
 import { createCachedIterable } from './create-cached-iterable'
+import { createOrchestrator } from './create-orchestrator'
 import { TERMINATING_REDUCER_CANCEL } from './create-terminating-reducers'
 import {
   CassiopeiaStateMachineAction,
@@ -7,8 +8,8 @@ import {
   CassiopeiaStateMachineState,
   type CassiopeiaStateMachineActionUpdateOptions,
   type CassiopeiaStateMachineContext,
+  type CassiopeiaStyleSheets,
 } from './types'
-import { createOrchestrator } from './create-orchestrator'
 
 export const stateMachine = createStateMachine()
   .state(CassiopeiaStateMachineState.Idle)
@@ -19,12 +20,15 @@ export const stateMachine = createStateMachine()
     CassiopeiaStateMachineAction.Update,
   )
   .action<CassiopeiaStateMachineAction.Reduce>(CassiopeiaStateMachineAction.Reduce)
-  .action<CassiopeiaStateMachineAction.Done>(CassiopeiaStateMachineAction.Done)
+  .action<CassiopeiaStateMachineAction.Done, CassiopeiaStyleSheets>(
+    CassiopeiaStateMachineAction.Done,
+  )
   .context<CassiopeiaStateMachineContext>(() => ({
     defer: setTimeout.bind(globalThis),
     deferCancel: clearTimeout.bind(globalThis),
     deferEvery: 8,
     reducerFactories: {},
+    reducerKeys: new Set(),
     updateIsAsync: true,
     updateType: CassiopeiaStateMachineActionUpdateType.None,
   }))
@@ -35,7 +39,7 @@ export const stateMachine = createStateMachine()
       CassiopeiaStateMachineState.InFlight,
       CassiopeiaStateMachineState.PreFlight,
     ],
-    [CassiopeiaStateMachineAction.Update],
+    CassiopeiaStateMachineAction.Update,
     CassiopeiaStateMachineState.PreFlight,
     (context, { payload }) => {
       context.updateIsAsync = payload.updateIsAsync
@@ -60,13 +64,29 @@ export const stateMachine = createStateMachine()
       }
 
       if (updateType === CassiopeiaStateMachineActionUpdateType.Reducer) {
-        const updateReducerKeys = payload.updateReducerKeys
+        const { reducerKeys } = context
+        const updateReducerKeys = payload.updateReducerKeys!
 
-        if (updateReducerKeys !== undefined) {
-          const contextReducerKeys = (context.updateReducerKeys ??= new Set())
+        let contextUpdateReducerKeys: Set<string>
 
-          for (const updateReducerKey of updateReducerKeys) {
-            contextReducerKeys.add(updateReducerKey)
+        if (context.updateReducerKeys === undefined) {
+          contextUpdateReducerKeys = context.updateReducerKeys = new Set()
+        } else {
+          contextUpdateReducerKeys = context.updateReducerKeys
+
+          // Cleanup: remove obsolete keys from updateReducerKeys when plugins have been disposed/deleted.
+          // This ensures updateReducerKeys only contains keys for currently registered plugins.
+          for (const key of contextUpdateReducerKeys) {
+            if (!reducerKeys.has(key)) {
+              contextUpdateReducerKeys.delete(key)
+            }
+          }
+        }
+
+        // TODO: in the future https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/intersection
+        for (const key of updateReducerKeys) {
+          if (reducerKeys.has(key)) {
+            contextUpdateReducerKeys.add(key)
           }
         }
       } else {
@@ -81,7 +101,7 @@ export const stateMachine = createStateMachine()
     CassiopeiaStateMachineState.PreFlight,
     [
       CassiopeiaStateMachineAction.Reduce,
-      (value) => value.updateGenerator !== undefined || value.generator !== undefined,
+      (context) => context.updateGenerator !== undefined || context.generator !== undefined,
     ],
     CassiopeiaStateMachineState.InFlight,
     (context) => {
@@ -89,6 +109,15 @@ export const stateMachine = createStateMachine()
 
       if (generator === undefined && updateGenerator !== undefined) {
         context.generator = createCachedIterable(updateGenerator)
+      }
+
+      // Performance optimization: early return when no processing is required.
+      // This avoids expensive orchestrator creation, generator iteration, and reducer execution
+      // when the result would be empty anyway. Two conditions trigger this optimization:
+      // - No plugins registered: when reducerFactories is empty, no plugins exist to process
+      // - Empty update reducer keys: when updateReducerKeys is empty, no reducers need processing
+      if (context.reducerKeys.size === 0 || context.updateReducerKeys?.size === 0) {
+        return context
       }
 
       if (__PLATFORM__ === 'browser') {
@@ -102,13 +131,14 @@ export const stateMachine = createStateMachine()
 
   .transition(
     CassiopeiaStateMachineState.InFlight,
-    [CassiopeiaStateMachineAction.Done],
+    CassiopeiaStateMachineAction.Done,
     CassiopeiaStateMachineState.Idle,
     (context) => {
       context.orchestrator = undefined
       context.updateType = CassiopeiaStateMachineActionUpdateType.None
       context.updateGenerator = undefined
       context.updateReducerKeys = undefined
+      // context.updateReducerKeys?.clear()
 
       return context
     },

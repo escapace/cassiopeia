@@ -10,18 +10,21 @@ import {
 import {
   createCountingGenerator,
   createManyPropertiesGenerator,
-} from './test-helpers/create-counting-generator'
-import { createDeferController } from './test-helpers/create-defer-controller'
-import { createTracePlugin } from './test-helpers/create-trace-plugin'
+} from './test-support/create-counting-generator'
+import { createDeferController } from './test-support/create-defer-controller'
+import { createTracePlugin } from './test-support/create-trace-plugin'
 
 const IS_BROWSER = __PLATFORM__ === 'browser'
 
 describe('routing & composition correctness', () => {
   for (const updateType of ['reducer', 'generator'] as const) {
-    it(`blocks PreFlight → InFlight ${updateType} transition when no generator available`, () => {
+    it(`blocks PreFlight → InFlight ${updateType} transition when no generator available`, async () => {
       const instance = createCassiopeia()
+      const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
+      instance.subscribe((subscription) => spy(subscription))
+
       const deferController = createDeferController()
-      deferController.setManual(false)
+      await deferController.setManual(false)
 
       instance[CASSIOPEIA_CONTEXT].defer = deferController.defer
 
@@ -32,7 +35,8 @@ describe('routing & composition correctness', () => {
         void instance.updateSync()
       }
 
-      assert.equal(instance[CASSIOPEIA_STATE], CassiopeiaStateMachineState.PreFlight)
+      assert.notEqual(instance[CASSIOPEIA_STATE], CassiopeiaStateMachineState.InFlight)
+      expect(spy.mock.calls).toMatchInlineSnapshot(`[]`)
     })
   }
 
@@ -678,7 +682,7 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
     const updatePromise2 = instance.update(generator2.generator)
 
     // Switch to automatic mode - all remaining defers execute immediately
-    deferController.setManual(false)
+    await deferController.setManual(false)
 
     await updatePromise1
     await updatePromise2
@@ -780,7 +784,7 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
     const updatePromise2 = instance.update(generator2.generator)
 
     // Switch to automatic mode - all remaining defers execute immediately
-    deferController.setManual(false)
+    await deferController.setManual(false)
 
     await updatePromise1
     await updatePromise2
@@ -888,7 +892,7 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
     assert.equal(traceA.history.length, 1)
     assert.equal(traceA.history[0].wasCancelled, true)
 
-    deferController.setManual(false)
+    await deferController.setManual(false)
     await updatePromise
 
     assert.equal(traceA.history[1].wasCompleted, true)
@@ -1017,7 +1021,7 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
 
         // Should have deferred the reduce action
         // assert.isTrue(deferController.hasQueued(), 'Should have deferred the reduce action')
-        deferController.setManual(false)
+        await deferController.setManual(false)
 
         if (first === 'reducer') {
           // Second reducer update: continues to reuse the original cached generator
@@ -1149,7 +1153,7 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
       assert.equal(traceA.history.length, 1)
       assert.equal(traceA.history[0].wasCancelled, true)
 
-      deferController.setManual(false)
+      await deferController.setManual(false)
       await updatePromise1
 
       assert.equal(traceA.history.length, 1)
@@ -1167,12 +1171,511 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
       expect(generator1.history).toMatchInlineSnapshot(`
         [
           {
+            "pullCount": 1,
+            "wasCancelled": false,
+            "wasCompleted": false,
+          },
+        ]
+      `)
+
+      const traceAA = createTracePlugin('a')
+      instance.use(traceAA.plugin)
+
+      await traceAA.update()
+
+      expect(generator1.history).toMatchInlineSnapshot(`
+        [
+          {
             "pullCount": 4,
             "wasCancelled": false,
             "wasCompleted": true,
           },
         ]
       `)
+
+      expect(spy.mock.calls[1]).toMatchInlineSnapshot(`
+        [
+          {
+            "keys": [
+              "a",
+            ],
+            "values": [
+              {
+                "content": ":root { ---a-prop0: 1; ---a-prop1: 2; ---a-prop2: 3; ---a-prop3: 4; }",
+                "index": 0,
+                "key": "a",
+              },
+            ],
+          },
+        ]
+      `)
     })
   }
+
+  it.runIf(IS_BROWSER)('removes obsolete keys from updateReducerKeys when plugins are disposed during reducer updates', async () => {
+    const instance = createCassiopeia()
+    const context = instance[CASSIOPEIA_CONTEXT]
+
+    // Setup controlled async execution
+    const deferController = createDeferController()
+    context.defer = deferController.defer
+    context.deferCancel = deferController.deferCancel
+    await deferController.setManual(true)
+
+    // Create multiple plugins and register them
+    const traceA = createTracePlugin('a')
+    const traceB = createTracePlugin('b')
+    const traceC = createTracePlugin('c')
+    instance.use(traceA.plugin, traceB.plugin, traceC.plugin)
+
+    // Establish generator cache first
+    const generator = createCountingGenerator('var(---a-test)', 'var(---b-test)', 'var(---c-test)')
+    instance.updateSync(generator.generator)
+
+    // Trigger plugin update with specific keys to populate updateReducerKeys
+    void traceA.update(['a', 'b', 'c']) // This will create updateReducerKeys Set with all three keys
+
+    // Execute to get to the state where updateReducerKeys is populated
+    assert.isTrue(deferController.executeNext())
+
+    // Verify updateReducerKeys contains all expected keys
+    assert.deepEqual([...context.updateReducerKeys!].sort(), ['a', 'b', 'c'])
+
+    // Dispose plugin B while the update is still processing - this removes 'b' from reducerKeys
+    void traceB.dispose()
+
+    // Execute the disposal
+    assert.isTrue(deferController.executeNext())
+
+    assert.deepEqual([...context.updateReducerKeys!].sort(), ['a', 'c'])
+
+    // Trigger another update that will hit the cleanup logic
+    void traceC.update(['a', 'b', 'c']) // Still trying to update all keys including disposed 'b'
+
+    // Execute the update that will trigger the cleanup logic in lines 77-81
+    assert.isTrue(deferController.executeNext())
+
+    // Verify that obsolete key 'b' was removed from updateReducerKeys during cleanup
+    assert.deepEqual([...context.updateReducerKeys!].sort(), ['a', 'c'])
+
+    // Complete remaining execution
+    await deferController.setManual(false)
+  })
+})
+
+describe('optimization: early return and no orchestrator paths', () => {
+  for (const isAsync of [true, false]) {
+    it(`skips orchestrator for generator updates when no plugins registered (${isAsync ? 'async' : 'sync'})`, async () => {
+      const instance = createCassiopeia()
+      const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
+      instance.subscribe((subscription) => spy(subscription))
+
+      // Ensure no plugins are registered - triggers no plugins registered optimization
+      assert.equal(Object.keys(instance[CASSIOPEIA_CONTEXT].reducerFactories).length, 0)
+
+      // Both generator and reducer update paths need a generator to satisfy the Reduce action guard
+      const generator = createCountingGenerator('var(---test-prop)')
+      if (isAsync) {
+        await instance.update(generator.generator)
+      } else {
+        instance.updateSync(generator.generator)
+      }
+
+      if (IS_BROWSER) {
+        // Optimization: no plugins registered triggers early return
+        // State machine goes PreFlight → InFlight transition and early returns
+        // Reduce action fires, orchestrator is undefined, so subscription gets empty values
+        expect(spy.mock.calls).toMatchInlineSnapshot(`
+          [
+            [
+              {
+                "keys": [],
+                "values": [],
+              },
+            ],
+          ]
+        `)
+
+        // During optimization, generator is not processed
+        assert.equal(generator.state, undefined)
+
+        // State should return to Idle after Done transition
+        assert.equal(instance[CASSIOPEIA_STATE], CassiopeiaStateMachineState.Idle)
+      } else {
+        // Node: no subscription calls
+        assert.equal(spy.mock.calls.length, 0)
+        assert.equal(generator.state, undefined)
+      }
+
+      // Verify final state shows optimization was triggered
+      const styleSheets = renderStyleSheets(instance)
+      // TODO: (fix inconsistency)
+      //
+      // When optimization triggers, renderStyleSheets returns undefined
+      // assert.equal(styleSheets, undefined)
+      expect(styleSheets).toMatchInlineSnapshot(`
+        {
+          "keys": [],
+          "values": [],
+        }
+      `)
+    })
+  }
+
+  for (const isAsync of [true, false]) {
+    it(`skips orchestrator for reducer updates when no plugins registered (${isAsync ? 'async' : 'sync'})`, async () => {
+      const instance = createCassiopeia()
+      const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
+      instance.subscribe((subscription) => spy(subscription))
+
+      // Ensure no plugins are registered - triggers no plugins registered optimization
+      assert.equal(Object.keys(instance[CASSIOPEIA_CONTEXT].reducerFactories).length, 0)
+
+      // Both generator and reducer update paths need a generator to satisfy the Reduce action guard
+      const generator = createCountingGenerator('var(---test-prop)')
+      if (isAsync) {
+        await instance.update(generator.generator)
+      } else {
+        instance.updateSync(generator.generator)
+      }
+
+      if (IS_BROWSER) {
+        // Optimization: no plugins registered triggers early return
+        // State machine goes PreFlight → InFlight and early returns
+        // Reduce action fires, orchestrator is undefined, so subscription gets empty values
+        expect(spy.mock.calls).toMatchInlineSnapshot(`
+          [
+            [
+              {
+                "keys": [],
+                "values": [],
+              },
+            ],
+          ]
+        `)
+
+        // During optimization, generator is not processed - it just gets cached
+        assert.equal(generator.state, undefined)
+
+        // State should return to Idle after Done transition
+        assert.equal(instance[CASSIOPEIA_STATE], CassiopeiaStateMachineState.Idle)
+      } else {
+        // Node: no subscription calls
+        assert.equal(spy.mock.calls.length, 0)
+        assert.equal(generator.state, undefined)
+      }
+
+      // Verify final state shows optimization was triggered
+      const styleSheets = renderStyleSheets(instance)
+      // TODO: inconsistency
+      //
+      // When optimization triggers, renderStyleSheets returns undefined
+      // assert.equal(styleSheets, undefined)
+      expect(styleSheets).toMatchInlineSnapshot(`
+        {
+          "keys": [],
+          "values": [],
+        }
+      `)
+    })
+  }
+
+  for (const isAsync of [true, false]) {
+    it(`skips orchestrator when update reducer keys is empty (${isAsync ? 'async' : 'sync'})`, async () => {
+      const instance = createCassiopeia()
+      const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
+      instance.subscribe((subscription) => spy(subscription))
+
+      // Register plugins so reducerFactories is not empty
+      const traceA = createTracePlugin('a')
+      const traceB = createTracePlugin('b')
+      instance.use(traceA.plugin, traceB.plugin)
+
+      // Verify plugins are registered (no plugins registered condition is false)
+      assert.isTrue(Object.keys(instance[CASSIOPEIA_CONTEXT].reducerFactories).length > 0)
+
+      // First establish a cached generator to satisfy the Reduce action guard
+      const generator = createCountingGenerator('var(---a-test)')
+      if (isAsync) {
+        await instance.update(generator.generator)
+      } else {
+        instance.updateSync(generator.generator)
+      }
+
+      // Reset spy to focus on the optimization test
+      spy.mockClear()
+
+      // TODO: this should be discouraged at least in documentation
+      //
+      // Now trigger reducer update with empty keys array to create empty Set
+      // This should trigger empty update reducer keys optimization: updateReducerKeys.size === 0
+      if (isAsync) {
+        await traceA.update([])
+      } else {
+        traceA.updateSync([])
+      }
+
+      if (IS_BROWSER) {
+        // Optimization: empty updateReducerKeys.size === 0
+        // State machine early returns, orchestrator undefined, subscription gets empty values
+        expect(spy.mock.calls).toMatchInlineSnapshot(`
+            [
+              [
+                {
+                  "keys": [
+                    "a",
+                    "b",
+                  ],
+                  "values": [],
+                },
+              ],
+            ]
+          `)
+      } else {
+        // Node: no subscription calls
+        assert.equal(spy.mock.calls.length, 0)
+      }
+
+      // The empty reducer keys update doesn't clear the generator
+      const styleSheets = renderStyleSheets(instance)
+      expect(styleSheets).toMatchInlineSnapshot(`
+          {
+            "keys": [
+              "a",
+              "b",
+            ],
+            "values": [
+              {
+                "content": ":root { ---a-test: 1; }",
+                "index": 0,
+                "key": "a",
+              },
+            ],
+          }
+        `)
+    })
+  }
+
+  for (const option of ['are disposed', 'key is deleted'] as const) {
+    it(`triggers optimization when plugins ${option}`, async () => {
+      const instance = createCassiopeia()
+      const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
+      instance.subscribe((subscription) => spy(subscription))
+
+      // Setup defer controller for both dispose and delete cases
+      const deferController = createDeferController()
+      const context = instance[CASSIOPEIA_CONTEXT]
+      context.defer = deferController.defer
+      context.deferCancel = deferController.deferCancel
+      await deferController.setManual(false)
+
+      // Register plugins and establish cached generator
+      const traceA = createTracePlugin('a')
+      const traceB = createTracePlugin('b')
+      instance.use(traceA.plugin, traceB.plugin)
+
+      const generator = createCountingGenerator('var(---a-test)', 'var(---b-test)')
+      instance.updateSync(generator.generator)
+
+      // Reset spy to focus on disposal behavior
+      spy.mockClear()
+
+      await deferController.setManual(true)
+
+      // Remove one plugin
+      if (option === 'are disposed') {
+        void traceA.dispose()
+      } else {
+        traceA.triggerDelete()
+      }
+
+      await deferController.executeAll()
+
+      // Verify still have one plugin
+      assert.equal(Object.keys(instance[CASSIOPEIA_CONTEXT].reducerFactories).length, 1)
+
+      // Remove last plugin
+      if (option === 'are disposed') {
+        void traceB.dispose()
+      } else {
+        traceB.triggerDelete()
+      }
+
+      await deferController.executeAll()
+
+      // Verify no plugins registered
+      assert.equal(Object.keys(instance[CASSIOPEIA_CONTEXT].reducerFactories).length, 0)
+
+      if (IS_BROWSER) {
+        expect(spy.mock.calls).toMatchInlineSnapshot(`
+          [
+            [
+              {
+                "keys": [
+                  "b",
+                ],
+                "values": [],
+              },
+            ],
+            [
+              {
+                "keys": [],
+                "values": [],
+              },
+            ],
+          ]
+        `)
+      } else {
+        assert.equal(spy.mock.calls.length, 0)
+      }
+
+      await deferController.setManual(false)
+
+      expect(renderStyleSheets(instance)).toMatchInlineSnapshot(`
+        {
+          "keys": [],
+          "values": [],
+        }
+      `)
+    })
+  }
+
+  it('orchestrator creation patterns during optimization', async () => {
+    const instance = createCassiopeia()
+    const context = instance[CASSIOPEIA_CONTEXT]
+    const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
+    instance.subscribe((subscription) => spy(subscription))
+
+    const deferController = createDeferController()
+    context.defer = deferController.defer
+    context.deferCancel = deferController.deferCancel
+    await deferController.setManual(true)
+
+    // Optimization: no plugins registered, no orchestrator should be created
+    // Need to provide a generator to satisfy the Reduce action guard
+    const generator = createCountingGenerator('var(---a-test)')
+    void instance.update(generator.generator)
+
+    await deferController.executeAll()
+
+    if (IS_BROWSER) {
+      assert.equal(context.orchestrator, undefined)
+    }
+
+    if (IS_BROWSER) {
+      expect(spy.mock.calls.at(0)).toMatchInlineSnapshot(`
+        [
+          {
+            "keys": [],
+            "values": [],
+          },
+        ]
+      `)
+    }
+
+    // Add plugin and establish cached generator for reducer updates
+    const traceA = createTracePlugin('a')
+    instance.use(traceA.plugin)
+
+    await deferController.executeAll()
+
+    if (IS_BROWSER) {
+      expect(spy.mock.calls.at(1)).toMatchInlineSnapshot(`
+        [
+          {
+            "keys": [
+              "a",
+            ],
+            "values": [
+              {
+                "content": ":root { ---a-test: 1; }",
+                "index": 0,
+                "key": "a",
+              },
+            ],
+          },
+        ]
+      `)
+    }
+
+    const generator2 = createCountingGenerator('var(---a-test)')
+    void instance.update(generator2.generator)
+
+    await deferController.executeAll()
+
+    if (IS_BROWSER) {
+      expect(spy.mock.calls.at(2)).toMatchInlineSnapshot(`
+        [
+          {
+            "keys": [
+              "a",
+            ],
+            "values": [
+              {
+                "content": ":root { ---a-test: 1; }",
+                "index": 0,
+                "key": "a",
+              },
+            ],
+          },
+        ]
+      `)
+    }
+
+    void traceA.update([])
+    await deferController.executeAll()
+
+    if (IS_BROWSER) {
+      expect(spy.mock.calls.at(3)).toMatchInlineSnapshot(`
+        [
+          {
+            "keys": [
+              "a",
+            ],
+            "values": [],
+          },
+        ]
+      `)
+      assert.equal(context.orchestrator, undefined)
+    }
+
+    // Normal update: orchestrator should be created and then cleaned up
+    void traceA.update(['a'])
+    await deferController.executeAll()
+
+    if (IS_BROWSER) {
+      expect(spy.mock.calls.at(4)).toMatchInlineSnapshot(`
+        [
+          {
+            "keys": [
+              "a",
+            ],
+            "values": [
+              {
+                "content": ":root { ---a-test: 1; }",
+                "index": 0,
+                "key": "a",
+              },
+            ],
+          },
+        ]
+      `)
+      // After normal processing, orchestrator should be undefined again (cleaned up)
+      assert.equal(context.orchestrator, undefined)
+    }
+
+    void traceA.dispose()
+    await deferController.executeAll()
+
+    if (IS_BROWSER) {
+      expect(spy.mock.calls.at(5)).toMatchInlineSnapshot(`
+        [
+          {
+            "keys": [],
+            "values": [],
+          },
+        ]
+      `)
+    }
+  })
 })

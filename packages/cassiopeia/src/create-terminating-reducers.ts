@@ -156,7 +156,7 @@ export function createTerminatingReducerFactoriesProxy<T extends object = {}, U 
   reducerFactories: TerminatingReducerFactories<T>,
   options: {
     onDelete: (key: keyof T) => void
-    onDispose: () => U
+    onDispose: (keys: Set<keyof T>) => U
     onSet: (key: keyof T) => void
   },
 ): {
@@ -197,8 +197,7 @@ export function createTerminatingReducerFactoriesProxy<T extends object = {}, U 
     for (const key of reducerKeys) {
       Reflect.deleteProperty(reducerFactories, key)
     }
-    reducerKeys.clear()
-    return options?.onDispose?.()
+    return options?.onDispose?.(reducerKeys)
   }
 
   return { dispose, reducerFactories: proxy, reducerKeys }

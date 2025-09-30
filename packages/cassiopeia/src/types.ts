@@ -147,6 +147,7 @@ export interface CassiopeiaStateMachineContext {
   deferCancel: (id: number) => void
   deferEvery: number
   reducerFactories: TerminatingReducerFactories<Record<string, CassiopeiaReducer>>
+  reducerKeys: Set<string>
 
   generator?: CachedIterable<[string, string], undefined>
   orchestrator?: CassiopeiaOrchestrator

@@ -1,27 +1,31 @@
 export function createDeferController() {
   const queue: Array<() => void> = []
-  let manual = true // Default to manual control
+  let isManual = true // Default to manual control
 
   return {
     get count() {
       return queue.length
     },
-    defer: (callback: () => void) => {
-      if (manual) {
+    defer: (callback: () => void): number => {
+      if (isManual) {
         // Manual mode: queue callback for later execution
         queue.push(callback)
         return queue.length - 1
       } else {
         // Automatic mode: execute immediately, transparently
-        callback()
-        return 0
+        return setTimeout(callback) as unknown as number
       }
     },
     deferCancel: (id: number) => {
-      queue.splice(id, 1)
+      if (isManual) {
+        queue.splice(id, 1)
+      } else {
+        clearTimeout(id)
+      }
     },
-    executeAll: () => {
+    executeAll: async () => {
       while (queue.length > 0) {
+        await new Promise((resolve) => setTimeout(resolve))
         queue.shift()!()
       }
     },
@@ -34,14 +38,18 @@ export function createDeferController() {
       return false
     },
     hasQueued: () => queue.length > 0,
-    isManual: () => manual,
+    isManual: () => isManual,
     queue,
-    setManual: (value: boolean) => {
-      manual = value
-      if (!manual) {
+    setManual: async (value = true) => {
+      if (value !== isManual) {
+        isManual = value
+
         // When switching to automatic, execute all queued callbacks
-        while (queue.length > 0) {
-          queue.shift()!()
+        if (!isManual) {
+          while (queue.length > 0) {
+            await new Promise((resolve) => setTimeout(resolve))
+            queue.shift()!()
+          }
         }
       }
     },

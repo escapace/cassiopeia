@@ -1,8 +1,8 @@
 import { afterEach, assert, describe, expect, it } from 'vitest'
 import { createCassiopeia, createStyleElementSubscription } from './index'
-import { createCountingGenerator } from './test-helpers/create-counting-generator'
-import { createTestContainer, createTestSelector } from './test-helpers/create-test-container'
-import { createTracePlugin } from './test-helpers/create-trace-plugin'
+import { createCountingGenerator } from './test-support/create-counting-generator'
+import { createTestContainer, createTestSelector } from './test-support/create-test-container'
+import { createTracePlugin } from './test-support/create-trace-plugin'
 import {
   assertStyleElementCount,
   assertStyleElementExists,
@@ -10,7 +10,7 @@ import {
   assertStyleElementHasNoMedia,
   assertStyleElementNotExists,
   getStyleElements,
-} from './test-helpers/dom-assertions'
+} from './test-support/dom-assertions'
 
 const IS_BROWSER = __PLATFORM__ === 'browser'
 

@@ -10,7 +10,6 @@ import { stateMachine } from './state-machine'
 import {
   CassiopeiaStateMachineAction,
   CassiopeiaStateMachineActionUpdateType,
-  CassiopeiaStateMachineState,
   type Cassiopeia,
   type CassiopeiaGenerator,
   type CassiopeiaPlugin,
@@ -21,8 +20,10 @@ import {
   type CassiopeiaSubscription,
 } from './types'
 
-// TODO: keys can be a set?
+// TODO: keys can be a set? simplify return types
+//
 // TODO: helper function to build style elements from renderStyleSheets
+// TODO: test organization
 
 export function createCassiopeia(): Cassiopeia {
   const subscriptions: CassiopeiaSubscription[] = []
@@ -49,12 +50,20 @@ export function createCassiopeia(): Cassiopeia {
 
         machine.do(CassiopeiaStateMachineAction.Reduce)
       }
-    } else if (
-      state.action.source === CassiopeiaStateMachineState.PreFlight &&
-      state.action.type === CassiopeiaStateMachineAction.Reduce &&
-      state.state === CassiopeiaStateMachineState.InFlight
-    ) {
+    } else if (state.action.type === CassiopeiaStateMachineAction.Reduce) {
       if (__PLATFORM__ === 'node') {
+        machine.do(CassiopeiaStateMachineAction.Done)
+      } else if (state.context.orchestrator === undefined) {
+        // Optimization path: when state machine skips orchestrator creation due to
+        // no plugins registered or empty update reducer keys, notify subscriptions
+        // with empty values to maintain consistent behavior
+        for (const subscription of subscriptions) {
+          subscription({
+            keys: Array.from(state.context.reducerKeys),
+            values: [],
+          })
+        }
+
         machine.do(CassiopeiaStateMachineAction.Done)
       } else {
         const value = createScheduler(context)
@@ -77,11 +86,7 @@ export function createCassiopeia(): Cassiopeia {
           machine.do(CassiopeiaStateMachineAction.Done)
         }
       }
-    } else if (
-      state.action.source === CassiopeiaStateMachineState.InFlight &&
-      state.action.type === CassiopeiaStateMachineAction.Done &&
-      state.state === CassiopeiaStateMachineState.Idle
-    ) {
+    } else if (state.action.type === CassiopeiaStateMachineAction.Done) {
       for (const resolve of updateCallbacks) {
         resolve()
       }
@@ -146,6 +151,7 @@ export function createCassiopeia(): Cassiopeia {
     context.orchestrator?.next(TERMINATING_REDUCER_CANCEL)
     context.orchestrator = undefined
     context.reducerFactories = {}
+    context.reducerKeys.clear()
     context.updateIsAsync = true
     context.updateType = CassiopeiaStateMachineActionUpdateType.None
     context.updateGenerator = undefined
@@ -201,13 +207,23 @@ export function createCassiopeia(): Cassiopeia {
             update,
             updateSync,
             ...createTerminatingReducerFactoriesProxy(context.reducerFactories, {
-              onDelete: () => void update(),
-              onDispose: () => {
+              onDelete: (key) => {
+                context.reducerKeys.delete(key)
+                void update()
+              },
+              onDispose: (keys) => {
+                for (const key of keys) {
+                  context.reducerKeys.delete(key)
+                }
+                // reducerKeys are not cleared by dispose()
+                keys.clear()
                 plugins.delete(plugin)
-                // reducerKeys are already cleared by dispose()
                 return update()
               },
-              onSet: () => void update(),
+              onSet: (key) => {
+                context.reducerKeys.add(key)
+                void update()
+              },
             }),
           }
           const { reducerKeys } = pluginContext

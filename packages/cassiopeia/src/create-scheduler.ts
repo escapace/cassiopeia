@@ -33,9 +33,10 @@ export const createScheduler = (
             defer(resolve)
           })
 
-          if (orchestrator !== context.orchestrator) {
-            return undefined
-          }
+          // FIXME: this is unnecessary
+          // if (orchestrator !== context.orchestrator) {
+          //   return undefined
+          // }
         }
       }
 

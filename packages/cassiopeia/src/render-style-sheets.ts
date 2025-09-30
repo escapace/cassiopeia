@@ -20,7 +20,7 @@ export const renderStyleSheets = <T extends CassiopeiaInstance>(
   cassiopeia: T,
 ): CassiopeiaStyleSheets | undefined => {
   const context = cassiopeia[CASSIOPEIA_CONTEXT]
-  const { generator, reducerFactories } = context
+  const { generator, reducerFactories, reducerKeys } = context
 
   if (generator === undefined) {
     return undefined
@@ -29,6 +29,7 @@ export const renderStyleSheets = <T extends CassiopeiaInstance>(
   const orchestrator = createOrchestrator({
     generator,
     reducerFactories,
+    reducerKeys,
   })
 
   let token: ReturnType<typeof orchestrator.next>
