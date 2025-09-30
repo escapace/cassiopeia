@@ -1,14 +1,16 @@
 import { stateMachine as createStateMachine } from '@escapace/fsm'
-import { createCachedIterable } from './create-cached-iterable'
-import { createOrchestrator } from './create-orchestrator'
-import { TERMINATING_REDUCER_CANCEL } from './create-terminating-reducers'
 import {
+  CASSIOPEIA_CANCEL,
   CassiopeiaStateMachineAction,
   CassiopeiaStateMachineActionUpdateType,
   CassiopeiaStateMachineState,
-  type CassiopeiaStateMachineActionUpdateOptions,
-  type CassiopeiaStateMachineContext,
-  type CassiopeiaStyleSheets,
+} from './constants'
+import { createCachedIterable } from './create-cached-iterable'
+import { createOrchestrator } from './create-orchestrator'
+import type {
+  CassiopeiaStateMachineActionUpdateOptions,
+  CassiopeiaStateMachineContext,
+  CassiopeiaStyleSheets,
 } from './types'
 
 export const stateMachine = createStateMachine()
@@ -43,7 +45,7 @@ export const stateMachine = createStateMachine()
     CassiopeiaStateMachineState.PreFlight,
     (context, { payload }) => {
       context.updateIsAsync = payload.updateIsAsync
-      context.orchestrator?.next(TERMINATING_REDUCER_CANCEL)
+      context.orchestrator?.next(CASSIOPEIA_CANCEL)
       context.orchestrator = undefined
 
       const updateType: CassiopeiaStateMachineActionUpdateType = (context.updateType |=
@@ -58,7 +60,7 @@ export const stateMachine = createStateMachine()
         payload.updateGenerator !== undefined &&
         (updateType & CassiopeiaStateMachineActionUpdateType.Generator) !== 0
       ) {
-        context.generator?.[TERMINATING_REDUCER_CANCEL]()
+        context.generator?.[CASSIOPEIA_CANCEL]()
         context.generator = undefined
         context.updateGenerator = payload.updateGenerator
       }

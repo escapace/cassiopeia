@@ -1,8 +1,8 @@
 import {
   CASSIOPEIA_REGEX,
-  TERMINATING_REDUCER_CANCEL,
+  CASSIOPEIA_CANCEL,
   type CassiopeiaGenerator,
-  type TerminatingReducerCancel,
+  type CassiopeiaCancel,
 } from '../index'
 
 interface CountingGeneratorState {
@@ -22,7 +22,7 @@ export function createCountingGenerator(...strings: string[]) {
     }
     history.push(state)
 
-    let token: TerminatingReducerCancel | undefined
+    let token: CassiopeiaCancel | undefined
 
     for (const string of strings) {
       state.pullCount++
@@ -31,7 +31,7 @@ export function createCountingGenerator(...strings: string[]) {
         const pair = match.splice(1) as unknown as [string, string]
         token = yield pair
 
-        if (token === TERMINATING_REDUCER_CANCEL) {
+        if (token === CASSIOPEIA_CANCEL) {
           state.wasCancelled = true
           return
         }

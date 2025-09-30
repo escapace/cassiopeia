@@ -23,3 +23,41 @@ export const CASSIOPEIA_REGEX = /var\(---([\dA-Za-z]+)-([\dA-Za-z-]+)[),]/g
 export const CASSIOPEIA_CONTEXT = Symbol.for('cassiopeia/context')
 export const CASSIOPEIA_STATE = Symbol.for('cassiopeia/state')
 export const CASSIOPEIA_PLUGIN = Symbol.for('cassiopeia/plugin')
+
+/**
+ * Control token signaling a generator to complete and return its final value.
+ */
+export const CASSIOPEIA_COMPLETE: unique symbol = Symbol.for('cassiopeia/complete')
+/**
+ * Control token signaling a generator to cancel
+ */
+export const CASSIOPEIA_CANCEL: unique symbol = Symbol.for('cassiopeia/cancel')
+
+export enum CassiopeiaStateMachineState {
+  /** No active processing, awaiting next update */
+  Idle,
+  /** Update received, preparing for orchestrator execution */
+  PreFlight,
+  /** Orchestrator actively processing stylesheets */
+  InFlight,
+}
+
+export enum CassiopeiaStateMachineAction {
+  /** Complete current operation and return to idle state */
+  Done,
+  /** Execute orchestrator to coordinate reducers and generate stylesheets */
+  Reduce,
+  /** Initiate new generator or reducer update cycle */
+  Update,
+}
+
+export enum CassiopeiaStateMachineActionUpdateType {
+  None = 0,
+
+  /** Update involves generator changes (new custom property sources) */
+  Generator = 1 << 0,
+  /** Update involves reducer changes (plugin modifications) */
+  Reducer = 1 << 1,
+  /** Update involves both generator and reducer changes */
+  Both = Generator | Reducer,
+}

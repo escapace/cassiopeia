@@ -1,10 +1,6 @@
 /* eslint-disable typescript/no-explicit-any */
-import {
-  isTerminatingReducerNotTerminated,
-  TERMINATING_REDUCER_CANCEL,
-  TERMINATING_REDUCER_COMPLETE,
-  type TerminatingReducerNext,
-} from './create-terminating-reducers'
+import { CASSIOPEIA_CANCEL, CASSIOPEIA_COMPLETE } from './constants'
+import { isReducerActive, type TerminatingReducerNext } from './create-terminating-reducers'
 import type { CassiopeiaPartialStyleSheet, CassiopeiaReducer } from './types'
 
 export const createMultiplexer = <T extends (...arguments_: any) => CassiopeiaReducer>(
@@ -21,20 +17,20 @@ export const createMultiplexer = <T extends (...arguments_: any) => CassiopeiaRe
 
     let token: TerminatingReducerNext<string>
 
-    while (isTerminatingReducerNotTerminated((token = yield))) {
+    while (isReducerActive((token = yield))) {
       for (const iterator of reducers) {
         iterator.next(token)
       }
     }
 
     const values: CassiopeiaPartialStyleSheet[] = []
-    const isCancel = token === TERMINATING_REDUCER_CANCEL
+    const isCancel = token === CASSIOPEIA_CANCEL
 
     for (const reducer of reducers) {
       if (isCancel) {
-        reducer.next(TERMINATING_REDUCER_CANCEL)
+        reducer.next(CASSIOPEIA_CANCEL)
       } else {
-        const { done, value } = reducer.next(TERMINATING_REDUCER_COMPLETE)
+        const { done, value } = reducer.next(CASSIOPEIA_COMPLETE)
 
         if (done === true && value !== undefined) {
           if (Array.isArray(value)) {

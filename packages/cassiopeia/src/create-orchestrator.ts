@@ -1,8 +1,7 @@
+import { CASSIOPEIA_CANCEL, CASSIOPEIA_COMPLETE } from './constants'
 import {
   createTerminatingReducers,
-  isTerminatingReducerNotTerminated,
-  TERMINATING_REDUCER_CANCEL,
-  TERMINATING_REDUCER_COMPLETE,
+  isReducerActive,
   type TerminatingReducerNext,
 } from './create-terminating-reducers'
 import type {
@@ -39,7 +38,7 @@ export function* createOrchestrator(
 
   let token: TerminatingReducerNext<undefined>
 
-  while (isTerminatingReducerNotTerminated((token = yield))) {
+  while (isReducerActive((token = yield))) {
     const { done, value } = iterator.next()
 
     if (done === true) {
@@ -64,21 +63,21 @@ export function* createOrchestrator(
     }
   }
 
-  if (token === TERMINATING_REDUCER_CANCEL) {
+  if (token === CASSIOPEIA_CANCEL) {
     for (const key of Object.keys(reducers)) {
       // Send cancellation signal to remaining reducers
-      reducers[key].next(TERMINATING_REDUCER_CANCEL)
+      reducers[key].next(CASSIOPEIA_CANCEL)
     }
 
     return undefined
   }
 
-  const styleSheets: CassiopeiaStyleSheet[] = []
+  const values: CassiopeiaStyleSheet[] = []
 
   // Finalize reducers and collect stylesheet results
   for (const key of Object.keys(reducers)) {
     // Send completion signal and collect results
-    const { done, value } = reducers[key].next(TERMINATING_REDUCER_COMPLETE)
+    const { done, value } = reducers[key].next(CASSIOPEIA_COMPLETE)
 
     if (done !== true || value === undefined) {
       continue
@@ -86,7 +85,7 @@ export function* createOrchestrator(
 
     // Transform partial stylesheets into complete CassiopeiaStyleSheet objects
     if (Array.isArray(value)) {
-      styleSheets.push(
+      values.push(
         ...value.map((value, index) => {
           value.key = key
           value.index ??= index
@@ -98,12 +97,9 @@ export function* createOrchestrator(
       value.key = key
       value.index ??= 0
 
-      styleSheets.push(value as CassiopeiaStyleSheet)
+      values.push(value as CassiopeiaStyleSheet)
     }
   }
 
-  return {
-    keys,
-    values: styleSheets,
-  }
+  return values
 }

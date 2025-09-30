@@ -20,8 +20,8 @@ describe('routing & composition correctness', () => {
   for (const updateType of ['reducer', 'generator'] as const) {
     it(`blocks PreFlight → InFlight ${updateType} transition when no generator available`, async () => {
       const instance = createCassiopeia()
-      const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
-      instance.subscribe((subscription) => spy(subscription))
+      const spy = vi.fn<(keys: Set<string>, values: CassiopeiaStyleSheets) => void>()
+      instance.subscribe((keys, values) => spy(keys, values))
 
       const deferController = createDeferController()
       await deferController.setManual(false)
@@ -61,8 +61,8 @@ describe('routing & composition correctness', () => {
     }
 
     const styleSheets = renderStyleSheets(instance)
-    assert.equal(styleSheets?.values.length, 1)
-    assert.equal(styleSheets?.values[0].content, ':root { ---a-x: 1; ---a-y: 2; }')
+    assert.equal(styleSheets?.length, 1)
+    assert.equal(styleSheets?.[0].content, ':root { ---a-x: 1; ---a-y: 2; }')
 
     expect(generator.history).toMatchInlineSnapshot(`
       [
@@ -108,11 +108,11 @@ describe('routing & composition correctness', () => {
 
     // Final stylesheet should contain outputs from both plugins
     const styleSheets = renderStyleSheets(instance)
-    assert.equal(styleSheets?.values.length, 2)
+    assert.equal(styleSheets?.length, 2)
 
     // Find styleSheets by key to avoid order dependency
-    const aStylesheet = styleSheets?.values.find((s) => s.key === 'a')
-    const bStylesheet = styleSheets?.values.find((s) => s.key === 'b')
+    const aStylesheet = styleSheets?.find((s) => s.key === 'a')
+    const bStylesheet = styleSheets?.find((s) => s.key === 'b')
 
     assert.isDefined(aStylesheet)
     assert.isDefined(bStylesheet)
@@ -135,8 +135,8 @@ describe('routing & composition correctness', () => {
     const traceB = createTracePlugin('b')
 
     const instance = createCassiopeia()
-    const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
-    instance.subscribe((subscription) => spy(subscription))
+    const spy = vi.fn<(keys: Set<string>, values: CassiopeiaStyleSheets) => void>()
+    instance.subscribe((keys, values) => spy(keys, values))
 
     instance.use(traceA.plugin, traceB.plugin)
 
@@ -168,10 +168,10 @@ describe('routing & composition correctness', () => {
 
     // Final stylesheet should contain outputs from non-aborted plugins
     const styleSheets = renderStyleSheets(instance)
-    assert.equal(styleSheets?.values.length, 1)
+    assert.equal(styleSheets?.length, 1)
 
     // Find styleSheets by key to avoid order dependency
-    const bStylesheet = styleSheets?.values.find((s) => s.key === 'b')
+    const bStylesheet = styleSheets?.find((s) => s.key === 'b')
     assert.isDefined(bStylesheet)
     assert.equal(bStylesheet.content, ':root { ---b-x: 1; ---b-y: 2; }')
     expect(generator.history).toMatchInlineSnapshot(`
@@ -185,24 +185,22 @@ describe('routing & composition correctness', () => {
     `)
     if (IS_BROWSER) {
       expect(spy.mock.calls).toMatchInlineSnapshot(`
-      [
         [
-          {
-            "keys": [
+          [
+            Set {
               "a",
               "b",
-            ],
-            "values": [
+            },
+            [
               {
                 "content": ":root { ---b-x: 1; ---b-y: 2; }",
                 "index": 0,
                 "key": "b",
               },
             ],
-          },
-        ],
-      ]
-    `)
+          ],
+        ]
+      `)
     }
   })
 
@@ -231,7 +229,7 @@ describe('routing & composition correctness', () => {
       const styleSheets = renderStyleSheets(instance)
 
       // Create a deterministic string representation of the results
-      const resultString = styleSheets?.values
+      const resultString = styleSheets
         ?.map((s) => s.content)
         ?.sort()
         ?.join('|')
@@ -264,8 +262,8 @@ describe('laziness', () => {
       const traceB = createTracePlugin('b')
       const instance = createCassiopeia()
 
-      const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
-      instance.subscribe((subscription) => spy(subscription))
+      const spy = vi.fn<(keys: Set<string>, values: CassiopeiaStyleSheets) => void>()
+      instance.subscribe((keys, values) => spy(keys, values))
 
       instance.use(traceA.plugin, traceB.plugin)
 
@@ -293,7 +291,7 @@ describe('laziness', () => {
 
         // Subscription should have been called with empty results
         assert.equal(spy.mock.calls.length, 1)
-        assert.deepEqual(spy.mock.calls[0][0].values, [])
+        assert.deepEqual(spy.mock.calls[0][1], [])
       } else {
         assert.equal(spy.mock.calls.length, 0)
         assert.equal(generator.state, undefined)
@@ -302,7 +300,7 @@ describe('laziness', () => {
 
       // renderStyleSheets should also return empty array
       const styleSheets = renderStyleSheets(instance)
-      assert.deepEqual(styleSheets?.values, [])
+      assert.deepEqual(styleSheets, [])
       expect(generator.history).toMatchInlineSnapshot(`
         [
           {
@@ -354,9 +352,9 @@ describe('laziness', () => {
 
       // Only styleSheets from plugin A should appear
       const styleSheets = renderStyleSheets(instance)
-      assert.equal(styleSheets?.values.length, 1)
+      assert.equal(styleSheets?.length, 1)
       assert.equal(
-        styleSheets?.values[0].content,
+        styleSheets?.[0].content,
         ':root { ---a-first: 1; ---a-second: 2; ---a-third: 3; }',
       )
       expect(generator.history).toMatchInlineSnapshot(`
@@ -377,8 +375,8 @@ describe('laziness', () => {
         const traceB = createTracePlugin('b')
         const instance = createCassiopeia()
 
-        const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
-        instance.subscribe((subscription) => spy(subscription))
+        const spy = vi.fn<(keys: Set<string>, values: CassiopeiaStyleSheets) => void>()
+        instance.subscribe((keys, values) => spy(keys, values))
 
         // Register plugins but don't call update yet
         instance.use(traceA.plugin, traceB.plugin)
@@ -422,7 +420,7 @@ describe('laziness', () => {
 
         // Now renderStyleSheets should return results
         styleSheets = renderStyleSheets(instance)
-        assert.equal(styleSheets?.values.length, 2)
+        assert.equal(styleSheets?.length, 2)
         assert.equal(generator.history.length, 1)
       },
     )
@@ -434,8 +432,8 @@ describe('laziness', () => {
         const traceB = createTracePlugin('b')
         const traceC = createTracePlugin('c')
         const instance = createCassiopeia()
-        const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
-        instance.subscribe((subscription) => spy(subscription))
+        const spy = vi.fn<(keys: Set<string>, values: CassiopeiaStyleSheets) => void>()
+        instance.subscribe((keys, values) => spy(keys, values))
 
         instance.use(traceA.plugin, traceB.plugin, traceC.plugin)
 
@@ -453,25 +451,23 @@ describe('laziness', () => {
         assert.equal(spy.mock.calls.length, 1)
         expect(spy.mock.calls[0]).toMatchInlineSnapshot(`
           [
-            {
-              "keys": [
-                "a",
-                "b",
-                "c",
-              ],
-              "values": [
-                {
-                  "content": ":root { ---a-test: 1; }",
-                  "index": 0,
-                  "key": "a",
-                },
-                {
-                  "content": ":root { ---b-test: 1; }",
-                  "index": 0,
-                  "key": "b",
-                },
-              ],
+            Set {
+              "a",
+              "b",
+              "c",
             },
+            [
+              {
+                "content": ":root { ---a-test: 1; }",
+                "index": 0,
+                "key": "a",
+              },
+              {
+                "content": ":root { ---b-test: 1; }",
+                "index": 0,
+                "key": "b",
+              },
+            ],
           ]
         `)
 
@@ -486,20 +482,18 @@ describe('laziness', () => {
         assert.equal(spy.mock.calls.length, 2)
         expect(spy.mock.calls[1]).toMatchInlineSnapshot(`
           [
-            {
-              "keys": [
-                "a",
-                "b",
-                "c",
-              ],
-              "values": [
-                {
-                  "content": ":root { ---a-test: 1; }",
-                  "index": 0,
-                  "key": "a",
-                },
-              ],
+            Set {
+              "a",
+              "b",
+              "c",
             },
+            [
+              {
+                "content": ":root { ---a-test: 1; }",
+                "index": 0,
+                "key": "a",
+              },
+            ],
           ]
         `)
 
@@ -514,20 +508,18 @@ describe('laziness', () => {
         assert.equal(spy.mock.calls.length, 3)
         expect(spy.mock.calls[2]).toMatchInlineSnapshot(`
           [
-            {
-              "keys": [
-                "a",
-                "b",
-                "c",
-              ],
-              "values": [
-                {
-                  "content": ":root { ---b-test: 1; }",
-                  "index": 0,
-                  "key": "b",
-                },
-              ],
+            Set {
+              "a",
+              "b",
+              "c",
             },
+            [
+              {
+                "content": ":root { ---b-test: 1; }",
+                "index": 0,
+                "key": "b",
+              },
+            ],
           ]
         `)
 
@@ -552,25 +544,23 @@ describe('laziness', () => {
         assert.equal(spy.mock.calls.length, 4)
         expect(spy.mock.calls[3]).toMatchInlineSnapshot(`
           [
-            {
-              "keys": [
-                "a",
-                "b",
-                "c",
-              ],
-              "values": [
-                {
-                  "content": ":root { ---a-test: 1; }",
-                  "index": 0,
-                  "key": "a",
-                },
-                {
-                  "content": ":root { ---b-test: 1; }",
-                  "index": 0,
-                  "key": "b",
-                },
-              ],
+            Set {
+              "a",
+              "b",
+              "c",
             },
+            [
+              {
+                "content": ":root { ---a-test: 1; }",
+                "index": 0,
+                "key": "a",
+              },
+              {
+                "content": ":root { ---b-test: 1; }",
+                "index": 0,
+                "key": "b",
+              },
+            ],
           ]
         `)
       },
@@ -589,8 +579,8 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
     const traceA = createTracePlugin('a')
     instance.use(traceA.plugin)
 
-    const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
-    instance.subscribe((subscription) => spy(subscription))
+    const spy = vi.fn<(keys: Set<string>, values: CassiopeiaStyleSheets) => void>()
+    instance.subscribe((keys, values) => spy(keys, values))
 
     let deferCallCount = 0
     let deferCallbacksExecuted = 0
@@ -636,7 +626,7 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
       1,
       'Should have exactly one subscription callback invocation',
     )
-    assert.equal(spy.mock.calls[0][0].values.length, 1, 'Should have one stylesheet')
+    assert.equal(spy.mock.calls[0][1].length, 1, 'Should have one stylesheet')
     assert.equal(traceA.state?.wasCompleted, true, 'Plugin should be completed')
     assert.equal(traceA.state?.receivedMarkers.length, 6, 'All 6 properties should be processed')
 
@@ -663,8 +653,8 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
     const traceA = createTracePlugin('a')
     instance.use(traceA.plugin)
 
-    const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
-    instance.subscribe((subscription) => spy(subscription))
+    const spy = vi.fn<(keys: Set<string>, values: CassiopeiaStyleSheets) => void>()
+    instance.subscribe((keys, values) => spy(keys, values))
 
     // Start first update with many iterations
     const generator1 = createManyPropertiesGenerator(10, 'a-first')
@@ -689,8 +679,8 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
 
     // Should have only one subscription callback invocation (from update2)
     assert.equal(spy.mock.calls.length, 1)
-    assert.equal(spy.mock.calls[0][0].values.length, 1)
-    assert.equal(spy.mock.calls[0][0].values[0].content, ':root { ---a-second: 1; }')
+    assert.equal(spy.mock.calls[0][1].length, 1)
+    assert.equal(spy.mock.calls[0][1][0].content, ':root { ---a-second: 1; }')
 
     // Verify history shows cancellation of first reducer and completion of second
     assert.equal(traceA.history.length, 2, 'Should have history of 2 reducer instances')
@@ -767,8 +757,8 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
     const traceA = createTracePlugin('a')
     instance.use(traceA.plugin)
 
-    const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
-    instance.subscribe((subscription) => spy(subscription))
+    const spy = vi.fn<(keys: Set<string>, values: CassiopeiaStyleSheets) => void>()
+    instance.subscribe((keys, values) => spy(keys, values))
     // Start first update with many iterations
     const generator1 = createManyPropertiesGenerator(10, 'a-first')
     const updatePromise1 = instance.update(generator1.generator)
@@ -794,9 +784,9 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
       1,
       'Should have exactly one subscription callback invocation',
     )
-    assert.equal(spy.mock.calls[0][0].values.length, 1, 'Should have one stylesheet')
+    assert.equal(spy.mock.calls[0][1].length, 1, 'Should have one stylesheet')
     assert.equal(
-      spy.mock.calls[0][0].values[0].content,
+      spy.mock.calls[0][1][0].content,
       ':root { ---a-second: 1; }',
       'Should have result from second update only',
     )
@@ -870,8 +860,8 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
 
     assert.equal(deferController.count, 1)
 
-    const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
-    instance.subscribe((subscription) => spy(subscription))
+    const spy = vi.fn<(keys: Set<string>, values: CassiopeiaStyleSheets) => void>()
+    instance.subscribe((keys, values) => spy(keys, values))
 
     // Start first update with many iterations
     const generator = createManyPropertiesGenerator(4, 'a')
@@ -899,18 +889,16 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
     expect(spy.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          {
-            "keys": [
-              "a",
-            ],
-            "values": [
-              {
-                "content": ":root { ---a-prop0: 1; ---a-prop1: 2; ---a-prop2: 3; ---a-prop3: 4; }",
-                "index": 0,
-                "key": "a",
-              },
-            ],
+          Set {
+            "a",
           },
+          [
+            {
+              "content": ":root { ---a-prop0: 1; ---a-prop1: 2; ---a-prop2: 3; ---a-prop3: 4; }",
+              "index": 0,
+              "key": "a",
+            },
+          ],
         ],
       ]
     `)
@@ -1127,8 +1115,8 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
 
       assert.equal(deferController.count, 1)
 
-      const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
-      instance.subscribe((subscription) => spy(subscription))
+      const spy = vi.fn<(keys: Set<string>, values: CassiopeiaStyleSheets) => void>()
+      instance.subscribe((keys, values) => spy(keys, values))
 
       // Start first update with many iterations
       const generator1 = createManyPropertiesGenerator(4, 'a')
@@ -1160,10 +1148,8 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
       expect(spy.mock.calls).toMatchInlineSnapshot(`
         [
           [
-            {
-              "keys": [],
-              "values": [],
-            },
+            Set {},
+            [],
           ],
         ]
       `)
@@ -1195,80 +1181,85 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
 
       expect(spy.mock.calls[1]).toMatchInlineSnapshot(`
         [
-          {
-            "keys": [
-              "a",
-            ],
-            "values": [
-              {
-                "content": ":root { ---a-prop0: 1; ---a-prop1: 2; ---a-prop2: 3; ---a-prop3: 4; }",
-                "index": 0,
-                "key": "a",
-              },
-            ],
+          Set {
+            "a",
           },
+          [
+            {
+              "content": ":root { ---a-prop0: 1; ---a-prop1: 2; ---a-prop2: 3; ---a-prop3: 4; }",
+              "index": 0,
+              "key": "a",
+            },
+          ],
         ]
       `)
     })
   }
 
-  it.runIf(IS_BROWSER)('removes obsolete keys from updateReducerKeys when plugins are disposed during reducer updates', async () => {
-    const instance = createCassiopeia()
-    const context = instance[CASSIOPEIA_CONTEXT]
+  it.runIf(IS_BROWSER)(
+    'removes obsolete keys from updateReducerKeys when plugins are disposed during reducer updates',
+    async () => {
+      const instance = createCassiopeia()
+      const context = instance[CASSIOPEIA_CONTEXT]
 
-    // Setup controlled async execution
-    const deferController = createDeferController()
-    context.defer = deferController.defer
-    context.deferCancel = deferController.deferCancel
-    await deferController.setManual(true)
+      // Setup controlled async execution
+      const deferController = createDeferController()
+      context.defer = deferController.defer
+      context.deferCancel = deferController.deferCancel
+      await deferController.setManual(true)
 
-    // Create multiple plugins and register them
-    const traceA = createTracePlugin('a')
-    const traceB = createTracePlugin('b')
-    const traceC = createTracePlugin('c')
-    instance.use(traceA.plugin, traceB.plugin, traceC.plugin)
+      // Create multiple plugins and register them
+      const traceA = createTracePlugin('a')
+      const traceB = createTracePlugin('b')
+      const traceC = createTracePlugin('c')
+      instance.use(traceA.plugin, traceB.plugin, traceC.plugin)
 
-    // Establish generator cache first
-    const generator = createCountingGenerator('var(---a-test)', 'var(---b-test)', 'var(---c-test)')
-    instance.updateSync(generator.generator)
+      // Establish generator cache first
+      const generator = createCountingGenerator(
+        'var(---a-test)',
+        'var(---b-test)',
+        'var(---c-test)',
+      )
+      instance.updateSync(generator.generator)
 
-    // Trigger plugin update with specific keys to populate updateReducerKeys
-    void traceA.update(['a', 'b', 'c']) // This will create updateReducerKeys Set with all three keys
+      // Trigger plugin update with specific keys to populate updateReducerKeys
+      void traceA.update(['a', 'b', 'c']) // This will create updateReducerKeys Set with all three keys
 
-    // Execute to get to the state where updateReducerKeys is populated
-    assert.isTrue(deferController.executeNext())
+      // Execute to get to the state where updateReducerKeys is populated
+      assert.isTrue(deferController.executeNext())
 
-    // Verify updateReducerKeys contains all expected keys
-    assert.deepEqual([...context.updateReducerKeys!].sort(), ['a', 'b', 'c'])
+      // Verify updateReducerKeys contains all expected keys
+      assert.deepEqual([...context.updateReducerKeys!].sort(), ['a', 'b', 'c'])
 
-    // Dispose plugin B while the update is still processing - this removes 'b' from reducerKeys
-    void traceB.dispose()
+      // Dispose plugin B while the update is still processing - this removes 'b' from reducerKeys
+      void traceB.dispose()
 
-    // Execute the disposal
-    assert.isTrue(deferController.executeNext())
+      // Execute the disposal
+      assert.isTrue(deferController.executeNext())
 
-    assert.deepEqual([...context.updateReducerKeys!].sort(), ['a', 'c'])
+      assert.deepEqual([...context.updateReducerKeys!].sort(), ['a', 'c'])
 
-    // Trigger another update that will hit the cleanup logic
-    void traceC.update(['a', 'b', 'c']) // Still trying to update all keys including disposed 'b'
+      // Trigger another update that will hit the cleanup logic
+      void traceC.update(['a', 'b', 'c']) // Still trying to update all keys including disposed 'b'
 
-    // Execute the update that will trigger the cleanup logic in lines 77-81
-    assert.isTrue(deferController.executeNext())
+      // Execute the update that will trigger the cleanup logic in lines 77-81
+      assert.isTrue(deferController.executeNext())
 
-    // Verify that obsolete key 'b' was removed from updateReducerKeys during cleanup
-    assert.deepEqual([...context.updateReducerKeys!].sort(), ['a', 'c'])
+      // Verify that obsolete key 'b' was removed from updateReducerKeys during cleanup
+      assert.deepEqual([...context.updateReducerKeys!].sort(), ['a', 'c'])
 
-    // Complete remaining execution
-    await deferController.setManual(false)
-  })
+      // Complete remaining execution
+      await deferController.setManual(false)
+    },
+  )
 })
 
 describe('optimization: early return and no orchestrator paths', () => {
   for (const isAsync of [true, false]) {
     it(`skips orchestrator for generator updates when no plugins registered (${isAsync ? 'async' : 'sync'})`, async () => {
       const instance = createCassiopeia()
-      const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
-      instance.subscribe((subscription) => spy(subscription))
+      const spy = vi.fn<(keys: Set<string>, values: CassiopeiaStyleSheets) => void>()
+      instance.subscribe((keys, values) => spy(keys, values))
 
       // Ensure no plugins are registered - triggers no plugins registered optimization
       assert.equal(Object.keys(instance[CASSIOPEIA_CONTEXT].reducerFactories).length, 0)
@@ -1288,10 +1279,8 @@ describe('optimization: early return and no orchestrator paths', () => {
         expect(spy.mock.calls).toMatchInlineSnapshot(`
           [
             [
-              {
-                "keys": [],
-                "values": [],
-              },
+              Set {},
+              [],
             ],
           ]
         `)
@@ -1313,20 +1302,15 @@ describe('optimization: early return and no orchestrator paths', () => {
       //
       // When optimization triggers, renderStyleSheets returns undefined
       // assert.equal(styleSheets, undefined)
-      expect(styleSheets).toMatchInlineSnapshot(`
-        {
-          "keys": [],
-          "values": [],
-        }
-      `)
+      expect(styleSheets).toMatchInlineSnapshot(`[]`)
     })
   }
 
   for (const isAsync of [true, false]) {
     it(`skips orchestrator for reducer updates when no plugins registered (${isAsync ? 'async' : 'sync'})`, async () => {
       const instance = createCassiopeia()
-      const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
-      instance.subscribe((subscription) => spy(subscription))
+      const spy = vi.fn<(keys: Set<string>, values: CassiopeiaStyleSheets) => void>()
+      instance.subscribe((keys, values) => spy(keys, values))
 
       // Ensure no plugins are registered - triggers no plugins registered optimization
       assert.equal(Object.keys(instance[CASSIOPEIA_CONTEXT].reducerFactories).length, 0)
@@ -1346,10 +1330,8 @@ describe('optimization: early return and no orchestrator paths', () => {
         expect(spy.mock.calls).toMatchInlineSnapshot(`
           [
             [
-              {
-                "keys": [],
-                "values": [],
-              },
+              Set {},
+              [],
             ],
           ]
         `)
@@ -1371,20 +1353,15 @@ describe('optimization: early return and no orchestrator paths', () => {
       //
       // When optimization triggers, renderStyleSheets returns undefined
       // assert.equal(styleSheets, undefined)
-      expect(styleSheets).toMatchInlineSnapshot(`
-        {
-          "keys": [],
-          "values": [],
-        }
-      `)
+      expect(styleSheets).toMatchInlineSnapshot(`[]`)
     })
   }
 
   for (const isAsync of [true, false]) {
     it(`skips orchestrator when update reducer keys is empty (${isAsync ? 'async' : 'sync'})`, async () => {
       const instance = createCassiopeia()
-      const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
-      instance.subscribe((subscription) => spy(subscription))
+      const spy = vi.fn<(keys: Set<string>, values: CassiopeiaStyleSheets) => void>()
+      instance.subscribe((keys, values) => spy(keys, values))
 
       // Register plugins so reducerFactories is not empty
       const traceA = createTracePlugin('a')
@@ -1419,18 +1396,16 @@ describe('optimization: early return and no orchestrator paths', () => {
         // Optimization: empty updateReducerKeys.size === 0
         // State machine early returns, orchestrator undefined, subscription gets empty values
         expect(spy.mock.calls).toMatchInlineSnapshot(`
+          [
             [
-              [
-                {
-                  "keys": [
-                    "a",
-                    "b",
-                  ],
-                  "values": [],
-                },
-              ],
-            ]
-          `)
+              Set {
+                "a",
+                "b",
+              },
+              [],
+            ],
+          ]
+        `)
       } else {
         // Node: no subscription calls
         assert.equal(spy.mock.calls.length, 0)
@@ -1439,28 +1414,22 @@ describe('optimization: early return and no orchestrator paths', () => {
       // The empty reducer keys update doesn't clear the generator
       const styleSheets = renderStyleSheets(instance)
       expect(styleSheets).toMatchInlineSnapshot(`
+        [
           {
-            "keys": [
-              "a",
-              "b",
-            ],
-            "values": [
-              {
-                "content": ":root { ---a-test: 1; }",
-                "index": 0,
-                "key": "a",
-              },
-            ],
-          }
-        `)
+            "content": ":root { ---a-test: 1; }",
+            "index": 0,
+            "key": "a",
+          },
+        ]
+      `)
     })
   }
 
   for (const option of ['are disposed', 'key is deleted'] as const) {
     it(`triggers optimization when plugins ${option}`, async () => {
       const instance = createCassiopeia()
-      const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
-      instance.subscribe((subscription) => spy(subscription))
+      const spy = vi.fn<(keys: Set<string>, values: CassiopeiaStyleSheets) => void>()
+      instance.subscribe((keys, values) => spy(keys, values))
 
       // Setup defer controller for both dispose and delete cases
       const deferController = createDeferController()
@@ -1510,18 +1479,12 @@ describe('optimization: early return and no orchestrator paths', () => {
         expect(spy.mock.calls).toMatchInlineSnapshot(`
           [
             [
-              {
-                "keys": [
-                  "b",
-                ],
-                "values": [],
-              },
+              Set {},
+              [],
             ],
             [
-              {
-                "keys": [],
-                "values": [],
-              },
+              Set {},
+              [],
             ],
           ]
         `)
@@ -1531,20 +1494,15 @@ describe('optimization: early return and no orchestrator paths', () => {
 
       await deferController.setManual(false)
 
-      expect(renderStyleSheets(instance)).toMatchInlineSnapshot(`
-        {
-          "keys": [],
-          "values": [],
-        }
-      `)
+      expect(renderStyleSheets(instance)).toMatchInlineSnapshot(`[]`)
     })
   }
 
   it('orchestrator creation patterns during optimization', async () => {
     const instance = createCassiopeia()
     const context = instance[CASSIOPEIA_CONTEXT]
-    const spy = vi.fn<(value: CassiopeiaStyleSheets) => void>()
-    instance.subscribe((subscription) => spy(subscription))
+    const spy = vi.fn<(keys: Set<string>, values: CassiopeiaStyleSheets) => void>()
+    instance.subscribe((keys, values) => spy(keys, values))
 
     const deferController = createDeferController()
     context.defer = deferController.defer
@@ -1565,10 +1523,8 @@ describe('optimization: early return and no orchestrator paths', () => {
     if (IS_BROWSER) {
       expect(spy.mock.calls.at(0)).toMatchInlineSnapshot(`
         [
-          {
-            "keys": [],
-            "values": [],
-          },
+          Set {},
+          [],
         ]
       `)
     }
@@ -1582,18 +1538,16 @@ describe('optimization: early return and no orchestrator paths', () => {
     if (IS_BROWSER) {
       expect(spy.mock.calls.at(1)).toMatchInlineSnapshot(`
         [
-          {
-            "keys": [
-              "a",
-            ],
-            "values": [
-              {
-                "content": ":root { ---a-test: 1; }",
-                "index": 0,
-                "key": "a",
-              },
-            ],
+          Set {
+            "a",
           },
+          [
+            {
+              "content": ":root { ---a-test: 1; }",
+              "index": 0,
+              "key": "a",
+            },
+          ],
         ]
       `)
     }
@@ -1606,18 +1560,16 @@ describe('optimization: early return and no orchestrator paths', () => {
     if (IS_BROWSER) {
       expect(spy.mock.calls.at(2)).toMatchInlineSnapshot(`
         [
-          {
-            "keys": [
-              "a",
-            ],
-            "values": [
-              {
-                "content": ":root { ---a-test: 1; }",
-                "index": 0,
-                "key": "a",
-              },
-            ],
+          Set {
+            "a",
           },
+          [
+            {
+              "content": ":root { ---a-test: 1; }",
+              "index": 0,
+              "key": "a",
+            },
+          ],
         ]
       `)
     }
@@ -1628,12 +1580,10 @@ describe('optimization: early return and no orchestrator paths', () => {
     if (IS_BROWSER) {
       expect(spy.mock.calls.at(3)).toMatchInlineSnapshot(`
         [
-          {
-            "keys": [
-              "a",
-            ],
-            "values": [],
+          Set {
+            "a",
           },
+          [],
         ]
       `)
       assert.equal(context.orchestrator, undefined)
@@ -1646,18 +1596,16 @@ describe('optimization: early return and no orchestrator paths', () => {
     if (IS_BROWSER) {
       expect(spy.mock.calls.at(4)).toMatchInlineSnapshot(`
         [
-          {
-            "keys": [
-              "a",
-            ],
-            "values": [
-              {
-                "content": ":root { ---a-test: 1; }",
-                "index": 0,
-                "key": "a",
-              },
-            ],
+          Set {
+            "a",
           },
+          [
+            {
+              "content": ":root { ---a-test: 1; }",
+              "index": 0,
+              "key": "a",
+            },
+          ],
         ]
       `)
       // After normal processing, orchestrator should be undefined again (cleaned up)
@@ -1670,10 +1618,8 @@ describe('optimization: early return and no orchestrator paths', () => {
     if (IS_BROWSER) {
       expect(spy.mock.calls.at(5)).toMatchInlineSnapshot(`
         [
-          {
-            "keys": [],
-            "values": [],
-          },
+          Set {},
+          [],
         ]
       `)
     }

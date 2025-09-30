@@ -1,8 +1,41 @@
 /* eslint-disable typescript/no-explicit-any */
-import {
-  TERMINATING_REDUCER_CANCEL,
-  type TerminatingReducerCancel,
-} from './create-terminating-reducers'
+
+import { CASSIOPEIA_CANCEL } from './constants'
+import type { CassiopeiaCancel } from './types'
+
+/**
+ * Type guard that filters out CASSIOPEIA_CANCEL token from iterable inputs.
+ *
+ * @typeParam U - The expected user data type
+ * @param value - Input value that could be user data or a cancel token
+ * @returns `true` when the value is user data, `false` for cancel token
+ *
+ * Checks whether an iterable input value is actual user data rather than a
+ * cancellation token. When this function returns `true`, TypeScript narrows the
+ * value type from `CassiopeiaCancel | U` to `U`, enabling type-safe processing
+ * of user data while excluding the `CASSIOPEIA_CANCEL` token.
+ */
+export function isIterableActive<U = unknown>(value: CassiopeiaCancel | U): value is U {
+  return value !== CASSIOPEIA_CANCEL
+}
+
+/**
+ * Type guard that identifies CASSIOPEIA_CANCEL token in iterable inputs.
+ *
+ * @typeParam U - The expected user data type
+ * @param value - Input value that could be user data or a cancel token
+ * @returns `true` when the value is a cancel token, `false` for user data
+ *
+ * Checks whether an iterable input value is a cancellation token rather than
+ * user data. When this function returns `true`, TypeScript narrows the value
+ * type from `CassiopeiaCancel | U` to `CassiopeiaCancel`, enabling type-safe
+ * handling of cancellation tokens.
+ */
+export function isIterableTerminated<U = unknown>(
+  value: CassiopeiaCancel | U,
+): value is CassiopeiaCancel {
+  return value === CASSIOPEIA_CANCEL
+}
 
 /**
  * State enumeration representing the lifecycle of the cached iterable's source.
@@ -42,17 +75,17 @@ enum SourceState {
  * - Already-cached values remain accessible through existing iterators until they complete
  */
 export interface CachedIterable<T, TReturn = unknown>
-  extends Iterable<T, TReturn | undefined, TerminatingReducerCancel | undefined> {
+  extends Iterable<T, TReturn | undefined, CassiopeiaCancel | undefined> {
   /**
    * Cancels the cached iterable and terminates any ongoing source iteration.
    *
    * Provides external cancellation control without requiring an active iterator instance.
-   * Forwards `TERMINATING_REDUCER_CANCEL` to the source iterator following the same
-   * contract as iterator-based cancellation through `next(TERMINATING_REDUCER_CANCEL)`.
+   * Forwards `CASSIOPEIA_CANCEL` to the source iterator following the same
+   * contract as iterator-based cancellation through `next(CASSIOPEIA_CANCEL)`.
    *
    * @remarks
    * **Cancellation Effects:**
-   * - Sends `TERMINATING_REDUCER_CANCEL` to the current source before clearing it
+   * - Sends `CASSIOPEIA_CANCEL` to the current source before clearing it
    * - Clears the current source iterator, forcing active iterators to complete gracefully immediately
    * - New iterators created after cancellation immediately return done without extending cache or creating sources
    *
@@ -62,12 +95,12 @@ export interface CachedIterable<T, TReturn = unknown>
    * - No error is thrown for redundant cancellation attempts
    *
    * **Source Iterator Contract:**
-   * - Source iterator must handle `TERMINATING_REDUCER_CANCEL` and return immediately
+   * - Source iterator must handle `CASSIOPEIA_CANCEL` and return immediately
    * - Source iterator must not perform additional work after receiving the cancel token
    * - Source iterator must not yield additional values after cancellation
    * - Contract violation may result in unpredictable cache states
    */
-  [TERMINATING_REDUCER_CANCEL]: () => void
+  [CASSIOPEIA_CANCEL]: () => void
   // cancelled: boolean
 }
 
@@ -108,33 +141,31 @@ export interface CachedIterable<T, TReturn = unknown>
  * **Cancellation Support:**
  * The returned cached iterable supports two cancellation approaches:
  *
- * 1. **Iterator-based cancellation:** Pass `TERMINATING_REDUCER_CANCEL` to any iterator's `next()` method
- * 2. **Method-based cancellation:** Call the `TERMINATING_REDUCER_CANCEL` method directly on the cached iterable
+ * 1. **Iterator-based cancellation:** Pass `CASSIOPEIA_CANCEL` to any iterator's `next()` method
+ * 2. **Method-based cancellation:** Call the `CASSIOPEIA_CANCEL` method directly on the cached iterable
  *
  * Both approaches have the same immediate effects:
- * - `TERMINATING_REDUCER_CANCEL` is forwarded to the current source iterator
+ * - `CASSIOPEIA_CANCEL` is forwarded to the current source iterator
  * - Current source iterator is cleared, allowing active iterators to complete gracefully
  * - New iterators created after cancellation immediately return done without creating sources
  *
  * **Source Iterable Contract:**
- * - Source iterables must check for `TERMINATING_REDUCER_CANCEL` and return immediately
+ * - Source iterables must check for `CASSIOPEIA_CANCEL` and return immediately
  * - Source iterables must not perform additional work after receiving the cancel token
  * - Source iterables must not yield additional values after cancellation
  * - Iterables that violate this contract may result in unpredictable cache states
  */
 export function createCachedIterable<T, TReturn = any>(
-  factory: () => Iterable<T, TReturn, TerminatingReducerCancel | undefined>,
+  factory: () => Iterable<T, TReturn, CassiopeiaCancel | undefined>,
 ): CachedIterable<T, TReturn> {
   const cache: T[] = []
   let sourceState = SourceState.IDLE
-  let sourceIterator:
-    | Iterator<T, TReturn | undefined, TerminatingReducerCancel | undefined>
-    | undefined
+  let sourceIterator: Iterator<T, TReturn | undefined, CassiopeiaCancel | undefined> | undefined
 
   // TODO: optimize
   const cancel = () => {
     if (sourceState === SourceState.ACTIVE) {
-      sourceIterator!.next(TERMINATING_REDUCER_CANCEL)
+      sourceIterator!.next(CASSIOPEIA_CANCEL)
       sourceState = SourceState.CANCELLED
       sourceIterator = undefined
     }
@@ -144,14 +175,10 @@ export function createCachedIterable<T, TReturn = any>(
     }
   }
 
-  function* createGenerator(): Generator<
-    T,
-    TReturn | undefined,
-    TerminatingReducerCancel | undefined
-  > {
+  function* createGenerator(): Generator<T, TReturn | undefined, CassiopeiaCancel | undefined> {
     let index = 0
 
-    if ((yield undefined as T) === TERMINATING_REDUCER_CANCEL) {
+    if ((yield undefined as T) === CASSIOPEIA_CANCEL) {
       cancel()
       return
     }
@@ -170,7 +197,7 @@ export function createCachedIterable<T, TReturn = any>(
         const next = yield cache[index]
         index += 1
 
-        if (next === TERMINATING_REDUCER_CANCEL) {
+        if (next === CASSIOPEIA_CANCEL) {
           cancel()
           return
         }
@@ -201,14 +228,14 @@ export function createCachedIterable<T, TReturn = any>(
     // get cancelled() {
     //   return sourceState === SourceState.CANCELLED
     // },
-    [Symbol.iterator](): Iterator<T, TReturn | undefined, TerminatingReducerCancel | undefined> {
+    [CASSIOPEIA_CANCEL]() {
+      cancel()
+    },
+    [Symbol.iterator](): Iterator<T, TReturn | undefined, CassiopeiaCancel | undefined> {
       const generator = createGenerator()
       generator.next()
 
       return generator
-    },
-    [TERMINATING_REDUCER_CANCEL]() {
-      cancel()
     },
   }
 }

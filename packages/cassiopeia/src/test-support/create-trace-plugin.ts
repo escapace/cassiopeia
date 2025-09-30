@@ -1,7 +1,7 @@
 import {
   CASSIOPEIA_PLUGIN,
-  isTerminatingReducerNotTerminated,
-  TERMINATING_REDUCER_CANCEL,
+  isReducerActive,
+  CASSIOPEIA_CANCEL,
   type CassiopeiaPlugin,
   type CassiopeiaPluginContext,
   type CassiopeiaReducer,
@@ -39,7 +39,7 @@ export function createTracePlugin(key: string, shouldAbort?: (value: string) => 
 
           let token: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((token = yield))) {
+          while (isReducerActive((token = yield))) {
             // The token already includes the full ---key-suffix format
             state.receivedMarkers.push(token)
             markers.push(token.replace(`---${key}-`, ''))
@@ -49,7 +49,7 @@ export function createTracePlugin(key: string, shouldAbort?: (value: string) => 
             }
           }
 
-          if (token === TERMINATING_REDUCER_CANCEL) {
+          if (token === CASSIOPEIA_CANCEL) {
             state.wasCancelled = true
             return undefined
           }

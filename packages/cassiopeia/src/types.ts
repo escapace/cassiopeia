@@ -1,12 +1,26 @@
 import type { CASSIOPEIA_CONTEXT, CASSIOPEIA_PLUGIN, CASSIOPEIA_STATE } from './constants'
+import type { CASSIOPEIA_CANCEL, CASSIOPEIA_COMPLETE } from './constants'
+import type {
+  CassiopeiaStateMachineActionUpdateType,
+  CassiopeiaStateMachineState,
+} from './constants'
 import type { CachedIterable } from './create-cached-iterable'
 import type {
   TerminatingReducer,
-  TerminatingReducerCancel,
   TerminatingReducerFactories,
   TerminatingReducers,
 } from './create-terminating-reducers'
 import type $ from '@escapace/typelevel'
+
+/**
+ * Type alias for the cancel control token symbol.
+ */
+export type CassiopeiaCancel = typeof CASSIOPEIA_CANCEL
+
+/**
+ * Type alias for the complete control token symbol.
+ */
+export type CassiopeiaComplete = typeof CASSIOPEIA_COMPLETE
 
 export interface CassiopeiaPartialStyleSheet {
   [key: string]: number | string | undefined
@@ -19,10 +33,7 @@ export interface CassiopeiaStyleSheet extends CassiopeiaPartialStyleSheet {
   key: string
 }
 
-export interface CassiopeiaStyleSheets {
-  keys: string[]
-  values: CassiopeiaStyleSheet[]
-}
+export type CassiopeiaStyleSheets = CassiopeiaStyleSheet[]
 
 /**
  * Terminating reducer that coordinates stylesheet collection from multiple custom property processing reducers.
@@ -39,7 +50,7 @@ export type CassiopeiaOrchestrator = TerminatingReducer<CassiopeiaStyleSheets, n
 export type CassiopeiaGenerator = Generator<
   [string, string],
   undefined,
-  TerminatingReducerCancel | undefined
+  CassiopeiaCancel | undefined
 >
 
 /**
@@ -71,9 +82,7 @@ export type CassiopeiaGeneratorUpdate = (
 ) => Promise<void>
 
 /** Update function that accepts optional generator factory for custom property source changes */
-export type CassiopeiaGeneratorUpdateSync = (
-  createGenerator?: () => CassiopeiaGenerator,
-) => void
+export type CassiopeiaGeneratorUpdateSync = (createGenerator?: () => CassiopeiaGenerator) => void
 
 /** Update function that accepts optional reducer keys for targeted plugin updates */
 export type CassiopeiaReducerUpdate = (keys?: Iterable<string>) => Promise<void>
@@ -97,7 +106,7 @@ export interface CassiopeiaPlugin {
   [CASSIOPEIA_PLUGIN]: (context: CassiopeiaPluginContext) => void
 }
 
-export type CassiopeiaSubscription = (styleSheets: CassiopeiaStyleSheets) => void
+export type CassiopeiaSubscription = (keys: Set<string>, values: CassiopeiaStyleSheets) => void
 export type CassiopeiaUnsubscribe = () => void
 
 export interface CassiopeiaInstance {
@@ -111,35 +120,6 @@ export interface Cassiopeia extends CassiopeiaInstance {
   update: CassiopeiaGeneratorUpdate
   updateSync: CassiopeiaGeneratorUpdateSync
   use: (...plugins: CassiopeiaPlugin[]) => Cassiopeia
-}
-
-export enum CassiopeiaStateMachineState {
-  /** No active processing, awaiting next update */
-  Idle,
-  /** Update received, preparing for orchestrator execution */
-  PreFlight,
-  /** Orchestrator actively processing stylesheets */
-  InFlight,
-}
-
-export enum CassiopeiaStateMachineAction {
-  /** Complete current operation and return to idle state */
-  Done,
-  /** Execute orchestrator to coordinate reducers and generate stylesheets */
-  Reduce,
-  /** Initiate new generator or reducer update cycle */
-  Update,
-}
-
-export enum CassiopeiaStateMachineActionUpdateType {
-  None = 0,
-
-  /** Update involves generator changes (new custom property sources) */
-  Generator = 1 << 0,
-  /** Update involves reducer changes (plugin modifications) */
-  Reducer = 1 << 1,
-  /** Update involves both generator and reducer changes */
-  Both = Generator | Reducer,
 }
 
 export interface CassiopeiaStateMachineContext {

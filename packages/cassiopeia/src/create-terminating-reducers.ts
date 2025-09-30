@@ -1,35 +1,15 @@
 /* eslint-disable typescript/no-empty-object-type */
 
-/**
- * Control token signaling a terminating reducer to complete and return its final value.
- */
-export const TERMINATING_REDUCER_COMPLETE: unique symbol = Symbol.for(
-  'cassiopeia/terminating-reducer/complete',
-)
-/**
- * Control token signaling a terminating reducer to cancel
- */
-export const TERMINATING_REDUCER_CANCEL: unique symbol = Symbol.for(
-  'cassiopeia/terminating-reducer/cancel',
-)
-
-/**
- * Type alias for the cancel control token symbol.
- */
-export type TerminatingReducerCancel = typeof TERMINATING_REDUCER_CANCEL
-
-/**
- * Type alias for the complete control token symbol.
- */
-export type TerminatingReducerComplete = typeof TERMINATING_REDUCER_COMPLETE
+import { CASSIOPEIA_CANCEL, CASSIOPEIA_COMPLETE } from './constants'
+import type { CassiopeiaCancel, CassiopeiaComplete } from './types'
 
 /**
  * Union type representing all possible input values for a terminating reducer.
  */
 export type TerminatingReducerNext<GeneratorNext = unknown> =
+  | CassiopeiaCancel
+  | CassiopeiaComplete
   | GeneratorNext
-  | TerminatingReducerCancel
-  | TerminatingReducerComplete
 
 /**
  * Union type representing all possible return values for a terminating reducer.
@@ -213,12 +193,10 @@ export function createTerminatingReducerFactoriesProxy<T extends object = {}, U 
  * Checks whether a reducer input value is actual user data rather than a control
  * token. When this function returns `true`, TypeScript narrows the value type from
  * `TerminatingReducerNextInput<U>` to `U`, enabling type-safe processing of user data
- * while excluding `TERMINATING_REDUCER_CANCEL` and `TERMINATING_REDUCER_COMPLETE` tokens.
+ * while excluding `CASSIOPEIA_CANCEL` and `CASSIOPEIA_COMPLETE` tokens.
  */
-export function isTerminatingReducerNotTerminated<U = unknown>(
-  value: TerminatingReducerNext<U>,
-): value is U {
-  return value !== TERMINATING_REDUCER_CANCEL && value !== TERMINATING_REDUCER_COMPLETE
+export function isReducerActive<U = unknown>(value: TerminatingReducerNext<U>): value is U {
+  return value !== CASSIOPEIA_CANCEL && value !== CASSIOPEIA_COMPLETE
 }
 
 /**
@@ -233,8 +211,8 @@ export function isTerminatingReducerNotTerminated<U = unknown>(
  * `TerminatingReducerNext<U>` to `TerminatingReducerCancel | TerminatingReducerComplete`,
  * enabling type-safe handling of control tokens.
  */
-export function isTerminatingReducerTerminated<U = unknown>(
+export function isReducerTerminated<U = unknown>(
   value: TerminatingReducerNext<U>,
-): value is TerminatingReducerCancel | TerminatingReducerComplete {
-  return value === TERMINATING_REDUCER_CANCEL || value === TERMINATING_REDUCER_COMPLETE
+): value is CassiopeiaCancel | CassiopeiaComplete {
+  return value === CASSIOPEIA_CANCEL || value === CASSIOPEIA_COMPLETE
 }

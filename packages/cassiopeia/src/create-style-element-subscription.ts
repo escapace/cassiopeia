@@ -77,8 +77,7 @@ export const createStyleElementSubscription = (
 
   const container = normalizeContainer(options?.container)
 
-  return ({ keys: keys_, values }) => {
-    const keys = new Set(keys_)
+  return (keys, values) => {
     const elements = new Map<string, HTMLStyleElement>()
     const keysWithValues = new Set()
 

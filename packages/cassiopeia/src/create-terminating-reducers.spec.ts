@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
   createTerminatingReducers,
-  isTerminatingReducerNotTerminated,
-  TERMINATING_REDUCER_CANCEL,
-  TERMINATING_REDUCER_COMPLETE,
+  isReducerActive,
   type TerminatingReducer,
   type TerminatingReducerNext,
 } from './create-terminating-reducers'
+import { CASSIOPEIA_CANCEL, CASSIOPEIA_COMPLETE } from './constants'
 
 describe('createTerminatingReducers', () => {
   describe('basic functionality', () => {
@@ -18,11 +17,11 @@ describe('createTerminatingReducers', () => {
           const results: string[] = []
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             results.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) {
+          if (input === CASSIOPEIA_CANCEL) {
             return undefined
           }
 
@@ -49,12 +48,12 @@ describe('createTerminatingReducers', () => {
           const results: string[] = []
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             results.push(input)
           }
 
           primeSteps.push('after-prime')
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 'result'
         },
       }
@@ -64,7 +63,7 @@ describe('createTerminatingReducers', () => {
       const reducer = reducers.test
       expect(primeSteps).toEqual(['started'])
 
-      const result = reducer.next(TERMINATING_REDUCER_COMPLETE)
+      const result = reducer.next(CASSIOPEIA_COMPLETE)
       expect(result.value).toBe('result')
       expect(primeSteps).toEqual(['started', 'after-prime'])
     })
@@ -77,18 +76,18 @@ describe('createTerminatingReducers', () => {
           const results: string[] = []
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             results.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 'string result'
         },
       }
       const reducers = createTerminatingReducers(factories, ['stringKey'])
       expect(factoryCallCount).toBe(0)
 
-      expect(reducers.stringKey.next(TERMINATING_REDUCER_COMPLETE).value).toBe('string result')
+      expect(reducers.stringKey.next(CASSIOPEIA_COMPLETE).value).toBe('string result')
       expect(factoryCallCount).toBe(1)
     })
 
@@ -100,18 +99,18 @@ describe('createTerminatingReducers', () => {
           const results: number[] = []
           let input: TerminatingReducerNext<number>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             results.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 42
         },
       }
       const reducers = createTerminatingReducers(factories, ['42'])
       expect(factoryCallCount).toBe(0)
 
-      expect(reducers[42].next(TERMINATING_REDUCER_COMPLETE).value).toBe(42)
+      expect(reducers[42].next(CASSIOPEIA_COMPLETE).value).toBe(42)
       expect(factoryCallCount).toBe(1)
     })
   })
@@ -123,16 +122,16 @@ describe('createTerminatingReducers', () => {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             inputs.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 'finished'
         },
       }
       const reducers = createTerminatingReducers(factories, ['test'])
-      const result = reducers.test.next(TERMINATING_REDUCER_COMPLETE)
+      const result = reducers.test.next(CASSIOPEIA_COMPLETE)
 
       expect(result.done).toBe(true)
       expect(result.value).toBe('finished')
@@ -144,16 +143,16 @@ describe('createTerminatingReducers', () => {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             inputs.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 'not cancelled'
         },
       }
       const reducers = createTerminatingReducers(factories, ['test'])
-      const result = reducers.test.next(TERMINATING_REDUCER_CANCEL)
+      const result = reducers.test.next(CASSIOPEIA_CANCEL)
 
       expect(result.done).toBe(true)
       expect(result.value).toBe(undefined)
@@ -166,16 +165,16 @@ describe('createTerminatingReducers', () => {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             inputs.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return promise
         },
       }
       const reducers = createTerminatingReducers(factories, ['test'])
-      const result = reducers.test.next(TERMINATING_REDUCER_COMPLETE)
+      const result = reducers.test.next(CASSIOPEIA_COMPLETE)
 
       expect(result.done).toBe(true)
       expect(result.value).toBe(promise)
@@ -187,18 +186,18 @@ describe('createTerminatingReducers', () => {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             inputs.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           throw new Error('generator error')
         },
       }
       const reducers = createTerminatingReducers(factories, ['test'])
 
       expect(() => {
-        reducers.test.next(TERMINATING_REDUCER_COMPLETE)
+        reducers.test.next(CASSIOPEIA_COMPLETE)
       }).toThrow('generator error')
     })
 
@@ -208,11 +207,11 @@ describe('createTerminatingReducers', () => {
           const inputs: Array<'customKey'> = []
           let input: TerminatingReducerNext<'customKey'>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             inputs.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return inputs.includes('customKey') ? 'custom key received' : 'something else'
         },
       }
@@ -220,7 +219,7 @@ describe('createTerminatingReducers', () => {
 
       const result = reducers.test.next('customKey')
       expect(result.done).toBe(false)
-      expect(reducers.test.next(TERMINATING_REDUCER_COMPLETE).value).toBe('custom key received')
+      expect(reducers.test.next(CASSIOPEIA_COMPLETE).value).toBe('custom key received')
     })
   })
 
@@ -233,11 +232,11 @@ describe('createTerminatingReducers', () => {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             inputs.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 'result1'
         },
         *test2(): TerminatingReducer<string, string> {
@@ -245,11 +244,11 @@ describe('createTerminatingReducers', () => {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             inputs.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 'result2'
         },
       }
@@ -280,11 +279,11 @@ describe('createTerminatingReducers', () => {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             inputs.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 'value1'
         },
         *key2(): TerminatingReducer<string, string> {
@@ -292,11 +291,11 @@ describe('createTerminatingReducers', () => {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             inputs.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 'value2'
         },
       }
@@ -332,22 +331,22 @@ describe('createTerminatingReducers', () => {
           factoryCallCount1++
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             // Just ignore inputs for this test
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 'value1'
         },
         *key2(): TerminatingReducer<string, string> {
           factoryCallCount2++
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             // Just ignore inputs for this test
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 'value2'
         },
       }
@@ -391,11 +390,11 @@ describe('createTerminatingReducers', () => {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             inputs.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 'unused1'
         },
         *unused2(): TerminatingReducer<string, string> {
@@ -403,11 +402,11 @@ describe('createTerminatingReducers', () => {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             inputs.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 'unused2'
         },
         *used(): TerminatingReducer<string, string> {
@@ -415,17 +414,17 @@ describe('createTerminatingReducers', () => {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             inputs.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 'used'
         },
       }
       const reducers = createTerminatingReducers(factories, ['used'])
 
-      expect(reducers.used.next(TERMINATING_REDUCER_COMPLETE).value).toBe('used')
+      expect(reducers.used.next(CASSIOPEIA_COMPLETE).value).toBe('used')
       expect(call1).toBe(1)
       expect(call2).toBe(0)
       expect(call3).toBe(0)
@@ -439,11 +438,11 @@ describe('createTerminatingReducers', () => {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             inputs.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 'completed'
         },
       }
@@ -451,7 +450,7 @@ describe('createTerminatingReducers', () => {
       const reducer = reducers.test
 
       // Complete the reducer
-      const result = reducer.next(TERMINATING_REDUCER_COMPLETE)
+      const result = reducer.next(CASSIOPEIA_COMPLETE)
       expect(result.value).toBe('completed')
       expect(result.done).toBe(true)
       expect(factoryCallCount).toBe(1)
@@ -474,10 +473,10 @@ describe('createTerminatingReducers', () => {
       const factories = {
         *existingFactory(): TerminatingReducer<string, string> {
           let input: TerminatingReducerNext<string>
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             // ignore inputs
           }
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 'exists'
         },
       }
@@ -498,7 +497,7 @@ describe('createTerminatingReducers', () => {
       expect('missingFactory' in reducers).toBe(false)
 
       // Verify existing factory still works normally
-      expect(reducers.existingFactory.next(TERMINATING_REDUCER_COMPLETE).value).toBe('exists')
+      expect(reducers.existingFactory.next(CASSIOPEIA_COMPLETE).value).toBe('exists')
     })
 
     it('should handle mixed completion states', () => {
@@ -507,22 +506,22 @@ describe('createTerminatingReducers', () => {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             inputs.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 'not cancelled'
         },
         *finished(): TerminatingReducer<string, string> {
           const inputs: string[] = []
           let input: TerminatingReducerNext<string>
 
-          while (isTerminatingReducerNotTerminated((input = yield))) {
+          while (isReducerActive((input = yield))) {
             inputs.push(input)
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return inputs.length > 0 ? 'not finished' : 'finished'
         },
         *pending(): TerminatingReducer<string, string> {
@@ -533,25 +532,25 @@ describe('createTerminatingReducers', () => {
           input = yield
 
           // Second yield - collect first input
-          if (isTerminatingReducerNotTerminated(input)) {
+          if (isReducerActive(input)) {
             inputs.push(input)
             input = yield
           }
 
           // Continue with remaining inputs until termination
-          while (isTerminatingReducerNotTerminated(input)) {
+          while (isReducerActive(input)) {
             inputs.push(input)
             input = yield
           }
 
-          if (input === TERMINATING_REDUCER_CANCEL) return undefined
+          if (input === CASSIOPEIA_CANCEL) return undefined
           return 'pending'
         },
       }
       const reducers = createTerminatingReducers(factories, ['cancelled', 'finished', 'pending'])
 
-      expect(reducers.finished.next(TERMINATING_REDUCER_COMPLETE).value).toBe('finished')
-      expect(reducers.cancelled.next(TERMINATING_REDUCER_CANCEL).value).toBe(undefined)
+      expect(reducers.finished.next(CASSIOPEIA_COMPLETE).value).toBe('finished')
+      expect(reducers.cancelled.next(CASSIOPEIA_CANCEL).value).toBe(undefined)
 
       const pending = reducers.pending
       expect(pending.next('step1').done).toBe(false)

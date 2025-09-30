@@ -3,8 +3,8 @@ import { bench, describe } from 'vitest'
 import {
   CASSIOPEIA_PLUGIN,
   createCassiopeia,
-  isTerminatingReducerNotTerminated,
-  TERMINATING_REDUCER_CANCEL,
+  isReducerActive,
+  CASSIOPEIA_CANCEL,
   type Cassiopeia,
   type CassiopeiaGenerator,
   type CassiopeiaPlugin,
@@ -12,7 +12,7 @@ import {
   type CassiopeiaReducer,
   type CassiopeiaStyleSheets,
   type CassiopeiaSubscription,
-  type TerminatingReducerCancel,
+  type CassiopeiaCancel,
   type TerminatingReducerNext,
 } from './index'
 
@@ -34,16 +34,13 @@ const simpleCountingStylesheetOrchastrator = (
 
   stylesheet += '}'
 
-  return {
-    keys: ['number'],
-    values: [
-      {
-        content: stylesheet,
-        index: 0,
-        key: 'number',
-      },
-    ],
-  }
+  return [
+    {
+      content: stylesheet,
+      index: 0,
+      key: 'number',
+    },
+  ]
 }
 
 function createSimpleCountingStylesheet() {
@@ -53,7 +50,7 @@ function createSimpleCountingStylesheet() {
     const value = simpleCountingStylesheetOrchastrator(generator)
 
     for (const subscription of subscriptions) {
-      subscription(value)
+      subscription(new Set(value.map((v) => v.key)), value)
     }
   }
 
@@ -73,12 +70,12 @@ function createSimpleCountingStylesheet() {
 
 function createCountingGenerator(properties: Array<[string, string]>) {
   function* countingGenerator(): CassiopeiaGenerator {
-    let token: TerminatingReducerCancel | undefined
+    let token: CassiopeiaCancel | undefined
 
     for (const pair of properties) {
       token = yield pair
 
-      if (token === TERMINATING_REDUCER_CANCEL) {
+      if (token === CASSIOPEIA_CANCEL) {
         return
       }
     }
@@ -97,11 +94,11 @@ function createNumberPlugin(): CassiopeiaPlugin {
         let localIndex = -1
         let token: TerminatingReducerNext<string>
 
-        while (isTerminatingReducerNotTerminated((token = yield))) {
+        while (isReducerActive((token = yield))) {
           markers.push(token)
         }
 
-        if (token === TERMINATING_REDUCER_CANCEL) {
+        if (token === CASSIOPEIA_CANCEL) {
           return undefined
         }
 
@@ -142,8 +139,8 @@ for (const count of [100, 1000, 10_000, 50_000]) {
         const promise = new Promise<CassiopeiaStyleSheets>((value) => {
           resolve = value
         })
-        const unsubscribe = simple.subscribe((value) => {
-          resolve(value)
+        const unsubscribe = simple.subscribe((_keys, values) => {
+          resolve(values)
         })
         simple.updateSync(createCountingGenerator(NUMBER_PROPERTIES))
 
@@ -166,8 +163,8 @@ for (const count of [100, 1000, 10_000, 50_000]) {
         const promise = new Promise<CassiopeiaStyleSheets>((value) => {
           resolve = value
         })
-        const unsubscribe = cassiopeia.subscribe((value) => {
-          resolve(value)
+        const unsubscribe = cassiopeia.subscribe((_keys, values) => {
+          resolve(values)
         })
 
         cassiopeia.updateSync(createCountingGenerator(NUMBER_PROPERTIES))

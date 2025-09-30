@@ -1,29 +1,28 @@
 import { interpret } from '@escapace/fsm'
 import { remove } from 'coastal'
-import { CASSIOPEIA_CONTEXT, CASSIOPEIA_PLUGIN, CASSIOPEIA_STATE } from './constants'
-import { createScheduler } from './create-scheduler'
 import {
-  createTerminatingReducerFactoriesProxy,
-  TERMINATING_REDUCER_CANCEL,
-} from './create-terminating-reducers'
-import { stateMachine } from './state-machine'
-import {
+  CASSIOPEIA_CANCEL,
+  CASSIOPEIA_CONTEXT,
+  CASSIOPEIA_PLUGIN,
+  CASSIOPEIA_STATE,
   CassiopeiaStateMachineAction,
   CassiopeiaStateMachineActionUpdateType,
-  type Cassiopeia,
-  type CassiopeiaGenerator,
-  type CassiopeiaPlugin,
-  type CassiopeiaPluginContext,
-  type CassiopeiaReducerUpdate,
-  type CassiopeiaReducerUpdateSync,
-  type CassiopeiaStateMachineActionUpdateOptions,
-  type CassiopeiaSubscription,
+} from './constants'
+import { createScheduler } from './create-scheduler'
+import { createTerminatingReducerFactoriesProxy } from './create-terminating-reducers'
+import { stateMachine } from './state-machine'
+import type {
+  Cassiopeia,
+  CassiopeiaGenerator,
+  CassiopeiaPlugin,
+  CassiopeiaPluginContext,
+  CassiopeiaReducerUpdate,
+  CassiopeiaReducerUpdateSync,
+  CassiopeiaStateMachineActionUpdateOptions,
+  CassiopeiaSubscription,
 } from './types'
 
-// TODO: keys can be a set? simplify return types
-//
-// TODO: helper function to build style elements from renderStyleSheets
-// TODO: test organization
+// TODO: multiplexer tests
 
 export function createCassiopeia(): Cassiopeia {
   const subscriptions: CassiopeiaSubscription[] = []
@@ -58,29 +57,26 @@ export function createCassiopeia(): Cassiopeia {
         // no plugins registered or empty update reducer keys, notify subscriptions
         // with empty values to maintain consistent behavior
         for (const subscription of subscriptions) {
-          subscription({
-            keys: Array.from(state.context.reducerKeys),
-            values: [],
-          })
+          subscription(state.context.reducerKeys, [])
         }
 
         machine.do(CassiopeiaStateMachineAction.Done)
       } else {
-        const value = createScheduler(context)
+        const values = createScheduler(context)
 
-        if (value instanceof Promise) {
-          void Promise.resolve(value).then((value) => {
-            if (value !== undefined) {
+        if (values instanceof Promise) {
+          void Promise.resolve(values).then((values) => {
+            if (values !== undefined) {
               for (const subscription of subscriptions) {
-                subscription(value)
+                subscription(state.context.reducerKeys, values)
               }
 
               machine.do(CassiopeiaStateMachineAction.Done)
             }
           })
-        } else if (value !== undefined) {
+        } else if (values !== undefined) {
           for (const subscription of subscriptions) {
-            subscription(value)
+            subscription(state.context.reducerKeys, values)
           }
 
           machine.do(CassiopeiaStateMachineAction.Done)
@@ -147,8 +143,8 @@ export function createCassiopeia(): Cassiopeia {
     updateCallbacks.length = 0
     deferCancellationIdentifier = undefined
 
-    context.generator?.[TERMINATING_REDUCER_CANCEL]()
-    context.orchestrator?.next(TERMINATING_REDUCER_CANCEL)
+    context.generator?.[CASSIOPEIA_CANCEL]()
+    context.orchestrator?.next(CASSIOPEIA_CANCEL)
     context.orchestrator = undefined
     context.reducerFactories = {}
     context.reducerKeys.clear()

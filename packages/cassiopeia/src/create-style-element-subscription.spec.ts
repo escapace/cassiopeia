@@ -269,17 +269,14 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       const subscription = createStyleElementSubscription()
 
       // Directly test the subscription with mock data that includes media
-      subscription({
-        keys: ['test'],
-        values: [
-          {
-            content: ':root { --test: 1; }',
-            index: 0,
-            key: 'test',
-            media: 'screen and (min-width: 768px)',
-          },
-        ],
-      })
+      subscription(new Set(['test']), [
+        {
+          content: ':root { --test: 1; }',
+          index: 0,
+          key: 'test',
+          media: 'screen and (min-width: 768px)',
+        },
+      ])
 
       assertStyleElementHasMedia(document.head, 'test', 0, 'screen and (min-width: 768px)')
     })
@@ -288,31 +285,25 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       const subscription = createStyleElementSubscription({ method: 'overwrite' })
 
       // First create element without media
-      subscription({
-        keys: ['test'],
-        values: [
-          {
-            content: ':root { --test: 1; }',
-            index: 0,
-            key: 'test',
-          },
-        ],
-      })
+      subscription(new Set(['test']), [
+        {
+          content: ':root { --test: 1; }',
+          index: 0,
+          key: 'test',
+        },
+      ])
 
       assertStyleElementHasNoMedia(document.head, 'test', 0)
 
       // Update same element with media attribute
-      subscription({
-        keys: ['test'],
-        values: [
-          {
-            content: ':root { --test: 2; }',
-            index: 0,
-            key: 'test',
-            media: 'screen and (min-width: 768px)',
-          },
-        ],
-      })
+      subscription(new Set(['test']), [
+        {
+          content: ':root { --test: 2; }',
+          index: 0,
+          key: 'test',
+          media: 'screen and (min-width: 768px)',
+        },
+      ])
 
       assertStyleElementHasMedia(document.head, 'test', 0, 'screen and (min-width: 768px)')
       assertStyleElementExists(document.head, 'test', 0, ':root { --test: 2; }')
@@ -386,16 +377,16 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       const subscription = createStyleElementSubscription()
       instance.subscribe(subscription)
 
+      const pluginC = createTracePlugin('c')
       const pluginA = createTracePlugin('a')
       const pluginB = createTracePlugin('b')
-      const pluginC = createTracePlugin('c')
-      instance.use(pluginA.plugin, pluginB.plugin, pluginC.plugin)
+      instance.use(pluginB.plugin, pluginA.plugin, pluginC.plugin)
 
       for (let index = 0; index < 3; index++) {
         const generator = createCountingGenerator(
-          'var(---a-test)',
-          'var(---b-test)',
           'var(---c-test)',
+          'var(---b-test)',
+          'var(---a-test)',
         )
         instance.updateSync(generator.generator)
 
@@ -403,7 +394,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
         const keys = elements.map((element) => element.key)
 
         // Order should be consistent across runs
-        expect(keys.sort()).toEqual(['a', 'b', 'c'])
+        expect(keys).toEqual(['b', 'a', 'c'])
       }
     })
 
@@ -411,21 +402,18 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       const subscription = createStyleElementSubscription()
 
       // First, create two style elements with same key but different indices
-      subscription({
-        keys: ['test'],
-        values: [
-          {
-            content: ':root { --test-0: value0; }',
-            index: 0,
-            key: 'test',
-          },
-          {
-            content: ':root { --test-1: value1; }',
-            index: 1,
-            key: 'test',
-          },
-        ],
-      })
+      subscription(new Set(['test']), [
+        {
+          content: ':root { --test-0: value0; }',
+          index: 0,
+          key: 'test',
+        },
+        {
+          content: ':root { --test-1: value1; }',
+          index: 1,
+          key: 'test',
+        },
+      ])
 
       // Verify both elements exist
       assertStyleElementCount(document.head, 2)
@@ -433,16 +421,13 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       assertStyleElementExists(document.head, 'test', 1, ':root { --test-1: value1; }')
 
       // Update with only index 0 - index 1 should be removed
-      subscription({
-        keys: ['test'],
-        values: [
-          {
-            content: ':root { --test-0: updated; }',
-            index: 0,
-            key: 'test',
-          },
-        ],
-      })
+      subscription(new Set(['test']), [
+        {
+          content: ':root { --test-0: updated; }',
+          index: 0,
+          key: 'test',
+        },
+      ])
 
       // Should only have one element now (index 0), index 1 should be deleted
       assertStyleElementCount(document.head, 1)
@@ -454,26 +439,23 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       const subscription = createStyleElementSubscription()
 
       // Create elements: theme with indices 0,1 and components with index 0
-      subscription({
-        keys: ['theme', 'components'],
-        values: [
-          {
-            content: ':root { --theme-primary: blue; }',
-            index: 0,
-            key: 'theme',
-          },
-          {
-            content: ':root { --theme-secondary: green; }',
-            index: 1,
-            key: 'theme',
-          },
-          {
-            content: '.button { color: red; }',
-            index: 0,
-            key: 'components',
-          },
-        ],
-      })
+      subscription(new Set(['components', 'theme']), [
+        {
+          content: ':root { --theme-primary: blue; }',
+          index: 0,
+          key: 'theme',
+        },
+        {
+          content: ':root { --theme-secondary: green; }',
+          index: 1,
+          key: 'theme',
+        },
+        {
+          content: '.button { color: red; }',
+          index: 0,
+          key: 'components',
+        },
+      ])
 
       // Verify all three elements exist
       assertStyleElementCount(document.head, 3)
@@ -485,16 +467,13 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       // theme:1 should be removed (key active but key+index combo missing)
       // components:0 should remain (key active even though no values)
       // theme:0 should remain (key active and key+index combo present)
-      subscription({
-        keys: ['theme', 'components'],
-        values: [
-          {
-            content: ':root { --theme-primary: updated; }',
-            index: 0,
-            key: 'theme',
-          },
-        ],
-      })
+      subscription(new Set(['components', 'theme']), [
+        {
+          content: ':root { --theme-primary: updated; }',
+          index: 0,
+          key: 'theme',
+        },
+      ])
 
       // Should have theme index 0 and components index 0
       assertStyleElementCount(document.head, 2)
@@ -503,10 +482,7 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       assertStyleElementExists(document.head, 'components', 0, '.button { color: red; }')
 
       // Now remove all keys - remaining element should be deleted
-      subscription({
-        keys: [],
-        values: [],
-      })
+      subscription(new Set([]), [])
 
       // Should have no elements now
       assertStyleElementCount(document.head, 0)
@@ -516,21 +492,18 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       const subscription = createStyleElementSubscription()
 
       // Create elements for multiple keys
-      subscription({
-        keys: ['theme', 'components'],
-        values: [
-          {
-            content: ':root { --theme-color: blue; }',
-            index: 0,
-            key: 'theme',
-          },
-          {
-            content: '.button { color: red; }',
-            index: 0,
-            key: 'components',
-          },
-        ],
-      })
+      subscription(new Set(['components', 'nonexistent', 'theme']), [
+        {
+          content: ':root { --theme-color: blue; }',
+          index: 0,
+          key: 'theme',
+        },
+        {
+          content: '.button { color: red; }',
+          index: 0,
+          key: 'components',
+        },
+      ])
 
       // Verify both elements exist
       assertStyleElementCount(document.head, 2)
@@ -538,16 +511,13 @@ describe.runIf(IS_BROWSER)('createStyleElementSubscription', () => {
       assertStyleElementExists(document.head, 'components', 0, '.button { color: red; }')
 
       // Update with only 'theme' key active - components should be removed
-      subscription({
-        keys: ['theme'],
-        values: [
-          {
-            content: ':root { --theme-color: green; }',
-            index: 0,
-            key: 'theme',
-          },
-        ],
-      })
+      subscription(new Set(['theme']), [
+        {
+          content: ':root { --theme-color: green; }',
+          index: 0,
+          key: 'theme',
+        },
+      ])
 
       // Should only have theme element now - components removed because key no longer active
       assertStyleElementCount(document.head, 1)

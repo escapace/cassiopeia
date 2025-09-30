@@ -1,8 +1,8 @@
 /* eslint-disable unicorn/consistent-function-scoping */
 // createCachedIterable.spec.ts
 import { describe, expect, it, vi } from 'vitest'
-import { createCachedIterable } from './create-cached-iterable'
-import { TERMINATING_REDUCER_CANCEL } from './create-terminating-reducers'
+import { createCachedIterable, isIterableTerminated } from './create-cached-iterable'
+import { CASSIOPEIA_CANCEL } from './constants'
 
 describe('createCachedIterable', () => {
   it('is lazy and does not call the factory until first consumption', () => {
@@ -214,8 +214,8 @@ describe('createCachedIterable', () => {
     expect(first).toEqual({ done: false, value: 'first' })
     expect(yieldSpy).toHaveBeenCalledTimes(1)
 
-    // Pass TERMINATING_REDUCER_CANCEL to terminate early
-    const cancelled = iterator.next(TERMINATING_REDUCER_CANCEL)
+    // Pass CASSIOPEIA_CANCEL to terminate early
+    const cancelled = iterator.next(CASSIOPEIA_CANCEL)
     expect(cancelled.done).toBe(true)
     expect(cancelled.value).toBe(undefined)
     expect(yieldSpy).toHaveBeenCalledTimes(2)
@@ -226,7 +226,7 @@ describe('createCachedIterable', () => {
     expect(yieldSpy).toHaveBeenCalledTimes(2)
   })
 
-  it('forwards cancellation to source generator that handles TERMINATING_REDUCER_CANCEL appropriately', () => {
+  it('forwards cancellation to source generator that handles CASSIOPEIA_CANCEL appropriately', () => {
     const yieldSpy = vi
       .fn()
       .mockReturnValueOnce('value1')
@@ -236,13 +236,13 @@ describe('createCachedIterable', () => {
 
     function* makeValues() {
       let input: unknown = yield yieldSpy()
-      if (input === TERMINATING_REDUCER_CANCEL) return
+      if (isIterableTerminated(input)) return
 
       input = yield yieldSpy()
-      if (input === TERMINATING_REDUCER_CANCEL) return
+      if (isIterableTerminated(input)) return
 
       input = yield yieldSpy()
-      if (input === TERMINATING_REDUCER_CANCEL) return
+      if (isIterableTerminated(input)) return
     }
 
     const cached = createCachedIterable(() => makeValues())
@@ -252,8 +252,8 @@ describe('createCachedIterable', () => {
     expect(first).toEqual({ done: false, value: 'value1' })
     expect(yieldSpy).toHaveBeenCalledTimes(1)
 
-    // Pass TERMINATING_REDUCER_CANCEL - should be handled by source generator
-    const cancelled = iterator.next(TERMINATING_REDUCER_CANCEL)
+    // Pass CASSIOPEIA_CANCEL - should be handled by source generator
+    const cancelled = iterator.next(CASSIOPEIA_CANCEL)
     expect(cancelled.done).toBe(true)
     expect(cancelled.value).toBe(undefined)
     expect(yieldSpy).toHaveBeenCalledTimes(1) // no additional calls
@@ -294,7 +294,7 @@ describe('createCachedIterable', () => {
     expect(yieldSpy).toHaveBeenCalledTimes(3) // no additional calls, from cache
 
     // Cancel during cache reading
-    const cancelled = secondIterator.next(TERMINATING_REDUCER_CANCEL)
+    const cancelled = secondIterator.next(CASSIOPEIA_CANCEL)
 
     expect(cancelled.done).toBe(true)
     expect(cancelled.value).toBe(undefined)
@@ -318,13 +318,13 @@ describe('createCachedIterable', () => {
 
     function* makeValues() {
       let input: unknown = yield yieldSpy()
-      if (input === TERMINATING_REDUCER_CANCEL) return
+      if (isIterableTerminated(input)) return
 
       input = yield yieldSpy()
-      if (input === TERMINATING_REDUCER_CANCEL) return
+      if (isIterableTerminated(input)) return
 
       input = yield yieldSpy()
-      if (input === TERMINATING_REDUCER_CANCEL) return
+      if (isIterableTerminated(input)) return
     }
 
     const cached = createCachedIterable(() => makeValues())
@@ -335,7 +335,7 @@ describe('createCachedIterable', () => {
     expect(yieldSpy).toHaveBeenCalledTimes(1)
 
     // Cancel via method call
-    cached[TERMINATING_REDUCER_CANCEL]()
+    cached[CASSIOPEIA_CANCEL]()
     expect(yieldSpy).toHaveBeenCalledTimes(1)
 
     const nextFromActiveIterator = iterator.next()
@@ -346,8 +346,8 @@ describe('createCachedIterable', () => {
     expect(newIterator.next()).toEqual({ done: true, value: undefined })
 
     // Verify method is idempotent (safe to call multiple times)
-    cached[TERMINATING_REDUCER_CANCEL]()
-    cached[TERMINATING_REDUCER_CANCEL]()
+    cached[CASSIOPEIA_CANCEL]()
+    cached[CASSIOPEIA_CANCEL]()
     expect(yieldSpy).toHaveBeenCalledTimes(1) // no additional calls from idempotent cancellations
   })
 
@@ -374,7 +374,7 @@ describe('createCachedIterable', () => {
     expect(factorySpy).toHaveBeenCalledTimes(0) // factory not called yet
     expect(yieldSpy).toHaveBeenCalledTimes(0) // no source calls yet
 
-    cached[TERMINATING_REDUCER_CANCEL]()
+    cached[CASSIOPEIA_CANCEL]()
 
     expect(factorySpy).toHaveBeenCalledTimes(0) // factory still not called until needed
     expect(yieldSpy).toHaveBeenCalledTimes(0) // no source calls yet
@@ -399,19 +399,19 @@ describe('createCachedIterable', () => {
 
     function* makeItems() {
       let input: unknown = yield yieldSpy()
-      if (input === TERMINATING_REDUCER_CANCEL) return
+      if (isIterableTerminated(input)) return
 
       input = yield yieldSpy()
-      if (input === TERMINATING_REDUCER_CANCEL) return
+      if (isIterableTerminated(input)) return
 
       input = yield yieldSpy()
-      if (input === TERMINATING_REDUCER_CANCEL) return
+      if (isIterableTerminated(input)) return
 
       input = yield yieldSpy()
-      if (input === TERMINATING_REDUCER_CANCEL) return
+      if (isIterableTerminated(input)) return
 
       input = yield yieldSpy()
-      if (input === TERMINATING_REDUCER_CANCEL) return
+      if (isIterableTerminated(input)) return
     }
 
     const cached = createCachedIterable(() => makeItems())
@@ -488,16 +488,16 @@ describe('createCachedIterable', () => {
 
       function* makeValues() {
         let input: unknown = yield yieldSpy()
-        if (input === TERMINATING_REDUCER_CANCEL) return
+        if (isIterableTerminated(input)) return
 
         input = yield yieldSpy()
-        if (input === TERMINATING_REDUCER_CANCEL) return
+        if (isIterableTerminated(input)) return
 
         input = yield yieldSpy()
-        if (input === TERMINATING_REDUCER_CANCEL) return
+        if (isIterableTerminated(input)) return
 
         input = yield yieldSpy()
-        if (input === TERMINATING_REDUCER_CANCEL) return
+        if (isIterableTerminated(input)) return
       }
 
       const cached = createCachedIterable(() => makeValues())
@@ -509,9 +509,9 @@ describe('createCachedIterable', () => {
 
       if (option === 'method-based') {
         // Cancel via method while iterator is active - clears source immediately
-        cached[TERMINATING_REDUCER_CANCEL]()
+        cached[CASSIOPEIA_CANCEL]()
       } else {
-        iterator.next(TERMINATING_REDUCER_CANCEL)
+        iterator.next(CASSIOPEIA_CANCEL)
       }
 
       // Active iterator should complete gracefully on next call without extending cache
@@ -549,19 +549,19 @@ describe('createCachedIterable', () => {
 
       function* makeValues() {
         let input: unknown = yield yieldSpy()
-        if (input === TERMINATING_REDUCER_CANCEL) return
+        if (isIterableTerminated(input)) return
 
         input = yield yieldSpy()
-        if (input === TERMINATING_REDUCER_CANCEL) return
+        if (isIterableTerminated(input)) return
 
         input = yield yieldSpy()
-        if (input === TERMINATING_REDUCER_CANCEL) return
+        if (isIterableTerminated(input)) return
 
         input = yield yieldSpy()
-        if (input === TERMINATING_REDUCER_CANCEL) return
+        if (isIterableTerminated(input)) return
 
         input = yield yieldSpy()
-        if (input === TERMINATING_REDUCER_CANCEL) return
+        if (isIterableTerminated(input)) return
       }
 
       const cached = createCachedIterable(() => makeValues())
@@ -584,9 +584,9 @@ describe('createCachedIterable', () => {
 
       // Cancel via while iterator is reading from cache
       if (option === 'method-based') {
-        cached[TERMINATING_REDUCER_CANCEL]()
+        cached[CASSIOPEIA_CANCEL]()
       } else {
-        secondIterator.next(TERMINATING_REDUCER_CANCEL)
+        secondIterator.next(CASSIOPEIA_CANCEL)
       }
 
       // Existing iterator should complete immediately
@@ -620,19 +620,19 @@ describe('createCachedIterable', () => {
 
       function* makeValues() {
         let input: unknown = yield yieldSpy()
-        if (input === TERMINATING_REDUCER_CANCEL) return
+        if (isIterableTerminated(input)) return
 
         input = yield yieldSpy()
-        if (input === TERMINATING_REDUCER_CANCEL) return
+        if (isIterableTerminated(input)) return
 
         input = yield yieldSpy()
-        if (input === TERMINATING_REDUCER_CANCEL) return
+        if (isIterableTerminated(input)) return
 
         input = yield yieldSpy()
-        if (input === TERMINATING_REDUCER_CANCEL) return
+        if (isIterableTerminated(input)) return
 
         input = yield yieldSpy()
-        if (input === TERMINATING_REDUCER_CANCEL) return
+        if (isIterableTerminated(input)) return
       }
 
       const cached = createCachedIterable(() => makeValues())
@@ -641,10 +641,10 @@ describe('createCachedIterable', () => {
       const secondIterator = cached[Symbol.iterator]()
 
       if (option === 'method-based') {
-        cached[TERMINATING_REDUCER_CANCEL]()
+        cached[CASSIOPEIA_CANCEL]()
         expect(yieldSpy).toHaveBeenCalledTimes(0)
       } else {
-        firstIterator.next(TERMINATING_REDUCER_CANCEL)
+        firstIterator.next(CASSIOPEIA_CANCEL)
         expect(yieldSpy).toHaveBeenCalledTimes(0)
       }
 
