@@ -1,6 +1,6 @@
 {
   "name": "cassiopeia",
-  "description": "",
+  "description": "Generates and manages CSS from var(---key-suffix) Triple-dash Custom Properties using plugins, subscriptions, and lazy batched processing",
   "version": "0.0.0",
   "author": {
     "name": "escapace",
@@ -56,7 +56,7 @@
   "homepage": "https://github.com/escapace/cassiopeia/tree/trunk/packages/cassiopeia#readme",
   "license": "MPL-2.0",
   "peerDependencies": {
-    "@escapace/fsm": "^4.2.0",
+    "@escapace/fsm": "^5.0.0",
     "@escapace/typelevel": "^2.0.3",
     "coastal": "^0.2.1"
   },

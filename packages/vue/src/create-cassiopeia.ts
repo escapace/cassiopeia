@@ -65,6 +65,7 @@ export const createCassiopeia = (options: CassiopeiaOptions = {}): Cassiopeia =>
     const scope = new Set<string>()
     scopes.add(scope)
 
+    // TODO: accept refs?
     function add(value: string): string
     function add(value: string[]): string[]
     function add(value: string | string[]): string | string[] {

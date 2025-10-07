@@ -45,8 +45,8 @@ importers:
   packages/cassiopeia:
     dependencies:
       '@escapace/fsm':
-        specifier: ^4.2.0
-        version: 4.2.0(@escapace/typelevel@2.0.3)(coastal@0.2.1)
+        specifier: ^5.0.0
+        version: 5.0.0(@escapace/typelevel@2.0.3)(coastal@0.2.1)
       '@escapace/typelevel':
         specifier: ^2.0.3
         version: 2.0.3
@@ -610,9 +610,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@escapace/fsm@4.2.0':
-    resolution: {integrity: sha512-X5rUaOltGILXvD0fi3xIlWnXiaAH8vC01hD5DGUubCUPliPtSwMLhRXTfwVj2G/bwVaESpZrrWEIojb7UgWHnQ==}
-    engines: {pnpm: ^10.14.0}
+  '@escapace/fsm@5.0.0':
+    resolution: {integrity: sha512-nE4+PkihWK9dH5aBPQkymMnN6yCywx4zhMPRWq9VoKsyb8qdRJCyp8u+4IWzVKFSBLKf7M+MtT5lIYJWZAQIvA==}
+    engines: {pnpm: '>=10.17.1'}
     peerDependencies:
       '@escapace/typelevel': ^2.0.2
       coastal: ^0.2.1
@@ -3501,7 +3501,7 @@ snapshots:
   '@esbuild/win32-x64@0.25.10':
     optional: true
 
-  '@escapace/fsm@4.2.0(@escapace/typelevel@2.0.3)(coastal@0.2.1)':
+  '@escapace/fsm@5.0.0(@escapace/typelevel@2.0.3)(coastal@0.2.1)':
     dependencies:
       '@escapace/typelevel': 2.0.3
       coastal: 0.2.1
