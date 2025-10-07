@@ -21,8 +21,6 @@ import type {
   CassiopeiaSubscription,
 } from './types'
 
-// TODO: multiplexer tests
-
 export function createCassiopeia(): Cassiopeia {
   const subscriptions: CassiopeiaSubscription[] = []
   const plugins = new Map<CassiopeiaPlugin, CassiopeiaPluginContext>()
