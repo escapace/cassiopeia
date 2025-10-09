@@ -2,28 +2,11 @@ import {
   CASSIOPEIA_CONTEXT,
   CASSIOPEIA_STATE,
   createCassiopeia as createCassiopeiaCore,
-  CASSIOPEIA_CANCEL,
-  type CassiopeiaGenerator,
+  CassiopeiaScopes,
 } from 'cassiopeia'
 import { computed, effectScope as createEffectScope, unref, watch, type App } from 'vue'
-import { CASSIOPEIA_INJECTION_KEY, CASSIOPEIA_REGEX } from './constants'
-import type { Cassiopeia, CassiopeiaOptions, CassiopeiaScope } from './types'
-
-function* createGenerator(scopes: Set<Set<string>>): CassiopeiaGenerator {
-  for (const scope of scopes) {
-    for (const string of scope) {
-      const match = string.match(CASSIOPEIA_REGEX)
-
-      if (match?.length === 3) {
-        const cancelled = yield match.splice(1) as [string, string]
-
-        if (cancelled === CASSIOPEIA_CANCEL) {
-          return
-        }
-      }
-    }
-  }
-}
+import { CASSIOPEIA_INJECTION_KEY } from './constants'
+import type { Cassiopeia, CassiopeiaOptions } from './types'
 
 export const createCassiopeia = (options: CassiopeiaOptions = {}): Cassiopeia => {
   if (__PLATFORM__ === 'browser') {
@@ -33,8 +16,7 @@ export const createCassiopeia = (options: CassiopeiaOptions = {}): Cassiopeia =>
   }
 
   const core = createCassiopeiaCore()
-  const scopes = new Set<Set<string>>()
-  const createVariables = () => createGenerator(scopes)
+  const scopes = new CassiopeiaScopes(core)
 
   const effectScope = createEffectScope(true)
   effectScope.run(() => {
@@ -58,54 +40,14 @@ export const createCassiopeia = (options: CassiopeiaOptions = {}): Cassiopeia =>
     )
   })
 
-  const update = async () => await core.update(createVariables)
-  const updateSync = () => core.updateSync(createVariables)
-
-  const createScope = (): CassiopeiaScope => {
-    const scope = new Set<string>()
-    scopes.add(scope)
-
-    // TODO: accept refs?
-    function add(value: string): string
-    function add(value: string[]): string[]
-    function add(value: string | string[]): string | string[] {
-      ;(Array.isArray(value) ? value : [value]).forEach((value) => {
-        if (!scope.has(value)) {
-          scope.add(value)
-        }
-      })
-
-      return value
-    }
-
-    const clear = () => scope.clear()
-
-    const dispose = (triggerUpdate = true) => {
-      clear()
-
-      if (triggerUpdate && scopes.delete(scope)) {
-        void update()
-      }
-    }
-
-    const del = (value: string | string[]) => {
-      ;(Array.isArray(value) ? value : [value]).forEach((value) => {
-        scope.delete(value)
-      })
-    }
-
-    return { add, clear, delete: del, dispose, update, updateSync }
-  }
-
   const cassiopeia: Cassiopeia = {
     ...core,
     get [CASSIOPEIA_STATE]() {
       return core[CASSIOPEIA_STATE]
     },
-    createScope,
     dispose: async () => {
       effectScope.stop()
-      scopes.clear()
+      scopes.dispose()
 
       if (__PLATFORM__ === 'browser') {
         globalThis.__CASSIOPEIA__ = undefined
@@ -116,8 +58,10 @@ export const createCassiopeia = (options: CassiopeiaOptions = {}): Cassiopeia =>
       app.provide(CASSIOPEIA_INJECTION_KEY, cassiopeia)
       app.onUnmount(() => void cassiopeia.dispose)
     },
-    update,
-    updateSync,
+
+    createScope: scopes.createScope,
+    update: scopes.update,
+    updateSync: scopes.updateSync,
   }
 
   if (__PLATFORM__ === 'browser') {

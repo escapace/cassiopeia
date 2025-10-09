@@ -7,3 +7,5 @@ export { createStyleElementSubscription } from './create-style-element-subscript
 export { createCassiopeia } from './create-cassiopeia'
 export { createMultiplexer } from './create-multiplexer'
 export { renderStyleSheets } from './render-style-sheets'
+export { parseCustomPropertyName } from './parse-custom-property-name'
+export { CassiopeiaScope, CassiopeiaScopes } from './cassiopeia-scope'

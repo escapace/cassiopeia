@@ -27,7 +27,8 @@ export const stateMachine = createStateMachine()
     defer: setTimeout.bind(globalThis),
     deferCancel: clearTimeout.bind(globalThis),
     deferEvery: 8,
-    reducerFactories: {},
+    // eslint-disable-next-line typescript/no-empty-object-type
+    reducerFactories: Object.create(null) as {},
     reducerKeys: new Set(),
     updateIsAsync: true,
     updateType: CassiopeiaStateMachineActionUpdateType.None,

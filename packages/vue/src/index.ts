@@ -1,5 +1,6 @@
+export type { Cassiopeia, CassiopeiaOptions } from './types'
+
+export { CASSIOPEIA_INJECTION_KEY } from './constants'
 export { createCassiopeia } from './create-cassiopeia'
-export type { Cassiopeia, CassiopeiaScope, CassiopeiaOptions } from './types'
 export { updateStyle } from './update-style'
 export { useCassiopeia } from './use-cassiopeia'
-export { CASSIOPEIA_INJECTION_KEY } from './constants'

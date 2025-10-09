@@ -1,5 +1,5 @@
 /* eslint-disable typescript/naming-convention */
-import { CASSIOPEIA_REGEX } from 'cassiopeia'
+import { CASSIOPEIA_CUSTOM_PROPERTY_VAR_NOTATION_REGEX } from 'cassiopeia'
 
 export const updateStyle = (
   __vite__id: string,
@@ -15,22 +15,22 @@ export const updateStyle = (
       setTimeout(() => updateStyle(__vite__id, __vite__css, onDispose, index + 1), 100)
     }
   } else {
-    const variables = Array.from(__vite__css.matchAll(CASSIOPEIA_REGEX)).map((value) =>
-      ['--', ...value.splice(1)].join('-'),
-    )
+    const variables = Array.from(
+      __vite__css.matchAll(CASSIOPEIA_CUSTOM_PROPERTY_VAR_NOTATION_REGEX),
+    ).map((value) => ['--', ...value.splice(1)].join('-'))
 
     if (variables.length !== 0) {
       const cassiopeia = globalThis.__CASSIOPEIA__
 
       const scope = cassiopeia.createScope()
 
-      scope.add(variables)
-
-      void cassiopeia.update()
+      if (scope.addMany(variables)) {
+        void cassiopeia.update()
+      }
 
       onDispose(() => {
         console.warn(`[cassiopeia] disposing scope '${__vite__id}'`)
-        scope.dispose(false)
+        scope.dispose()
       })
     }
   }

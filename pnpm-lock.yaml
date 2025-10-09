@@ -57,6 +57,9 @@ importers:
       '@ls-lint/ls-lint':
         specifier: 2.3.1
         version: 2.3.1
+      '@thi.ng/random':
+        specifier: 4.1.27
+        version: 4.1.27
       '@types/node':
         specifier: 24.5.2
         version: 24.5.2
@@ -1107,6 +1110,18 @@ packages:
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: '>=9.0.0'
+
+  '@thi.ng/api@8.12.2':
+    resolution: {integrity: sha512-DAVVpqCQAxSF8pszIYrzngi5Ca42x5LUp/vdbOLYlcm53KoRn59xmb13Y7cW6W5QHBPjEKFBZr0InaQ8L+47Kg==}
+    engines: {node: '>=18'}
+
+  '@thi.ng/errors@2.5.42':
+    resolution: {integrity: sha512-jsImkUhxzYzYgh2+0EJEGVKGyzSr2ovq1CTx8bilgJzuF778M6eh4ya81oc8LwT9Oqm6oz5ZZjVEBMldj4rRAw==}
+    engines: {node: '>=18'}
+
+  '@thi.ng/random@4.1.27':
+    resolution: {integrity: sha512-LNLlJt92jw1eybggRteUKyDMKT1uDDr52/zA3BZDD8/DDjcFpNgcI0Qq5a9JcZi2F1Jd9lGOqW+sdE/cxpok8Q==}
+    engines: {node: '>=18'}
 
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
@@ -3970,6 +3985,15 @@ snapshots:
       espree: 10.4.0
       estraverse: 5.3.0
       picomatch: 4.0.3
+
+  '@thi.ng/api@8.12.2': {}
+
+  '@thi.ng/errors@2.5.42': {}
+
+  '@thi.ng/random@4.1.27':
+    dependencies:
+      '@thi.ng/api': 8.12.2
+      '@thi.ng/errors': 2.5.42
 
   '@tybys/wasm-util@0.10.1':
     dependencies:

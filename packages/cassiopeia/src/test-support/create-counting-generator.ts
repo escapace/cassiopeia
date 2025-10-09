@@ -1,5 +1,5 @@
 import {
-  CASSIOPEIA_REGEX,
+  CASSIOPEIA_CUSTOM_PROPERTY_VAR_NOTATION_REGEX,
   CASSIOPEIA_CANCEL,
   type CassiopeiaGenerator,
   type CassiopeiaCancel,
@@ -27,7 +27,7 @@ export function createCountingGenerator(...strings: string[]) {
     for (const string of strings) {
       state.pullCount++
 
-      for (const match of string.matchAll(CASSIOPEIA_REGEX)) {
+      for (const match of string.matchAll(CASSIOPEIA_CUSTOM_PROPERTY_VAR_NOTATION_REGEX)) {
         const pair = match.splice(1) as unknown as [string, string]
         token = yield pair
 

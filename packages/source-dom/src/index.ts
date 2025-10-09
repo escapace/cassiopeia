@@ -1,5 +1,5 @@
 import type { Cassiopeia, CassiopeiaGenerator } from 'cassiopeia'
-import { CASSIOPEIA_REGEX, isReducerTerminated } from 'cassiopeia'
+import { CASSIOPEIA_CUSTOM_PROPERTY_VAR_NOTATION_REGEX, isReducerTerminated } from 'cassiopeia'
 
 const isSameDomain = (styleSheet: CSSStyleSheet): boolean => {
   if (styleSheet.href === null) {
@@ -76,7 +76,7 @@ function* createCassiopeiaGenerator(root: Document | ShadowRoot): CassiopeiaGene
     const cssText = element.attributes.getNamedItem('style')?.value
 
     if (cssText !== undefined) {
-      for (const match of cssText.matchAll(CASSIOPEIA_REGEX)) {
+      for (const match of cssText.matchAll(CASSIOPEIA_CUSTOM_PROPERTY_VAR_NOTATION_REGEX)) {
         if (isReducerTerminated(yield match.splice(1) as unknown as [string, string])) {
           return
         }
@@ -95,7 +95,7 @@ function* createCassiopeiaGenerator(root: Document | ShadowRoot): CassiopeiaGene
     if (isSameDomain(cssStyleSheet)) {
       for (const cssRule of cssStyleSheet.cssRules) {
         if (isSupportedCSSRule(cssRule)) {
-          for (const match of cssRule.cssText.matchAll(CASSIOPEIA_REGEX)) {
+          for (const match of cssRule.cssText.matchAll(CASSIOPEIA_CUSTOM_PROPERTY_VAR_NOTATION_REGEX)) {
             if (isReducerTerminated(yield match.splice(1) as unknown as [string, string])) {
               return
             }

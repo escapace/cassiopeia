@@ -3,7 +3,7 @@
 import { Lang, parse as parseAST } from '@ast-grep/napi'
 import type { Api as VuePluginApi } from '@vitejs/plugin-vue'
 import { parseVueRequest } from '@vitejs/plugin-vue'
-import { CASSIOPEIA_REGEX } from 'cassiopeia'
+import { CASSIOPEIA_CUSTOM_PROPERTY_VAR_NOTATION_REGEX } from 'cassiopeia'
 import MagicString from 'magic-string'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -56,7 +56,7 @@ const createProductionPlugins = (properties: ShallowRef<Properties | undefined>)
               ? indice.get(filename)!
               : (indice.set(filename, new Set()), indice.get(filename)!)
 
-            for (const match of styles.matchAll(CASSIOPEIA_REGEX)) {
+            for (const match of styles.matchAll(CASSIOPEIA_CUSTOM_PROPERTY_VAR_NOTATION_REGEX)) {
               set.add(['--', ...match.slice(1, 3)].join('-'))
             }
           }
@@ -117,8 +117,7 @@ const createProductionPlugins = (properties: ShallowRef<Properties | undefined>)
                   [
                     '',
                     `    const __cassiopeia = __useCassiopeia();`,
-                    `    __cassiopeia.add([${variables}]);`,
-                    `    __cassiopeia.update(false);`,
+                    `    if (__cassiopeia.addMany([${variables}])) void __cassiopeia.update();`,
                     '',
                   ].join('\n'),
                 )
@@ -158,8 +157,7 @@ const createProductionPlugins = (properties: ShallowRef<Properties | undefined>)
                   `const _sfc_setup_cassiopeia = _sfc_main.setup;`,
                   `_sfc_main.setup = (props, ctx) => {`,
                   `const __cassiopeia = __useCassiopeia();`,
-                  `__cassiopeia.add([${addVariables}]);`,
-                  `__cassiopeia.update(false);`,
+                  `if (__cassiopeia.addMany([${addVariables}])) void __cassiopeia.update();`,
                   `return _sfc_setup_cassiopeia ? _sfc_setup_cassiopeia(props, ctx) : void 0;`,
                   `};`,
                   '',
