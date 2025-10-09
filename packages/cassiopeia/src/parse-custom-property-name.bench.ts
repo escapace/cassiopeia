@@ -54,8 +54,8 @@ function parseCustomPropertyNameRegex(input: string): [string, string] | undefin
   return undefined
 }
 
-const ASCII = createData(true)
-const UNICODE = createData(false)
+const ASCII = createData(true, 100)
+const UNICODE = createData(false, 100)
 
 describe('custom property name parsing (ascii)', () => {
   bench(
