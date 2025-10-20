@@ -24,8 +24,8 @@ importers:
         specifier: 9.36.0
         version: 9.36.0(jiti@2.6.1)
       eslint-config-escapace:
-        specifier: 5.9.2
-        version: 5.9.2(@typescript-eslint/parser@8.46.0(eslint@9.36.0(jiti@2.6.1))(typescript@5.9.2))(eslint@9.36.0(jiti@2.6.1))(typescript@5.9.2)
+        specifier: 5.9.3
+        version: 5.9.3(@typescript-eslint/parser@8.46.0(eslint@9.36.0(jiti@2.6.1))(typescript@5.9.2))(eslint@9.36.0(jiti@2.6.1))(typescript@5.9.2)
       knip:
         specifier: 5.64.0
         version: 5.64.0(@types/node@24.5.2)(typescript@5.9.2)
@@ -113,8 +113,8 @@ importers:
         specifier: 9.36.0
         version: 9.36.0(jiti@2.6.1)
       eslint-config-escapace:
-        specifier: 5.9.2
-        version: 5.9.2(@typescript-eslint/parser@8.46.0(eslint@9.36.0(jiti@2.6.1))(typescript@5.9.2))(eslint@9.36.0(jiti@2.6.1))(typescript@5.9.2)
+        specifier: 5.9.3
+        version: 5.9.3(@typescript-eslint/parser@8.46.0(eslint@9.36.0(jiti@2.6.1))(typescript@5.9.2))(eslint@9.36.0(jiti@2.6.1))(typescript@5.9.2)
       esroll:
         specifier: 0.4.5
         version: 0.4.5
@@ -1654,6 +1654,12 @@ packages:
     peerDependencies:
       eslint: '>=9.34.0'
 
+  eslint-config-escapace@5.9.3:
+    resolution: {integrity: sha512-xL+oUjq0hrk4ZQO8w8t56kDalOLQ0YzKdLmQLR4SxARQ1yywuVbJ+0kiCcojfm4o4oheWJM5BO2NlLh9MDW7oQ==}
+    engines: {node: '>=24.9.0', pnpm: '>=10.17.1'}
+    peerDependencies:
+      eslint: ^9.36.0
+
   eslint-config-flat-gitignore@2.1.0:
     resolution: {integrity: sha512-cJzNJ7L+psWp5mXM7jBX+fjHtBvvh06RBlcweMhKD8jWqQw0G78hOW5tpVALGHGFPsBV+ot2H+pdDGJy6CV8pA==}
     peerDependencies:
@@ -1708,6 +1714,12 @@ packages:
 
   eslint-plugin-unicorn@60.0.0:
     resolution: {integrity: sha512-QUzTefvP8stfSXsqKQ+vBQSEsXIlAiCduS/V1Em+FKgL9c21U/IIm20/e3MFy1jyCf14tHAhqC1sX8OTy6VUCg==}
+    engines: {node: ^20.10.0 || >=21.0.0}
+    peerDependencies:
+      eslint: '>=9.29.0'
+
+  eslint-plugin-unicorn@61.0.2:
+    resolution: {integrity: sha512-zLihukvneYT7f74GNbVJXfWIiNQmkc/a9vYBTE4qPkQZswolWNdu+Wsp9sIXno1JOzdn6OUwLPd19ekXVkahRA==}
     engines: {node: ^20.10.0 || >=21.0.0}
     peerDependencies:
       eslint: '>=9.29.0'
@@ -4606,6 +4618,34 @@ snapshots:
       - supports-color
       - typescript
 
+  eslint-config-escapace@5.9.3(@typescript-eslint/parser@8.46.0(eslint@9.36.0(jiti@2.6.1))(typescript@5.9.2))(eslint@9.36.0(jiti@2.6.1))(typescript@5.9.2):
+    dependencies:
+      '@stylistic/eslint-plugin': 5.4.0(eslint@9.36.0(jiti@2.6.1))
+      '@typescript-eslint/utils': 8.46.0(eslint@9.36.0(jiti@2.6.1))(typescript@5.9.2)
+      eslint: 9.36.0(jiti@2.6.1)
+      eslint-config-flat-gitignore: 2.1.0(eslint@9.36.0(jiti@2.6.1))
+      eslint-plugin-de-morgan: 1.3.1(eslint@9.36.0(jiti@2.6.1))
+      eslint-plugin-depend: 1.3.1
+      eslint-plugin-jsonc: 2.21.0(eslint@9.36.0(jiti@2.6.1))
+      eslint-plugin-perfectionist: 4.15.1(eslint@9.36.0(jiti@2.6.1))(typescript@5.9.2)
+      eslint-plugin-regexp: 2.10.0(eslint@9.36.0(jiti@2.6.1))
+      eslint-plugin-toml: 0.12.0(eslint@9.36.0(jiti@2.6.1))
+      eslint-plugin-tsdoc: 0.4.0
+      eslint-plugin-unicorn: 61.0.2(eslint@9.36.0(jiti@2.6.1))
+      eslint-plugin-vue: 10.5.0(@stylistic/eslint-plugin@5.4.0(eslint@9.36.0(jiti@2.6.1)))(@typescript-eslint/parser@8.46.0(eslint@9.36.0(jiti@2.6.1))(typescript@5.9.2))(eslint@9.36.0(jiti@2.6.1))(vue-eslint-parser@10.2.0(eslint@9.36.0(jiti@2.6.1)))
+      eslint-plugin-vuejs-accessibility: 2.4.1(eslint@9.36.0(jiti@2.6.1))
+      eslint-plugin-yml: 1.19.0(eslint@9.36.0(jiti@2.6.1))
+      jsonc-eslint-parser: 2.4.1
+      toml-eslint-parser: 0.10.0
+      typescript-eslint: 8.46.0(eslint@9.36.0(jiti@2.6.1))(typescript@5.9.2)
+      vue-eslint-parser: 10.2.0(eslint@9.36.0(jiti@2.6.1))
+      yaml-eslint-parser: 1.3.0
+    transitivePeerDependencies:
+      - '@eslint/json'
+      - '@typescript-eslint/parser'
+      - supports-color
+      - typescript
+
   eslint-config-flat-gitignore@2.1.0(eslint@9.36.0(jiti@2.6.1)):
     dependencies:
       '@eslint/compat': 1.4.0(eslint@9.36.0(jiti@2.6.1))
@@ -4679,6 +4719,28 @@ snapshots:
       '@microsoft/tsdoc-config': 0.17.1
 
   eslint-plugin-unicorn@60.0.0(eslint@9.36.0(jiti@2.6.1)):
+    dependencies:
+      '@babel/helper-validator-identifier': 7.27.1
+      '@eslint-community/eslint-utils': 4.9.0(eslint@9.36.0(jiti@2.6.1))
+      '@eslint/plugin-kit': 0.3.5
+      change-case: 5.4.4
+      ci-info: 4.3.1
+      clean-regexp: 1.0.0
+      core-js-compat: 3.46.0
+      eslint: 9.36.0(jiti@2.6.1)
+      esquery: 1.6.0
+      find-up-simple: 1.0.1
+      globals: 16.4.0
+      indent-string: 5.0.0
+      is-builtin-module: 5.0.0
+      jsesc: 3.1.0
+      pluralize: 8.0.0
+      regexp-tree: 0.1.27
+      regjsparser: 0.12.0
+      semver: 7.7.3
+      strip-indent: 4.1.1
+
+  eslint-plugin-unicorn@61.0.2(eslint@9.36.0(jiti@2.6.1)):
     dependencies:
       '@babel/helper-validator-identifier': 7.27.1
       '@eslint-community/eslint-utils': 4.9.0(eslint@9.36.0(jiti@2.6.1))
