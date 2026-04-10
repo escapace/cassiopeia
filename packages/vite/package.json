@@ -46,7 +46,7 @@
     "@vitejs/plugin-vue": "^6.0.5",
     "cassiopeia": "workspace:*",
     "vite": "^7.3.1",
-    "vue": "^3.5.22"
+    "vue": "^3.5.31"
   },
   "private": false,
   "publishConfig": {
