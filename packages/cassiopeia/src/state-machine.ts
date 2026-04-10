@@ -12,7 +12,7 @@ import type {
   CassiopeiaStateMachineContext,
 } from './types'
 
-export const stateMachine = createStateMachine()
+export const stateMachine = /*@__PURE__*/ createStateMachine()
   .state(CassiopeiaStateMachineState.Idle)
   .state(CassiopeiaStateMachineState.InFlight)
   .state(CassiopeiaStateMachineState.PreFlight)
@@ -165,3 +165,4 @@ export const stateMachine = createStateMachine()
       return context
     },
   )
+  .done()

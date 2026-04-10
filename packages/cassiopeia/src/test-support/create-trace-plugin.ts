@@ -69,11 +69,11 @@ export function createTracePlugin(key: string, shouldAbort?: (value: string) => 
   }
 
   return {
+    history,
+    plugin,
     dispose: async () => {
       await context?.dispose?.()
     },
-    history,
-    plugin,
     get state() {
       return history.at(-1)
     },

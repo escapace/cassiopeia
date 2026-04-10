@@ -154,7 +154,7 @@ describe('createCachedIterable', () => {
     expect(iteratorOne.next()).toEqual({ done: false, value: 'a' })
     expect(iteratorOne.next()).toEqual({ done: false, value: 'b' })
 
-    expect(() => iteratorOne.next()).toThrowError()
+    expect(() => iteratorOne.next()).toThrow('boom')
 
     const iteratorTwo = cached[Symbol.iterator]()
     expect(iteratorTwo.next()).toEqual({ done: false, value: 'a' })
@@ -166,7 +166,7 @@ describe('createCachedIterable', () => {
     // @ts-expect-error intentional misuse for runtime check
     const cached = createCachedIterable(() => undefined)
     const iterator = cached[Symbol.iterator]()
-    expect(() => iterator.next()).toThrowError()
+    expect(() => iterator.next()).toThrow(/iterable/i)
   })
 
   it('does not forward regular inputs to source', () => {
@@ -642,11 +642,11 @@ describe('createCachedIterable', () => {
 
       if (option === 'method-based') {
         cached[CASSIOPEIA_CANCEL]()
-        expect(yieldSpy).toHaveBeenCalledTimes(0)
       } else {
         firstIterator.next(CASSIOPEIA_CANCEL)
-        expect(yieldSpy).toHaveBeenCalledTimes(0)
       }
+
+      expect(yieldSpy).toHaveBeenCalledTimes(0)
 
       // Existing iterator should complete immediately
       expect(secondIterator.next()).toEqual({ done: true, value: undefined })

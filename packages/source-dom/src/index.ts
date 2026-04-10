@@ -95,7 +95,9 @@ function* createCassiopeiaGenerator(root: Document | ShadowRoot): CassiopeiaGene
     if (isSameDomain(cssStyleSheet)) {
       for (const cssRule of cssStyleSheet.cssRules) {
         if (isSupportedCSSRule(cssRule)) {
-          for (const match of cssRule.cssText.matchAll(CASSIOPEIA_CUSTOM_PROPERTY_VAR_NOTATION_REGEX)) {
+          for (const match of cssRule.cssText.matchAll(
+            CASSIOPEIA_CUSTOM_PROPERTY_VAR_NOTATION_REGEX,
+          )) {
             if (isReducerTerminated(yield match.splice(1) as unknown as [string, string])) {
               return
             }
@@ -157,8 +159,8 @@ export const createSourceDOM = (options: Options = {}, cassiopeia: Cassiopeia) =
   }
 
   return {
-    isActive: () => isActive,
     start,
     stop,
+    isActive: () => isActive,
   }
 }

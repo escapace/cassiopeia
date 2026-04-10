@@ -94,43 +94,45 @@ describe('createMultiplexer', () => {
     assert.equal(history[1].wasCancelled, false)
   })
 
-  it.runIf(__PLATFORM__ === 'browser')('cancels all child reducers when multiplexer is cancelled', async () => {
-    const history: ReducerState[] = []
-    const instance = createCassiopeia()
-    const context = instance[CASSIOPEIA_CONTEXT]
+  it.runIf(__PLATFORM__ === 'browser')(
+    'cancels all child reducers when multiplexer is cancelled',
+    async () => {
+      const history: ReducerState[] = []
+      const instance = createCassiopeia()
+      const context = instance[CASSIOPEIA_CONTEXT]
 
-    context.deferEvery = 1
-    const deferController = createDeferController()
-    context.defer = deferController.defer
-    context.deferCancel = deferController.deferCancel
+      context.deferEvery = 1
+      const deferController = createDeferController()
+      context.defer = deferController.defer
+      context.deferCancel = deferController.deferCancel
 
-    const plugin: CassiopeiaPlugin = {
-      [CASSIOPEIA_PLUGIN]: (context) => {
-        context.reducerFactories.theme = createMultiplexer(createTestReducer, [
-          { history, variant: 'light' },
-          { history, variant: 'dark' },
-        ])
-      },
-    }
+      const plugin: CassiopeiaPlugin = {
+        [CASSIOPEIA_PLUGIN]: (context) => {
+          context.reducerFactories.theme = createMultiplexer(createTestReducer, [
+            { history, variant: 'light' },
+            { history, variant: 'dark' },
+          ])
+        },
+      }
 
-    const generator1 = createCountingGenerator('var(---theme-a)', 'var(---theme-b)')
-    const updatePromise1 = instance.update(generator1.generator)
-    instance.use(plugin)
+      const generator1 = createCountingGenerator('var(---theme-a)', 'var(---theme-b)')
+      const updatePromise1 = instance.update(generator1.generator)
+      instance.use(plugin)
 
-    assert.isTrue(deferController.hasQueued())
+      assert.isTrue(deferController.hasQueued())
 
-    deferController.executeNext()
-    deferController.executeNext()
+      deferController.executeNext()
+      deferController.executeNext()
 
-    const generator2 = createCountingGenerator('var(---theme-x)')
-    const updatePromise2 = instance.update(generator2.generator)
+      const generator2 = createCountingGenerator('var(---theme-x)')
+      const updatePromise2 = instance.update(generator2.generator)
 
-    await deferController.setManual(false)
+      await deferController.setManual(false)
 
-    await updatePromise1
-    await updatePromise2
+      await updatePromise1
+      await updatePromise2
 
-    expect(history).toMatchInlineSnapshot(`
+      expect(history).toMatchInlineSnapshot(`
       [
         {
           "collected": [
@@ -166,5 +168,6 @@ describe('createMultiplexer', () => {
         },
       ]
     `)
-  })
+    },
+  )
 })

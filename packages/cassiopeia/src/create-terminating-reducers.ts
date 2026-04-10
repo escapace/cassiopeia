@@ -140,9 +140,9 @@ export function createTerminatingReducerFactoriesProxy<T extends object = {}, U 
     onSet: (key: keyof T) => void
   },
 ): {
-  dispose: () => U
   reducerFactories: TerminatingReducerFactories<T>
   reducerKeys: ReadonlySet<keyof T>
+  dispose: () => U
 } {
   const onSet = options?.onSet
   const onDelete = options?.onDelete

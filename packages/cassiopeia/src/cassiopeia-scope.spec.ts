@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createCassiopeia, CassiopeiaScopes  } from './'
+import { createCassiopeia, CassiopeiaScopes } from './'
 
 describe('CassiopeiaScopes', () => {
   const cassiopeia = createCassiopeia()
@@ -67,8 +67,8 @@ describe('CassiopeiaScopes', () => {
     expect(subset1.dispose()).toBe(true)
 
     expect(Object.keys(aggregate.index)).toEqual(['a'])
-    expect(() => subset1.add('c')).toThrow()
-    expect(() => subset1.delete('c')).toThrow()
+    expect(() => subset1.add('c')).toThrow(/Cannot read properties of undefined/i)
+    expect(() => subset1.delete('c')).toThrow(/Cannot read properties of undefined/i)
   })
 
   it('handles aggregate disposal', () => {

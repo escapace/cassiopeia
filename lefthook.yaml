@@ -123,15 +123,16 @@ pre-commit:
             done
 
             if [[ ${#local_files[@]} -gt 0 ]]; then
-              pnpm exec prettier --write "${local_files[@]}"
+              pnpm exec prettier --no-error-on-unmatched-pattern --ignore-unknown --write "${local_files[@]}"
             fi
           done
         ' -- {staged_files}
       stage_fixed: true
 
-    typecheck:
+    build:
       priority: 6
-      run: pnpm run typecheck
+      run: pnpm run build
+      stage_fixed: true
 
     test:
       priority: 7

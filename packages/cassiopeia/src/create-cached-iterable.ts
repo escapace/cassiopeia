@@ -41,10 +41,10 @@ export function isIterableTerminated<U = unknown>(
  * State enumeration representing the lifecycle of the cached iterable's source.
  */
 enum SourceState {
-  ACTIVE = 1,
-  CANCELLED = 3,
-  EXHAUSTED = 2,
   IDLE = 0,
+  ACTIVE = 1,
+  EXHAUSTED = 2,
+  CANCELLED = 3,
 }
 
 /**
@@ -74,8 +74,11 @@ enum SourceState {
  * - Cancellation clears current source iterator; new iterators created after cancellation return done immediately
  * - Already-cached values remain accessible through existing iterators until they complete
  */
-export interface CachedIterable<T, TReturn = unknown>
-  extends Iterable<T, TReturn | undefined, CassiopeiaCancel | undefined> {
+export interface CachedIterable<T, TReturn = unknown> extends Iterable<
+  T,
+  TReturn | undefined,
+  CassiopeiaCancel | undefined
+> {
   /**
    * Cancels the cached iterable and terminates any ongoing source iteration.
    *

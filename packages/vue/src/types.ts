@@ -6,7 +6,8 @@ import type {
 import type { MaybeRef, ObjectPlugin } from 'vue'
 
 export interface Cassiopeia
-  extends ObjectPlugin,
+  extends
+    ObjectPlugin,
     Omit<CassiopeiaCore, 'update' | 'updateSync'>,
     Pick<CassiopeiaScopes, 'createScope' | 'update' | 'updateSync'> {}
 

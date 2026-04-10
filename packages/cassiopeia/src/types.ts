@@ -115,27 +115,27 @@ export interface CassiopeiaInstance {
 }
 
 export interface Cassiopeia extends CassiopeiaInstance {
-  dispose: () => Promise<void>
-  subscribe: (subscription: CassiopeiaSubscription) => CassiopeiaUnsubscribe
   update: CassiopeiaGeneratorUpdate
   updateSync: CassiopeiaGeneratorUpdateSync
+  dispose: () => Promise<void>
+  subscribe: (subscription: CassiopeiaSubscription) => CassiopeiaUnsubscribe
   use: (...plugins: CassiopeiaPlugin[]) => Cassiopeia
 }
 
 export interface CassiopeiaStateMachineContext {
-  defer: (callback: () => void) => number
-  deferCancel: (id: number) => void
   deferEvery: number
   reducerFactories: TerminatingReducerFactories<Record<string, CassiopeiaReducer>>
   reducerKeys: Set<string>
+  defer: (callback: () => void) => number
+  deferCancel: (id: number) => void
 
   generator?: CachedIterable<[string, string], undefined>
   orchestrator?: CassiopeiaOrchestrator
 
   updateIsAsync: boolean
   updateType: CassiopeiaStateMachineActionUpdateType
-  updateGenerator?: () => CassiopeiaGenerator
   updateReducerKeys?: Set<string>
+  updateGenerator?: () => CassiopeiaGenerator
 }
 
 export type CassiopeiaStateMachineActionUpdateOptions = $.Prettify<

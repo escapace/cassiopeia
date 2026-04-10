@@ -27,10 +27,10 @@ function* createGenerator(this: CassiopeiaScopes): CassiopeiaGenerator {
  * and feeds them to the plugin system for CSS generation.
  */
 export class CassiopeiaScopes {
-  public index: Record<string, number>
-  public subsets: Set<CassiopeiaScope>
   private readonly cassiopeia: Cassiopeia
   private readonly createGenerator = createGenerator.bind(this)
+  public index: Record<string, number>
+  public subsets: Set<CassiopeiaScope>
 
   constructor(cassiopeia: Cassiopeia) {
     this.index = Object.create(null) as Record<string, number>
@@ -69,8 +69,8 @@ export class CassiopeiaScopes {
  * and feeds them to the plugin system for CSS generation.
  */
 export class CassiopeiaScope {
-  private parent?: CassiopeiaScopes
   private store: Set<string>
+  private parent?: CassiopeiaScopes
 
   public update: () => Promise<void>
   public updateSync: () => void

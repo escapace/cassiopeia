@@ -55,6 +55,7 @@ function createSimpleCountingStylesheet() {
   }
 
   return {
+    updateSync,
     subscribe: (subscription: CassiopeiaSubscription) => {
       if (!subscriptions.includes(subscription)) {
         subscriptions.push(subscription)
@@ -64,7 +65,6 @@ function createSimpleCountingStylesheet() {
         remove(subscriptions, (value) => value === subscription)
       }
     },
-    updateSync,
   }
 }
 
@@ -149,10 +149,10 @@ for (const count of [100, 1000, 10_000, 50_000]) {
       },
       {
         iterations: 100,
+        warmupIterations: 10,
         setup: () => {
           simple = createSimpleCountingStylesheet()
         },
-        warmupIterations: 10,
       },
     )
 
@@ -174,12 +174,12 @@ for (const count of [100, 1000, 10_000, 50_000]) {
       },
       {
         iterations: 100,
+        warmupIterations: 10,
         setup: () => {
           cassiopeia = createCassiopeia()
           const plugin = createNumberPlugin()
           cassiopeia.use(plugin)
         },
-        warmupIterations: 10,
       },
     )
   })

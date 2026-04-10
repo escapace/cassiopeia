@@ -1,3 +1,4 @@
+/* eslint-disable math/prefer-math-trunc */
 /**
  * Pattern matching identifier characters excluding hyphens.
  * Matches: letters (A-Z, a-z), digits (0-9), underscore (_), and all non-ASCII

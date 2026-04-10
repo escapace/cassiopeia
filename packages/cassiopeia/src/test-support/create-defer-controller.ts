@@ -3,6 +3,7 @@ export function createDeferController() {
   let isManual = true // Default to manual control
 
   return {
+    queue,
     get count() {
       return queue.length
     },
@@ -39,7 +40,6 @@ export function createDeferController() {
     },
     hasQueued: () => queue.length > 0,
     isManual: () => isManual,
-    queue,
     setManual: async (value = true) => {
       if (value !== isManual) {
         isManual = value

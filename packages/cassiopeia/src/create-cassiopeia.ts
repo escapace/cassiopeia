@@ -139,10 +139,10 @@ export function createCassiopeia(): Cassiopeia {
 
   const cassiopeia: Cassiopeia = {
     [CASSIOPEIA_CONTEXT]: context,
+    dispose,
     get [CASSIOPEIA_STATE]() {
       return machine.state
     },
-    dispose,
     subscribe: (subscription) => {
       if (!subscriptions.includes(subscription)) {
         subscriptions.push(subscription)

@@ -8,20 +8,21 @@
   },
   "bugs": "https://github.com/escapace/cassiopeia/issues",
   "devDependencies": {
-    "@commitlint/cli": "19.8.1",
-    "@commitlint/config-conventional": "19.8.1",
+    "@commitlint/cli": "20.5.0",
+    "@commitlint/config-conventional": "20.5.0",
     "@escapace/pnpm-pack": "0.8.0",
+    "@escapace/syncpack-configuration": "0.1.0",
     "@ls-lint/ls-lint": "2.3.1",
-    "eslint": "9.36.0",
-    "eslint-config-escapace": "5.15.0",
-    "knip": "5.64.0",
-    "lefthook": "1.13.4",
-    "prettier": "3.6.2",
+    "eslint": "9.39.4",
+    "eslint-config-escapace": "5.16.0",
+    "knip": "6.2.0",
+    "lefthook": "2.1.4",
+    "prettier": "3.8.1",
     "prettier-config-escapace": "1.2.2",
-    "syncpack": "13.0.4"
+    "syncpack": "14.3.0"
   },
   "engines": {
-    "pnpm": "^10.14.0"
+    "pnpm": ">=10.33.0"
   },
   "files": [
     "pnpm-lock.yaml",
@@ -33,21 +34,22 @@
   "repository": "escapace/cassiopeia",
   "scripts": {
     "build": "pnpm run workspace:build",
-    "format": "syncpack format --source package.json && eslint --ignore-pattern packages --no-warn-ignored --fix && prettier -uw !packages . && pnpm run workspace:format",
+    "format": "syncpack format --source package.json && eslint --ignore-pattern packages --no-warn-ignored --fix && prettier --no-error-on-unmatched-pattern -uw !packages . && pnpm run workspace:format",
     "lint": "ls-lint --config .ls-lint.yaml && knip --no-config-hints && eslint --ignore-pattern packages && pnpm run workspace:lint",
     "ls-lint": "ls-lint --config .ls-lint.yaml && pnpm run workspace:ls-lint",
     "pack": "pnpm-pack workspace",
     "prepare": "lefthook install",
-    "syncpack": "syncpack fix-mismatches && syncpack set-semver-ranges && syncpack format",
+    "syncpack": "syncpack fix && syncpack format",
     "test": "pnpm run workspace:test",
     "typecheck": "pnpm run workspace:typecheck",
-    "workspace:build": "pnpm run --if-present --workspace-concurrency=4 -r --filter '*' build",
-    "workspace:format": "pnpm run --if-present --workspace-concurrency=4 -r --filter '*' format",
-    "workspace:lint": "pnpm run --if-present --workspace-concurrency=4 -r --filter '*' lint",
-    "workspace:ls-lint": "pnpm run --if-present --workspace-concurrency=4 -r --filter '*' ls-lint",
-    "workspace:test": "pnpm run --if-present --workspace-concurrency=4 -r --filter '*' test",
-    "workspace:typecheck": "pnpm run --if-present --workspace-concurrency=4 -r --filter '*' typecheck",
-    "workspace:update": "pnpm -rw --filter '*' --workspace-concurrency=4 exec ncu -u --peer --dep dev,peer,prod,optional && pnpm run syncpack"
+    "update": "ncu --cooldown 7 -p pnpm -u --peer --dep dev,peer,prod,optional && pnpm run syncpack",
+    "workspace:build": "pnpm run --if-present --workspace-concurrency=4 -r --filter !. --filter '*' build",
+    "workspace:format": "pnpm run --if-present --workspace-concurrency=4 -r --filter !. --filter '*' format",
+    "workspace:lint": "pnpm run --if-present --workspace-concurrency=4 -r --filter !. --filter '*' lint",
+    "workspace:ls-lint": "pnpm run --if-present --workspace-concurrency=4 -r --filter !. --filter '*' ls-lint",
+    "workspace:test": "pnpm run --if-present --workspace-concurrency=4 -r --filter !. --filter '*' test",
+    "workspace:typecheck": "pnpm run --if-present --workspace-concurrency=4 -r --filter !. --filter '*' typecheck",
+    "workspace:update": "pnpm -rw --filter !. --filter '*' --workspace-concurrency=4 exec ncu --cooldown 7 -p pnpm -u --peer --dep dev,peer,prod,optional && pnpm run syncpack"
   },
   "sideEffects": false,
   "type": "module"

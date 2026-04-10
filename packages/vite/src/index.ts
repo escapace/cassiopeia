@@ -50,6 +50,7 @@ const createProductionPlugins = (properties: ShallowRef<Properties | undefined>)
       },
 
       transform: {
+        order: 'pre',
         async handler(source, id) {
           const updateStateVariables = (styles: string) => {
             const set = indice.has(filename)
@@ -78,7 +79,6 @@ const createProductionPlugins = (properties: ShallowRef<Properties | undefined>)
             }
           }
         },
-        order: 'pre',
       },
     },
     {
@@ -88,6 +88,7 @@ const createProductionPlugins = (properties: ShallowRef<Properties | undefined>)
       apply: (_, { command, isPreview }) => (command === 'serve' ? isPreview === true : true),
 
       transform: {
+        order: 'post',
         handler(source, id, options) {
           const isSSR = options?.ssr === true
 
@@ -187,7 +188,6 @@ const createProductionPlugins = (properties: ShallowRef<Properties | undefined>)
 
           return
         },
-        order: 'post',
       },
     },
   ]

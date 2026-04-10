@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { assert, describe, expect, it } from 'vitest'
 import {
   CASSIOPEIA_CUSTOM_PROPERTY_NAME_REGEX,
   CASSIOPEIA_CUSTOM_PROPERTY_VAR_NOTATION_REGEX,
@@ -99,7 +99,7 @@ describe('parseCustomPropertyName - Unit Tests', () => {
     expect(parseCustomPropertyName('---my\\2dkey-value')).toEqual(['my-key', 'value'])
   })
 
-  it('allows escaped hyphens in KEY segment', () => {
+  it('allows escaped hyphens in KEY segment (hex and simple escapes)', () => {
     expect(parseCustomPropertyName('---my\\2d key-value')).toEqual(['my-key', 'value'])
     expect(parseCustomPropertyName('---my\\-key-value')).toEqual(['my-key', 'value'])
     expect(parseCustomPropertyName('---a\\2d b\\2d c-suffix')).toEqual(['a-b-c', 'suffix'])
@@ -193,10 +193,9 @@ describe('parseCustomPropertyName - Property-Based Tests', () => {
       const input = gen.validCustomPropertyName()
       const result = parseCustomPropertyName(input)
 
-      if (result !== undefined) {
-        const [key] = result
-        expect(key.includes('-')).toBe(false)
-      }
+      expect(result).toBeDefined()
+      const [key] = result!
+      expect(key.includes('-')).toBe(false)
     }
   })
 
@@ -216,12 +215,11 @@ describe('parseCustomPropertyName - Property-Based Tests', () => {
       const input = gen.validCustomPropertyName()
       const result = parseCustomPropertyName(input)
 
-      if (result !== undefined) {
-        const [key, suffix] = result
-        expect(input.startsWith('---')).toBe(true)
-        expect(key.length).toBeGreaterThan(0)
-        expect(suffix.length).toBeGreaterThan(0)
-      }
+      expect(result).toBeDefined()
+      const [key, suffix] = result!
+      expect(input.startsWith('---')).toBe(true)
+      expect(key.length).toBeGreaterThan(0)
+      expect(suffix.length).toBeGreaterThan(0)
     }
   })
 
@@ -230,10 +228,9 @@ describe('parseCustomPropertyName - Property-Based Tests', () => {
 
     for (const input of shortInputs) {
       const result = parseCustomPropertyName(input)
-      // eslint-disable-next-line typescript/strict-boolean-expressions
-      if (input.length < 6 || !/^---[a-z_\u0080-\uFFFF]/i.exec(input)) {
-        expect(result).toBeUndefined()
-      }
+      const shouldBeRejected = input.length < 6 || /^---[a-z_\u0080-\uFFFF]/i.exec(input) === null
+      expect(shouldBeRejected).toBe(true)
+      expect(result).toBeUndefined()
     }
   })
 
@@ -258,11 +255,12 @@ describe('parseCustomPropertyName - Property-Based Tests', () => {
     for (const { expectedKey, expectedSuffix, input } of testCases) {
       const result = parseCustomPropertyName(input)
       expect(result).toBeDefined()
+      const parsed = result!
       if (expectedKey !== undefined) {
-        expect(result![0]).toBe(expectedKey)
+        assert.equal(parsed[0], expectedKey)
       }
       if (expectedSuffix !== undefined) {
-        expect(result![1]).toBe(expectedSuffix)
+        assert.equal(parsed[1], expectedSuffix)
       }
     }
   })
@@ -485,10 +483,12 @@ describe('parseCustomPropertyName vs CASSIOPEIA_CUSTOM_PROPERTY_NAME_UNICODE_REG
       const regexResult = parseWithRegex(input)
 
       // If parser accepts, regex MUST also accept
-      if (parserResult !== undefined) {
-        expect(regexResult).toBeDefined()
-        expect(regexResult).toEqual(parserResult)
+      if (parserResult === undefined) {
+        continue
       }
+
+      expect(regexResult).toBeDefined()
+      expect(regexResult).toEqual(parserResult)
     }
   })
 
@@ -505,15 +505,13 @@ describe('parseCustomPropertyName vs CASSIOPEIA_CUSTOM_PROPERTY_NAME_UNICODE_REG
       expect(regexResult).toBeDefined()
 
       // Step 2: Feed decoded result to parser for validation
-      if (regexResult !== undefined) {
-        const [key, suffix] = regexResult
-        const reconstructed = `---${key}-${suffix}`
-        const parserValidation = parseCustomPropertyName(reconstructed)
+      const [key, suffix] = regexResult!
+      const reconstructed = `---${key}-${suffix}`
+      const parserValidation = parseCustomPropertyName(reconstructed)
 
-        // Parser must accept regex output for valid inputs
-        expect(parserValidation).toBeDefined()
-        expect(parserValidation).toEqual([key, suffix])
-      }
+      // Parser must accept regex output for valid inputs
+      expect(parserValidation).toBeDefined()
+      expect(parserValidation).toEqual([key, suffix])
 
       // Step 3: Original parser result should match
       const parserResult = parseCustomPropertyName(input)
@@ -535,14 +533,12 @@ describe('parseCustomPropertyName vs CASSIOPEIA_CUSTOM_PROPERTY_NAME_UNICODE_REG
       expect(regexResult).toBeDefined()
 
       // Feed to parser
-      if (regexResult !== undefined) {
-        const [decodedKey, decodedSuffix] = regexResult
-        const reconstructed = `---${decodedKey}-${decodedSuffix}`
-        const parserValidation = parseCustomPropertyName(reconstructed)
+      const [decodedKey, decodedSuffix] = regexResult!
+      const reconstructed = `---${decodedKey}-${decodedSuffix}`
+      const parserValidation = parseCustomPropertyName(reconstructed)
 
-        expect(parserValidation).toBeDefined()
-        expect(parserValidation).toEqual([decodedKey, decodedSuffix])
-      }
+      expect(parserValidation).toBeDefined()
+      expect(parserValidation).toEqual([decodedKey, decodedSuffix])
 
       // Verify against direct parsing
       const parserResult = parseCustomPropertyName(input)
@@ -564,19 +560,19 @@ describe('parseCustomPropertyName vs CASSIOPEIA_CUSTOM_PROPERTY_NAME_UNICODE_REG
       const regexResult = parseWithRegex(input)
 
       // Critical property: regex never rejects what parser accepts
-      if (parserResult !== undefined) {
-        expect(regexResult).toBeDefined()
-
-        // Feed regex output back to parser
-        if (regexResult !== undefined) {
-          const [decodedKey, decodedSuffix] = regexResult
-          const reconstructed = `---${decodedKey}-${decodedSuffix}`
-          const parserValidation = parseCustomPropertyName(reconstructed)
-
-          expect(parserValidation).toBeDefined()
-          expect(parserValidation).toEqual(parserResult)
-        }
+      if (parserResult === undefined) {
+        continue
       }
+
+      expect(regexResult).toBeDefined()
+
+      // Feed regex output back to parser
+      const [decodedKey, decodedSuffix] = regexResult!
+      const reconstructed = `---${decodedKey}-${decodedSuffix}`
+      const parserValidation = parseCustomPropertyName(reconstructed)
+
+      expect(parserValidation).toBeDefined()
+      expect(parserValidation).toEqual(parserResult)
     }
   })
 

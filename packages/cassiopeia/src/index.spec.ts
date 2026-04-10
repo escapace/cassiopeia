@@ -15,6 +15,10 @@ import { createDeferController } from './test-support/create-defer-controller'
 import { createTracePlugin } from './test-support/create-trace-plugin'
 
 const IS_BROWSER = __PLATFORM__ === 'browser'
+const runBrowserAssertions = (assertions: () => void): void => {
+  if (!IS_BROWSER) return
+  assertions()
+}
 
 describe('routing & composition correctness', () => {
   for (const updateType of ['reducer', 'generator'] as const) {
@@ -183,7 +187,7 @@ describe('routing & composition correctness', () => {
         },
       ]
     `)
-    if (IS_BROWSER) {
+    runBrowserAssertions(() => {
       expect(spy.mock.calls).toMatchInlineSnapshot(`
         [
           [
@@ -201,7 +205,7 @@ describe('routing & composition correctness', () => {
           ],
         ]
       `)
-    }
+    })
   })
 
   it('order stability: identical inputs produce deterministic stylesheet ordering across runs', () => {
@@ -974,24 +978,12 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
         if (first === 'reducer') {
           // Reducer-only update: preserves existing generator cache (doesn't touch it)
           void tracePlugin.update()
-          expect(tracePlugin.history).toMatchInlineSnapshot(`
-          [
-            {
-              "receivedMarkers": [
-                "---a-prop0",
-                "---a-prop1",
-                "---a-prop2",
-                "---a-prop3",
-              ],
-              "wasCancelled": false,
-              "wasCompleted": true,
-            },
-          ]
-        `)
         } else {
           // Generator update: also preserves existing cache (no new generator provided in this test)
           void instance.update()
-          expect(tracePlugin.history).toMatchInlineSnapshot(`
+        }
+
+        expect(tracePlugin.history).toMatchInlineSnapshot(`
           [
             {
               "receivedMarkers": [
@@ -1005,16 +997,15 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
             },
           ]
         `)
-        }
 
         // Should have deferred the reduce action
         // assert.isTrue(deferController.hasQueued(), 'Should have deferred the reduce action')
         await deferController.setManual(false)
 
-        if (first === 'reducer') {
-          // Second reducer update: continues to reuse the original cached generator
-          await tracePlugin.update()
-          expect(tracePlugin.history).toMatchInlineSnapshot(`
+        // Second update continues to reuse the original cached generator
+        await (first === 'reducer' ? tracePlugin.update() : instance.update())
+
+        expect(tracePlugin.history).toMatchInlineSnapshot(`
           [
             {
               "receivedMarkers": [
@@ -1046,42 +1037,6 @@ describe.runIf(IS_BROWSER)('cooperative async mode & cancellation', () => {
             },
           ]
         `)
-        } else {
-          // Second generator update: also continues to reuse the original cached generator (no new generator created)
-          await instance.update()
-          expect(tracePlugin.history).toMatchInlineSnapshot(`
-          [
-            {
-              "receivedMarkers": [
-                "---a-prop0",
-                "---a-prop1",
-                "---a-prop2",
-                "---a-prop3",
-              ],
-              "wasCancelled": false,
-              "wasCompleted": true,
-            },
-            {
-              "receivedMarkers": [
-                "---a-prop0",
-                "---a-prop1",
-              ],
-              "wasCancelled": true,
-              "wasCompleted": false,
-            },
-            {
-              "receivedMarkers": [
-                "---a-prop0",
-                "---a-prop1",
-                "---a-prop2",
-                "---a-prop3",
-              ],
-              "wasCancelled": false,
-              "wasCompleted": true,
-            },
-          ]
-        `)
-        }
 
         // Verify that no new generators were created - the initial cached generator remained unchanged
         assert.isTrue(true, 'Cache preservation test completed successfully')
@@ -1272,7 +1227,13 @@ describe('optimization: early return and no orchestrator paths', () => {
         instance.updateSync(generator.generator)
       }
 
-      if (IS_BROWSER) {
+      if (!IS_BROWSER) {
+        // Node: no subscription calls
+        assert.equal(spy.mock.calls.length, 0)
+        assert.equal(generator.state, undefined)
+      }
+
+      runBrowserAssertions(() => {
         // Optimization: no plugins registered triggers early return
         // State machine goes PreFlight → InFlight transition and early returns
         // Reduce action fires, orchestrator is undefined, so subscription gets empty values
@@ -1290,11 +1251,7 @@ describe('optimization: early return and no orchestrator paths', () => {
 
         // State should return to Idle after Done transition
         assert.equal(instance[CASSIOPEIA_STATE], CassiopeiaStateMachineState.Idle)
-      } else {
-        // Node: no subscription calls
-        assert.equal(spy.mock.calls.length, 0)
-        assert.equal(generator.state, undefined)
-      }
+      })
 
       // Verify final state shows optimization was triggered
       const styleSheets = renderStyleSheets(instance)
@@ -1323,7 +1280,13 @@ describe('optimization: early return and no orchestrator paths', () => {
         instance.updateSync(generator.generator)
       }
 
-      if (IS_BROWSER) {
+      if (!IS_BROWSER) {
+        // Node: no subscription calls
+        assert.equal(spy.mock.calls.length, 0)
+        assert.equal(generator.state, undefined)
+      }
+
+      runBrowserAssertions(() => {
         // Optimization: no plugins registered triggers early return
         // State machine goes PreFlight → InFlight and early returns
         // Reduce action fires, orchestrator is undefined, so subscription gets empty values
@@ -1341,11 +1304,7 @@ describe('optimization: early return and no orchestrator paths', () => {
 
         // State should return to Idle after Done transition
         assert.equal(instance[CASSIOPEIA_STATE], CassiopeiaStateMachineState.Idle)
-      } else {
-        // Node: no subscription calls
-        assert.equal(spy.mock.calls.length, 0)
-        assert.equal(generator.state, undefined)
-      }
+      })
 
       // Verify final state shows optimization was triggered
       const styleSheets = renderStyleSheets(instance)
@@ -1392,7 +1351,12 @@ describe('optimization: early return and no orchestrator paths', () => {
         traceA.updateSync([])
       }
 
-      if (IS_BROWSER) {
+      if (!IS_BROWSER) {
+        // Node: no subscription calls
+        assert.equal(spy.mock.calls.length, 0)
+      }
+
+      runBrowserAssertions(() => {
         // Optimization: empty updateReducerKeys.size === 0
         // State machine early returns, orchestrator undefined, subscription gets empty values
         expect(spy.mock.calls).toMatchInlineSnapshot(`
@@ -1406,10 +1370,7 @@ describe('optimization: early return and no orchestrator paths', () => {
             ],
           ]
         `)
-      } else {
-        // Node: no subscription calls
-        assert.equal(spy.mock.calls.length, 0)
-      }
+      })
 
       // The empty reducer keys update doesn't clear the generator
       const styleSheets = renderStyleSheets(instance)
@@ -1475,7 +1436,11 @@ describe('optimization: early return and no orchestrator paths', () => {
       // Verify no plugins registered
       assert.equal(Object.keys(instance[CASSIOPEIA_CONTEXT].reducerFactories).length, 0)
 
-      if (IS_BROWSER) {
+      if (!IS_BROWSER) {
+        assert.equal(spy.mock.calls.length, 0)
+      }
+
+      runBrowserAssertions(() => {
         expect(spy.mock.calls).toMatchInlineSnapshot(`
           [
             [
@@ -1488,9 +1453,7 @@ describe('optimization: early return and no orchestrator paths', () => {
             ],
           ]
         `)
-      } else {
-        assert.equal(spy.mock.calls.length, 0)
-      }
+      })
 
       await deferController.setManual(false)
 
@@ -1520,14 +1483,14 @@ describe('optimization: early return and no orchestrator paths', () => {
       assert.equal(context.orchestrator, undefined)
     }
 
-    if (IS_BROWSER) {
+    runBrowserAssertions(() => {
       expect(spy.mock.calls.at(0)).toMatchInlineSnapshot(`
         [
           Set {},
           [],
         ]
       `)
-    }
+    })
 
     // Add plugin and establish cached generator for reducer updates
     const traceA = createTracePlugin('a')
@@ -1535,7 +1498,7 @@ describe('optimization: early return and no orchestrator paths', () => {
 
     await deferController.executeAll()
 
-    if (IS_BROWSER) {
+    runBrowserAssertions(() => {
       expect(spy.mock.calls.at(1)).toMatchInlineSnapshot(`
         [
           Set {
@@ -1550,14 +1513,14 @@ describe('optimization: early return and no orchestrator paths', () => {
           ],
         ]
       `)
-    }
+    })
 
     const generator2 = createCountingGenerator('var(---a-test)')
     void instance.update(generator2.generator)
 
     await deferController.executeAll()
 
-    if (IS_BROWSER) {
+    runBrowserAssertions(() => {
       expect(spy.mock.calls.at(2)).toMatchInlineSnapshot(`
         [
           Set {
@@ -1572,12 +1535,12 @@ describe('optimization: early return and no orchestrator paths', () => {
           ],
         ]
       `)
-    }
+    })
 
     void traceA.update([])
     await deferController.executeAll()
 
-    if (IS_BROWSER) {
+    runBrowserAssertions(() => {
       expect(spy.mock.calls.at(3)).toMatchInlineSnapshot(`
         [
           Set {
@@ -1587,13 +1550,13 @@ describe('optimization: early return and no orchestrator paths', () => {
         ]
       `)
       assert.equal(context.orchestrator, undefined)
-    }
+    })
 
     // Normal update: orchestrator should be created and then cleaned up
     void traceA.update(['a'])
     await deferController.executeAll()
 
-    if (IS_BROWSER) {
+    runBrowserAssertions(() => {
       expect(spy.mock.calls.at(4)).toMatchInlineSnapshot(`
         [
           Set {
@@ -1610,19 +1573,19 @@ describe('optimization: early return and no orchestrator paths', () => {
       `)
       // After normal processing, orchestrator should be undefined again (cleaned up)
       assert.equal(context.orchestrator, undefined)
-    }
+    })
 
     void traceA.dispose()
     await deferController.executeAll()
 
-    if (IS_BROWSER) {
+    runBrowserAssertions(() => {
       expect(spy.mock.calls.at(5)).toMatchInlineSnapshot(`
         [
           Set {},
           [],
         ]
       `)
-    }
+    })
   })
 })
 
@@ -1645,7 +1608,11 @@ describe('instance disposal and recovery', () => {
 
     instance.updateSync(initialGenerator.generator)
 
-    if (IS_BROWSER) {
+    if (!IS_BROWSER) {
+      assert.equal(spy.mock.calls.length, 0)
+    }
+
+    runBrowserAssertions(() => {
       expect(traceA.history).toMatchInlineSnapshot(`
         [
           {
@@ -1701,9 +1668,7 @@ describe('instance disposal and recovery', () => {
           },
         ]
       `)
-    } else {
-      assert.equal(spy.mock.calls.length, 0)
-    }
+    })
 
     expect(renderStyleSheets(instance)).toMatchInlineSnapshot(`
       [
