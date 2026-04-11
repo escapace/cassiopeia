@@ -7,7 +7,6 @@ function* createGenerator(this: CassiopeiaScopes): CassiopeiaGenerator {
     const match = parseCustomPropertyName(string)
 
     if (match === undefined) {
-      console.log('rejected', string)
       continue
     }
 

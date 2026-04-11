@@ -149,9 +149,9 @@ createStyleElementSubscription: (options?: StyleElementSubscriptionOptions) =>
 
 ### Parameters
 
-| Parameter | Type                                       | Description                                                   |
-| --------- | ------------------------------------------ | ------------------------------------------------------------- |
-| `options` | <pre>StyleElementSubscriptionOptions</pre> | Configuration for DOM update behavior and element namespacing |
+| Parameter | Type                                                                                                                                  | Description                                                   |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `options` | <pre>[StyleElementSubscriptionOptions](#interface-styleelementsubscriptionoptions- 'interface StyleElementSubscriptionOptions')</pre> | Configuration for DOM update behavior and element namespacing |
 
 ### Returns
 
@@ -379,7 +379,7 @@ renderStyleSheets: <T extends CassiopeiaInstance>(cassiopeia: T) =>
 
 Object containing stylesheet arrays and keys, or undefined if generator/reducers unavailable
 
-## class CassiopeiaScope [↗](src/cassiopeia-scope.ts#L71-L197 'CassiopeiaScope')
+## class CassiopeiaScope [↗](src/cassiopeia-scope.ts#L70-L196 'CassiopeiaScope')
 
 Represents an isolated scope of triple-dash CSS custom property names. Tracks property names used within this scope and updates the parent's aggregate index. The update methods trigger CSS generation by passing the parent's generator to cassiopeia. The generator extracts key and suffix pairs from property names in the aggregate index and feeds them to the plugin system for CSS generation.
 
@@ -449,7 +449,7 @@ Clears this scope, unregisters it from the parent, and nullifies references. The
 dispose: () => boolean
 ```
 
-## class CassiopeiaScopes [↗](src/cassiopeia-scope.ts#L29-L62 'CassiopeiaScopes')
+## class CassiopeiaScopes [↗](src/cassiopeia-scope.ts#L28-L61 'CassiopeiaScopes')
 
 Manages multiple isolated scopes of triple-dash CSS custom property names. Maintains a deduplicated index of property names across all scopes. The update methods trigger CSS generation by passing a generator to cassiopeia. The generator extracts key and suffix pairs from property names in the aggregate index and feeds them to the plugin system for CSS generation.
 
@@ -647,6 +647,42 @@ Trigger synchronous reducer-only update for this plugin's keys
 
 ```typescript
 updateSync: CassiopeiaReducerUpdateSync
+```
+
+## interface StyleElementSubscriptionOptions [↗](src/create-style-element-subscription.ts#L7-L37 'StyleElementSubscriptionOptions')
+
+Configuration options for style element subscription behavior.
+
+```typescript
+export interface StyleElementSubscriptionOptions
+```
+
+### StyleElementSubscriptionOptions.container
+
+Container element for style injection. Supports flexible targeting for different DOM contexts.
+
+- `Element`: Direct element reference where styles will be injected - `ShadowRoot`: Shadow DOM root for Web Component style isolation - `string`: CSS selector that resolves to a container element - `undefined`: Defaults to `document.head` for global stylesheet management
+
+```typescript
+container?: string | Element | ShadowRoot;
+```
+
+### StyleElementSubscriptionOptions.method
+
+Update strategy for existing style elements.
+
+- `overwrite`: Modifies existing elements in-place, preserving element identity and DOM position. Preferred for performance as it avoids element recreation and DOM reflow. - `insert-discard`: Replaces elements entirely by creating new ones at the same position. Use when complete element replacement is required for compatibility or debugging.
+
+```typescript
+method?: 'insert-discard' | 'overwrite';
+```
+
+### StyleElementSubscriptionOptions.namespace
+
+Optional namespace identifier for isolating style element groups. When provided, creates qualified attributes like `cassiopeia-key-theme` instead of `cassiopeia-key`.
+
+```typescript
+namespace?: string;
 ```
 
 ## type CassiopeiaCancel [↗](src/types.ts#L18 'CassiopeiaCancel')
