@@ -35,6 +35,14 @@ const createProperties = (config: ResolvedConfig) => {
 
 type Properties = ReturnType<typeof createProperties>
 
+const createSetupBodyInjection = (variables: string) =>
+  [
+    '',
+    `const __cassiopeia = __useCassiopeia();`,
+    `if (__cassiopeia.addMany([${variables}])) void __cassiopeia.update();`,
+    '',
+  ].join('\n')
+
 const createProductionPlugins = (properties: ShallowRef<Properties | undefined>): Plugin[] => {
   const indice = new Map<string, Set<string>>()
 
@@ -113,15 +121,7 @@ const createProductionPlugins = (properties: ShallowRef<Properties | undefined>)
                   .map((value) => `"${value}"`)
                   .join(', ')
 
-                magic.appendRight(
-                  position,
-                  [
-                    '',
-                    `    const __cassiopeia = __useCassiopeia();`,
-                    `    if (__cassiopeia.addMany([${variables}])) void __cassiopeia.update();`,
-                    '',
-                  ].join('\n'),
-                )
+                magic.appendRight(position, createSetupBodyInjection(variables))
 
                 magic.prepend(
                   `import { useCassiopeia as __useCassiopeia } from "@cassiopeia/vue"\n`,

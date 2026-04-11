@@ -29,6 +29,7 @@
 .serverless/
 .stylelintcache
 .temp
+.tmp
 .tern-port
 .vscode-test
 .vuepress/dist
@@ -48,6 +49,7 @@ bower_components
 build/Release
 coverage
 dist
+.firecrawl/
 jspm_packages/
 lerna-debug.log*
 lib

@@ -14,7 +14,7 @@
   },
   "declaration": {
     "declarationRollup": true,
-    "documentation": true,
+    "documentation": false,
     "entryPoints": ["src/index.ts"],
     "tsconfig": "tsconfig-build.json"
   }

@@ -56,7 +56,7 @@ export const createCassiopeia = (options: CassiopeiaOptions = {}): Cassiopeia =>
     },
     install: (app: App) => {
       app.provide(CASSIOPEIA_INJECTION_KEY, cassiopeia)
-      app.onUnmount(() => void cassiopeia.dispose)
+      app.onUnmount(() => void cassiopeia.dispose())
     },
 
     createScope: scopes.createScope,
