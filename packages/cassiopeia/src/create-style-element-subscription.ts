@@ -46,8 +46,9 @@ export interface StyleElementSubscriptionOptions {
  */
 const updateMediaAttribute = (element: HTMLStyleElement, media?: string) => {
   if (typeof media === 'string') {
-    // TODO: check whether reflow happens when existing media attribute is the same media
-    element.setAttribute('media', media)
+    if (element.getAttribute('media') !== media) {
+      element.setAttribute('media', media)
+    }
   } else if (element.hasAttribute('media')) {
     element.removeAttribute('media')
   }
@@ -105,7 +106,9 @@ export const createStyleElementSubscription = (
       if (hasExistingElement && method === 'overwrite') {
         // Modify in-place to preserve element position
         updateMediaAttribute(existingElement, media)
-        existingElement.innerHTML = content
+        if (existingElement.textContent !== content) {
+          existingElement.textContent = content
+        }
         elements.delete(compositeKey)
       } else {
         // Create new element for insert-discard method or when no existing element
@@ -113,7 +116,7 @@ export const createStyleElementSubscription = (
         element.setAttribute(qualifierKey, key)
         element.setAttribute(qualifierIndex, index.toString())
         if (typeof media === 'string') element.setAttribute('media', media)
-        element.innerHTML = content
+        element.textContent = content
 
         if (hasExistingElement) {
           // Replace existing element while maintaining document order
