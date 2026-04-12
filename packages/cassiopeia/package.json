@@ -10,7 +10,7 @@
   "devDependencies": {
     "@ls-lint/ls-lint": "2.3.1",
     "@thi.ng/random": "4.1.43",
-    "@types/node": "25.5.0",
+    "@types/node": "25.5.2",
     "@vitest/coverage-v8": "4.1.2",
     "eslint": "9.39.4",
     "eslint-config-escapace": "5.16.0",

@@ -8,12 +8,12 @@
   },
   "bugs": "https://github.com/escapace/cassiopeia/issues",
   "dependencies": {
-    "@ast-grep/napi": "^0.42.0",
+    "@ast-grep/napi": "^0.42.1",
     "magic-string": "^0.30.21"
   },
   "devDependencies": {
     "@ls-lint/ls-lint": "2.3.1",
-    "@types/node": "25.5.0",
+    "@types/node": "25.5.2",
     "@vitest/coverage-v8": "4.1.2",
     "eslint": "9.39.4",
     "eslint-config-escapace": "5.16.0",
