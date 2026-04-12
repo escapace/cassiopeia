@@ -1,6 +1,6 @@
 {
   "name": "cassiopeia",
-  "description": "Runtime CSS generation from triple-dash custom properties processed through user-defined plugins.",
+  "description": "Runtime CSS system that uses triple-dash custom properties to generate styles as application state changes, users update preferences, and components are added and removed.",
   "version": "0.0.0",
   "author": {
     "name": "escapace",

@@ -1,6 +1,6 @@
 {
   "name": "@cassiopeia/vue",
-  "description": "",
+  "description": "Vue integration for Cassiopeia that registers triple-dash custom properties as components are added and removed.",
   "version": "0.0.0",
   "author": {
     "name": "escapace",

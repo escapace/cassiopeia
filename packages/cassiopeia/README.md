@@ -138,7 +138,7 @@ Both approaches have the same immediate effects: - `CASSIOPEIA_CANCEL` is forwar
 
 **Source Iterable Contract:** - Source iterables must check for `CASSIOPEIA_CANCEL` and return immediately - Source iterables must not perform additional work after receiving the cancel token - Source iterables must not yield additional values after cancellation - Iterables that violate this contract may result in unpredictable cache states
 
-## function createStyleElementSubscription [↗](src/create-style-element-subscription.ts#L65-L141 'createStyleElementSubscription')
+## function createStyleElementSubscription [↗](src/create-style-element-subscription.ts#L66-L144 'createStyleElementSubscription')
 
 Creates a subscription function that dynamically manages `<style>` elements in the browser DOM. This function enables CSS injection and automatic cleanup for client-side applications by creating and maintaining style elements with qualified attributes for tracking.
 

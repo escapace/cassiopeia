@@ -1,6 +1,6 @@
 {
   "name": "@cassiopeia/vite",
-  "description": "",
+  "description": "Vite integration for Cassiopeia that detects triple-dash custom properties in Vue single-file components and wires them into runtime style generation.",
   "version": "0.0.0",
   "author": {
     "name": "escapace",

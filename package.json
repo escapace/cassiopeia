@@ -1,6 +1,6 @@
 {
   "name": "@cassiopeia/monorepo",
-  "description": "",
+  "description": "Monorepo for Cassiopeia and its Vue and Vite integrations.",
   "version": "0.0.0",
   "author": {
     "name": "escapace",
