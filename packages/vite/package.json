@@ -45,7 +45,7 @@
   "peerDependencies": {
     "@vitejs/plugin-vue": "^6.0.5",
     "cassiopeia": "workspace:*",
-    "vite": "^8.0.3",
+    "vite": "^8.0.5",
     "vue": "^3.5.31"
   },
   "private": false,
