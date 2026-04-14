@@ -156,7 +156,9 @@ const label = 'script setup'
     })
 
     expect(result.warnings).toEqual([])
-    expect(result.code).toContain('import { useCassiopeia as __useCassiopeia } from "@cassiopeia/vue"')
+    expect(result.code).toContain(
+      'import { useCassiopeia as __useCassiopeia } from "@cassiopeia/vue"',
+    )
     expect(result.code).toContain('const _sfc_setup_cassiopeia = _sfc_main.setup;')
     expect(result.code).toContain(
       'if (__cassiopeia.addMany(["---theme-primary", "---theme-secondary"])) void __cassiopeia.update();',
@@ -172,7 +174,9 @@ const label = 'script setup'
     })
 
     expect(result.warnings).toEqual([])
-    expect(result.code).toContain('import { useCassiopeia as __useCassiopeia } from "@cassiopeia/vue"')
+    expect(result.code).toContain(
+      'import { useCassiopeia as __useCassiopeia } from "@cassiopeia/vue"',
+    )
     expect(result.code).toContain('const __cassiopeia = __useCassiopeia();')
     expect(result.code).toContain(
       'if (__cassiopeia.addMany(["---theme-primary", "---theme-secondary"])) void __cassiopeia.update();',

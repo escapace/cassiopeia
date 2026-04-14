@@ -10,6 +10,7 @@
 .env.production.local
 .env.test.local
 .eslintcache
+.firecrawl/
 .fusebox/
 .grunt
 .lake/
@@ -29,8 +30,8 @@
 .serverless/
 .stylelintcache
 .temp
-.tmp
 .tern-port
+.tmp
 .vscode-test
 .vuepress/dist
 .yarn-integrity
@@ -49,7 +50,6 @@ bower_components
 build/Release
 coverage
 dist
-.firecrawl/
 jspm_packages/
 lerna-debug.log*
 lib

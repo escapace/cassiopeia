@@ -203,11 +203,7 @@ const writeOutputFiles = async (
   return entryPath
 }
 
-const buildAppModule = async (
-  root: string,
-  appModuleId: string,
-  ssr: boolean,
-): Promise<string> => {
+const buildAppModule = async (root: string, appModuleId: string, ssr: boolean): Promise<string> => {
   let captured: string | undefined
 
   await build({

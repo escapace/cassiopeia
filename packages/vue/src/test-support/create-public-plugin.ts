@@ -38,7 +38,7 @@ export const createPublicPlugin = (key = 'theme'): PublicPluginHarness => {
               .map((marker, index) => `--${key}-${marker.replace(`---${key}-`, '')}: ${index + 1};`)
               .join(' ')} }`,
           }
-        }())
+        })()
     },
   }
 

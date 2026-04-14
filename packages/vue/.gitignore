@@ -9,8 +9,8 @@
 .env.local
 .env.production.local
 .env.test.local
-.firecrawl/
 .eslintcache
+.firecrawl/
 .fusebox/
 .grunt
 .lake/

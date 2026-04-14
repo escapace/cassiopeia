@@ -8,6 +8,7 @@
   },
   "bugs": "https://github.com/escapace/cassiopeia/issues",
   "devDependencies": {
+    "@escapace/syncpack-configuration": "0.1.0",
     "@ls-lint/ls-lint": "2.3.1",
     "@vitest/coverage-v8": "4.1.2",
     "eslint": "9.39.4",
@@ -22,7 +23,7 @@
     "vitest": "4.1.2"
   },
   "engines": {
-    "pnpm": ">=10.29.2"
+    "pnpm": ">=10.33.0"
   },
   "exports": {
     ".": {
@@ -53,7 +54,7 @@
     "ls-lint": "ls-lint --config .ls-lint.yaml",
     "test": "vitest --no-watch --coverage",
     "typecheck": "tsc --noEmit",
-    "update": "ncu --cooldown 7 -p pnpm -u --peer --dep dev,peer,prod,optional && pnpm run syncpack"
+    "update": "ncu --cooldown 7 -p pnpm -u --peer --dep dev,peer,prod,optional && pnpm run -w syncpack"
   },
   "sideEffects": false,
   "type": "module",

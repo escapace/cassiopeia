@@ -9,10 +9,7 @@ const clientDirectory = path.join(exampleDirectory, 'dist/client')
 const serverEntryPath = path.join(exampleDirectory, 'dist/server/entry-server.js')
 const templatePath = path.join(clientDirectory, 'index.html')
 
-await Promise.all([
-  access(templatePath),
-  access(serverEntryPath),
-]).catch(() => {
+await Promise.all([access(templatePath), access(serverEntryPath)]).catch(() => {
   throw new Error(
     [
       'Missing production build output for the example.',
@@ -65,7 +62,7 @@ const server = createHttpServer(async (request, response) => {
     response.end(html)
   } catch (error) {
     response.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' })
-    response.end(error instanceof Error ? error.stack ?? error.message : String(error))
+    response.end(error instanceof Error ? (error.stack ?? error.message) : String(error))
   }
 })
 

@@ -15,17 +15,15 @@ type ConfigResolvedHook =
 type PostTransformResult = string | { code?: string } | undefined
 
 type PostTransformHandler = (
-  this: { warn: (log: (() => string | LogWithOptionalMessage) | string | LogWithOptionalMessage) => void },
+  this: {
+    warn: (log: (() => string | LogWithOptionalMessage) | string | LogWithOptionalMessage) => void
+  },
   code: string,
   id: string,
   options?: { moduleType: 'js'; ssr?: true },
 ) => PostTransformResult | Promise<PostTransformResult>
 
-type PreTransformHandler = (
-  this: { warn: () => undefined },
-  code: string,
-  id: string,
-) => HookResult
+type PreTransformHandler = (this: { warn: () => undefined }, code: string, id: string) => HookResult
 
 export interface CompiledModuleTransformOptions {
   compiledSource: string
@@ -106,7 +104,9 @@ export const transformCompiledVueModule = async ({
     {
       warn(log) {
         const resolved = typeof log === 'function' ? log() : log
-        warnings.push(typeof resolved === 'string' ? resolved : (resolved.message ?? 'Unknown warning'))
+        warnings.push(
+          typeof resolved === 'string' ? resolved : (resolved.message ?? 'Unknown warning'),
+        )
       },
     },
     compiledSource,

@@ -13,9 +13,8 @@ const renderChildReady = () => h('p', 'child ready')
 const renderChildRemoved = () => h('p', 'child removed')
 const renderUnreachable = () => h('p', 'unreachable')
 
-const createToggleRenderer = (showChild: Ref<boolean>, Child: Component) =>
-  () =>
-    showChild.value ? h(Child) : renderChildRemoved()
+const createToggleRenderer = (showChild: Ref<boolean>, Child: Component) => () =>
+  showChild.value ? h(Child) : renderChildRemoved()
 
 const createToggleRoot = (showChild: Ref<boolean>, Child: Component) =>
   defineComponent({
@@ -115,7 +114,9 @@ describe('browser end-user flows', () => {
 
   it('applies custom scheduler options and reacts to deferEvery changes', async () => {
     const deferEvery = ref<number | undefined>(undefined)
-    const defer = vi.fn<(callback: () => void) => number>((callback) => window.setTimeout(callback, 0))
+    const defer = vi.fn<(callback: () => void) => number>((callback) =>
+      window.setTimeout(callback, 0),
+    )
     const deferCancel = vi.fn<(id: number) => void>((id) => window.clearTimeout(id))
 
     const cassiopeia = createCassiopeia({ defer, deferCancel, deferEvery })
@@ -186,5 +187,4 @@ describe('browser end-user flows', () => {
 
     expect(warn).toHaveBeenCalledWith("[cassiopeia] update failed for 'missing.css'")
   })
-
 })

@@ -4,7 +4,8 @@
       <p class="eyebrow">Cassiopeia + Vue + Vite</p>
       <h1 class="title">The generated stylesheet should color this card and title.</h1>
       <p class="body">
-        Open devtools and inspect the generated <code>&lt;style&gt;</code> tags or the SSR HTML output.
+        Open devtools and inspect the generated <code>&lt;style&gt;</code> tags or the SSR HTML
+        output.
       </p>
       <ul class="checks">
         <li>surface uses <code>var(---theme-surface)</code></li>
@@ -19,7 +20,14 @@
 <style>
 :root {
   color-scheme: light;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   line-height: 1.5;
 }
 

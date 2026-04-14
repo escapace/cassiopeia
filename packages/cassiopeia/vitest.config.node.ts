@@ -11,10 +11,6 @@ export default mergeConfig(
       __ENVIRONMENT__: JSON.stringify('development'),
       __VERSION__: JSON.stringify(version),
     },
-    esbuild: {
-      platform: 'node',
-      target: builds.node.target,
-    },
     test: {
       environment: 'node',
       include: ['{src,test}/**/+([a-zA-Z0-9-])?(.node).{test,spec}.?(c|m)[jt]s?(x)'],
