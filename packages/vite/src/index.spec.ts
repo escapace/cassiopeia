@@ -205,7 +205,7 @@ const label = 'script setup'
     )
   })
 
-  it('registers variables during SSR renders, preserves Vue module tracking, and follows the consumer flush pattern', async () => {
+  it('registers variables during SSR renders, preserves Vue module tracking, and keeps request-scoped styles available for explicit flushing', async () => {
     await withVueProject(
       {
         appSource: `
@@ -256,7 +256,13 @@ const label = 'server ready'
 
           await cassiopeia.update()
 
-          expect(entry.readStyles(cassiopeia)).toEqual([])
+          expect(entry.readStyles(cassiopeia)).toEqual([
+            {
+              content: ':root { --theme-primary: 1; --theme-secondary: 2; }',
+              index: 0,
+              key: 'theme',
+            },
+          ])
         } finally {
           await cassiopeia.dispose()
         }

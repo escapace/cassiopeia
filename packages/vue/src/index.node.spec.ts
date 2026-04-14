@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { renderStyleSheets } from 'cassiopeia'
 import { createSSRApp, defineComponent, h, inject } from 'vue'
 import { renderToString } from 'vue/server-renderer'
-import { CASSIOPEIA_INJECTION_KEY, createCassiopeia } from './index'
+import { CASSIOPEIA_INJECTION_KEY, createCassiopeia, useCassiopeia } from './index'
 import { createPublicPlugin } from './test-support/create-public-plugin'
 
 const renderServerReady = () => h('main', 'server ready')
@@ -77,6 +77,39 @@ describe('node end-user flows', () => {
     expect(renderStyleSheets(cassiopeia)).toEqual([
       {
         content: ':root { --theme-manual: 1; }',
+        index: 0,
+        key: 'theme',
+      },
+    ])
+  })
+
+  it('keeps component registrations available on the request-owned instance for explicit SSR flushing', async () => {
+    const cassiopeia = createCassiopeia()
+    cassiopeia.use(createPublicPlugin('theme').plugin)
+
+    const Root = defineComponent({
+      name: 'Root',
+      setup() {
+        const scope = useCassiopeia()
+
+        if (scope.addMany(['---theme-primary', '---theme-secondary'])) {
+          void scope.update()
+        }
+
+        return renderServerReady
+      },
+    })
+
+    const app = createSSRApp(Root)
+    app.use(cassiopeia)
+
+    const html = await renderToString(app)
+    await cassiopeia.update()
+
+    expect(html).toContain('server ready')
+    expect(renderStyleSheets(cassiopeia)).toEqual([
+      {
+        content: ':root { --theme-primary: 1; --theme-secondary: 2; }',
         index: 0,
         key: 'theme',
       },
