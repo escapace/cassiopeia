@@ -1621,12 +1621,12 @@ packages:
     peerDependencies:
       eslint: ^9.0.0 || ^10.0.0
 
-  '@thi.ng/api@8.12.18':
-    resolution: {integrity: sha512-zIQMySGpCtqsdyWKFO17sIaw+5absvDBokNwEc0Adk8BfFg5jtBY1rWJHqZQPDO8BkaIi3xYBoG7CkmZMjj4Bg==}
+  '@thi.ng/api@8.12.19':
+    resolution: {integrity: sha512-XacJdt/Dtof3QiRibS5f6nGDqTafRoKzuKTlvGnxe9QpQqJ8GaKNbN82JE2f6mTrVBI+97ahAG9WpvIXKGZk/A==}
     engines: {node: '>=18'}
 
-  '@thi.ng/errors@2.6.7':
-    resolution: {integrity: sha512-jFvECE7RPtB8P3BPL+XYOgGZqRheVtq32DAy3LJwbqgFP2v/lSyTwzvA47KsDKn1VDOGPGBhR5cM8eR7mnNbdQ==}
+  '@thi.ng/errors@2.6.8':
+    resolution: {integrity: sha512-npKV69U8JYpMLZiqhUWf9dmd9Esjy36o7CxxGUgoLRS4ZmTLuIKqKfFnZuLrx6D5Mmb+D9ARCDR7qXO1QJV8DQ==}
     engines: {node: '>=18'}
 
   '@thi.ng/random@4.1.43':
@@ -5123,14 +5123,14 @@ snapshots:
       estraverse: 5.3.0
       picomatch: 4.0.4
 
-  '@thi.ng/api@8.12.18': {}
+  '@thi.ng/api@8.12.19': {}
 
-  '@thi.ng/errors@2.6.7': {}
+  '@thi.ng/errors@2.6.8': {}
 
   '@thi.ng/random@4.1.43':
     dependencies:
-      '@thi.ng/api': 8.12.18
-      '@thi.ng/errors': 2.6.7
+      '@thi.ng/api': 8.12.19
+      '@thi.ng/errors': 2.6.8
 
   '@tybys/wasm-util@0.10.1':
     dependencies:
