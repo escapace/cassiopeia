@@ -11,8 +11,8 @@
     "@escapace/syncpack-configuration": "0.2.0",
     "@ls-lint/ls-lint": "2.3.1",
     "@types/node": "25.5.2",
-    "@vitest/coverage-v8": "4.1.4",
-    "eslint": "10.2.0",
+    "@vitest/coverage-v8": "4.1.5",
+    "eslint": "10.2.1",
     "eslint-config-escapace": "5.17.0",
     "esroll": "1.2.2",
     "jsdom": "29.0.2",
@@ -21,7 +21,7 @@
     "syncpack": "14.3.0",
     "tsx": "4.21.0",
     "typescript": "6.0.3",
-    "vitest": "4.1.4"
+    "vitest": "4.1.5"
   },
   "devEngines": {
     "packageManager": {
@@ -69,7 +69,7 @@
   "license": "MPL-2.0",
   "peerDependencies": {
     "cassiopeia": "workspace:*",
-    "vue": "^3.5.32"
+    "vue": "^3.5.33"
   },
   "private": false,
   "publishConfig": {
