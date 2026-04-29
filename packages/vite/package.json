@@ -18,7 +18,7 @@
     "@vitest/coverage-v8": "4.1.4",
     "eslint": "10.2.0",
     "eslint-config-escapace": "5.17.0",
-    "esroll": "1.2.1",
+    "esroll": "1.2.2",
     "prettier": "3.8.3",
     "prettier-config-escapace": "1.2.2",
     "syncpack": "14.3.0",
