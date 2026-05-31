@@ -8,7 +8,7 @@
   },
   "bugs": "https://github.com/escapace/cassiopeia/issues",
   "devDependencies": {
-    "@escapace/syncpack-configuration": "0.2.0",
+    "@escapace/syncpack-configuration": "0.3.0",
     "@ls-lint/ls-lint": "2.3.1",
     "@thi.ng/random": "4.1.48",
     "@types/node": "25.5.2",
