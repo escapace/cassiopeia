@@ -14,7 +14,7 @@
     "@escapace/syncpack-configuration": "0.3.0",
     "@ls-lint/ls-lint": "2.3.1",
     "eslint": "10.6.0",
-    "eslint-config-escapace": "5.20.0",
+    "eslint-config-escapace": "5.20.1",
     "knip": "6.25.0",
     "lefthook": "2.1.9",
     "prettier": "3.9.4",
