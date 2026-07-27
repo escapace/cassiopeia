@@ -9,7 +9,7 @@
   "bugs": "https://github.com/escapace/cassiopeia/issues",
   "dependencies": {
     "@ast-grep/napi": "^0.44.1",
-    "magic-string": "^0.30.21"
+    "magic-string": "^1.0.0"
   },
   "devDependencies": {
     "@escapace/syncpack-configuration": "0.3.0",
