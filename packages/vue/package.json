@@ -19,7 +19,7 @@
     "prettier": "3.9.6",
     "prettier-config-escapace": "1.2.2",
     "syncpack": "15.3.2",
-    "tsx": "4.23.1",
+    "tsx": "4.23.7",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   },
@@ -69,7 +69,7 @@
   "license": "MPL-2.0",
   "peerDependencies": {
     "cassiopeia": "workspace:*",
-    "vue": "^3.5.40"
+    "vue": "^3.5.41"
   },
   "private": false,
   "publishConfig": {
