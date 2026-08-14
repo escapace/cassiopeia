@@ -4,17 +4,18 @@ github_checks:
 
 coverage:
   precision: 2
-  range: '20...60'
+  range: "20...60"
   round: down
   status:
     changes: false
     patch:
       default:
-        informational: true
+         informational: true
     project:
       default:
         target: auto
         threshold: 5%
+
 
 flags:
   cassiopeia:

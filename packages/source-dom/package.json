@@ -17,8 +17,8 @@
     "jsdom": "30.0.1",
     "prettier": "3.9.6",
     "prettier-config-escapace": "1.2.2",
-    "syncpack": "15.3.2",
-    "tsx": "4.23.7",
+    "syncpack": "15.3.3",
+    "tsx": "4.23.10",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   },
@@ -26,7 +26,7 @@
     "packageManager": {
       "name": "pnpm",
       "onFail": "warn",
-      "version": "^10.33.0"
+      "version": "^11.20.0"
     }
   },
   "exports": {
@@ -53,10 +53,10 @@
   "repository": "escapace/cassiopeia",
   "scripts": {
     "build": "tsx scripts/build.ts",
-    "format": "syncpack format --source package.json && eslint --no-warn-ignored --fix && prettier --no-error-on-unmatched-pattern -uw .",
+    "format": "syncpack format --source package.json && eslint --no-warn-ignored --fix && prettier --log-level warn --no-error-on-unmatched-pattern -uw .",
     "lint": "ls-lint --config .ls-lint.yaml && eslint",
     "ls-lint": "ls-lint --config .ls-lint.yaml",
-    "test": "vitest --no-watch --coverage",
+    "test": "vitest --no-watch --coverage --coverage.reporter=text-summary",
     "typecheck": "tsc --noEmit",
     "update": "ncu --cooldown 7 -p pnpm -u --peer --dep dev,peer,prod,optional && pnpm run -w syncpack"
   },

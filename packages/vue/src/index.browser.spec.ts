@@ -169,10 +169,15 @@ describe('browser end-user flows', () => {
       },
     ])
 
+    const update = vi.spyOn(cassiopeia, 'update')
+
     cleanupCallbacks[0]()
+
+    expect(update).not.toHaveBeenCalled()
+    expect(warn).toHaveBeenCalledWith("[cassiopeia] disposing scope 'entry.css'")
+
     cassiopeia.updateSync()
 
-    expect(warn).toHaveBeenCalledWith("[cassiopeia] disposing scope 'entry.css'")
     expect(renderStyleSheets(cassiopeia)).toEqual([])
   })
 

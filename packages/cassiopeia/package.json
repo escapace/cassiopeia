@@ -11,16 +11,16 @@
     "@escapace/syncpack-configuration": "0.3.0",
     "@ls-lint/ls-lint": "2.3.1",
     "@thi.ng/random": "4.1.53",
-    "@types/node": "25.5.2",
+    "@types/node": "24.13.2",
     "@vitest/coverage-v8": "4.1.10",
     "eslint": "10.8.0",
     "eslint-config-escapace": "5.20.1",
     "esroll": "1.3.0",
-    "jsdom": "29.1.1",
+    "jsdom": "30.0.1",
     "prettier": "3.9.6",
     "prettier-config-escapace": "1.2.2",
-    "syncpack": "15.3.2",
-    "tsx": "4.23.7",
+    "syncpack": "15.3.3",
+    "tsx": "4.23.10",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   },
@@ -28,16 +28,16 @@
     "packageManager": {
       "name": "pnpm",
       "onFail": "warn",
-      "version": "^10.33.0"
+      "version": "^11.20.0"
     },
     "runtime": {
       "name": "node",
       "onFail": "warn",
-      "version": "^24.15.0"
+      "version": "^24.16.0"
     }
   },
   "engines": {
-    "node": ">=24.13.0"
+    "node": ">=24"
   },
   "exports": {
     ".": {
@@ -82,10 +82,10 @@
   "scripts": {
     "bench": "pnpm exec vitest bench --project browser --run",
     "build": "tsx scripts/build.ts",
-    "format": "syncpack format --source package.json && eslint --no-warn-ignored --fix && prettier --no-error-on-unmatched-pattern -uw .",
+    "format": "syncpack format --source package.json && eslint --no-warn-ignored --fix && prettier --log-level warn --no-error-on-unmatched-pattern -uw .",
     "lint": "ls-lint --config .ls-lint.yaml && eslint",
     "ls-lint": "ls-lint --config .ls-lint.yaml",
-    "test": "vitest --no-watch --coverage",
+    "test": "vitest --no-watch --coverage --coverage.reporter=text-summary",
     "typecheck": "tsc --noEmit",
     "update": "ncu --cooldown 7 -p pnpm -u --peer --dep dev,peer,prod,optional && pnpm run -w syncpack"
   },

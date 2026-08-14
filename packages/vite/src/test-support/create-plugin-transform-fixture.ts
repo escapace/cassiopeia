@@ -14,20 +14,34 @@ type ConfigResolvedHook =
 
 type PostTransformResult = string | { code?: string } | undefined
 
+interface TransformContextFixture {
+  environment: {
+    config: {
+      consumer: 'client' | 'server'
+    }
+    mode: 'build' | 'dev'
+  }
+  resolve: (source: string, importer?: string, options?: { skipSelf?: boolean }) => Promise<{
+    id: string
+  } | null>
+  warn: (log: (() => string | LogWithOptionalMessage) | string | LogWithOptionalMessage) => void
+}
+
 type PostTransformHandler = (
-  this: {
-    warn: (log: (() => string | LogWithOptionalMessage) | string | LogWithOptionalMessage) => void
-  },
+  this: TransformContextFixture,
   code: string,
   id: string,
   options?: { moduleType: 'js'; ssr?: true },
 ) => PostTransformResult | Promise<PostTransformResult>
 
-type PreTransformHandler = (this: { warn: () => undefined }, code: string, id: string) => HookResult
+type PreTransformHandler = (this: TransformContextFixture, code: string, id: string) => HookResult
 
 export interface CompiledModuleTransformOptions {
   compiledSource: string
   sfcSource: string
+  consumer?: 'client' | 'server'
+  environmentMode?: 'build' | 'dev'
+  resolvedImportSource?: string
   ssr?: boolean
 }
 
@@ -62,11 +76,17 @@ const getNamedPlugin = (plugins: Plugin[], name: string): Plugin => {
   return plugin
 }
 
-export const transformCompiledVueModule = async ({
-  compiledSource,
-  sfcSource,
-  ssr = false,
-}: CompiledModuleTransformOptions): Promise<CompiledModuleTransformResult> => {
+export const transformCompiledVueModule = async (
+  options: CompiledModuleTransformOptions,
+): Promise<CompiledModuleTransformResult> => {
+  const {
+    compiledSource,
+    environmentMode = 'build',
+    resolvedImportSource = '@cassiopeia/vue',
+    sfcSource,
+    ssr = false,
+  } = options
+  const consumer = options.consumer ?? (ssr ? 'server' : 'client')
   const plugins = cassiopeia()
   const configPlugin = getNamedPlugin(plugins, '@cassiopeia/vite:configResolved')
   const preProductionPlugin = getNamedPlugin(plugins, '@cassiopeia/vite:pre-production')
@@ -92,7 +112,21 @@ export const transformCompiledVueModule = async ({
 
   const preTransformHandler = preTransform.handler as unknown as PreTransformHandler
 
-  await preTransformHandler.call({ warn: () => undefined }, sfcSource, filename)
+  const transformContext: TransformContextFixture = {
+    environment: {
+      config: {
+        consumer,
+      },
+      mode: environmentMode,
+    },
+    resolve: async () => await Promise.resolve({ id: resolvedImportSource }),
+    warn(log) {
+      const resolved = typeof log === 'function' ? log() : log
+      warnings.push(typeof resolved === 'string' ? resolved : (resolved.message ?? 'Unknown warning'))
+    },
+  }
+
+  await preTransformHandler.call(transformContext, sfcSource, filename)
 
   const postTransform = postProductionPlugin.transform
   if (postTransform === undefined || typeof postTransform === 'function') {
@@ -101,14 +135,7 @@ export const transformCompiledVueModule = async ({
 
   const postTransformHandler = postTransform.handler as PostTransformHandler
   const result = await postTransformHandler.call(
-    {
-      warn(log) {
-        const resolved = typeof log === 'function' ? log() : log
-        warnings.push(
-          typeof resolved === 'string' ? resolved : (resolved.message ?? 'Unknown warning'),
-        )
-      },
-    },
+    transformContext,
     compiledSource,
     filename,
     ssr ? { moduleType: 'js', ssr: true } : undefined,

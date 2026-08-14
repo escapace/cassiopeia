@@ -34,6 +34,6 @@ export const createThemePlugin = (): CassiopeiaPlugin => ({
             .map((suffix) => `--theme-${suffix}: ${themeValues[suffix] ?? '#ef4444'};`)
             .join(' ')} }`,
         }
-      })()
+      }())
   },
 })

@@ -1,14 +1,15 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import vue from '@vitejs/plugin-vue'
-import { build, createServer, type InlineConfig, type Plugin } from 'vite'
+import vue, { type Options as VuePluginOptions } from '@vitejs/plugin-vue'
+import { build, createServer, type InlineConfig, type Plugin, type ViteDevServer } from 'vite'
 import { cassiopeia } from '../index'
 import { createTemporaryDirectory } from './create-temporary-directory'
 
 export interface VueProjectOptions {
   appSource: string
   extraFiles?: Record<string, string>
+  vueOptions?: VuePluginOptions
 }
 
 export interface VueProject {
@@ -19,6 +20,13 @@ export interface VueProject {
   captureServerAppModule: () => Promise<string>
   cleanup: () => Promise<void>
   transformDevelopmentRequest: (request?: string, options?: { ssr?: boolean }) => Promise<string>
+  withDevelopmentServer: <Result>(
+    platform: 'browser' | 'node',
+    callback: (server: ViteDevServer) => Promise<Result>,
+  ) => Promise<Result>
+  withDevelopmentServerEntry: <Entry, Result>(
+    callback: (entry: Entry) => Promise<Result>,
+  ) => Promise<Result>
 }
 
 const createClientEntry = () => `
@@ -135,6 +143,7 @@ const createConfig = (
   root: string,
   platform: 'browser' | 'node',
   plugins: Plugin[] = [],
+  vueOptions?: VuePluginOptions,
 ): InlineConfig => ({
   define: {
     __ENVIRONMENT__: JSON.stringify('development'),
@@ -142,7 +151,7 @@ const createConfig = (
     __VERSION__: JSON.stringify('test'),
   },
   logLevel: 'silent',
-  plugins: [vue(), ...cassiopeia(), ...plugins],
+  plugins: [vue(vueOptions), ...cassiopeia(), ...plugins],
   resolve: {
     alias: {
       '@cassiopeia/vue': path.resolve(process.cwd(), '../vue/src/index.ts'),
@@ -203,15 +212,25 @@ const writeOutputFiles = async (
   return entryPath
 }
 
-const buildAppModule = async (root: string, appModuleId: string, ssr: boolean): Promise<string> => {
+const buildAppModule = async (
+  root: string,
+  appModuleId: string,
+  ssr: boolean,
+  vueOptions?: VuePluginOptions,
+): Promise<string> => {
   let captured: string | undefined
 
   await build({
-    ...createConfig(root, ssr ? 'node' : 'browser', [
-      createCapturePlugin(appModuleId, ssr, (code) => {
-        captured = code
-      }),
-    ]),
+    ...createConfig(
+      root,
+      ssr ? 'node' : 'browser',
+      [
+        createCapturePlugin(appModuleId, ssr, (code) => {
+          captured = code
+        }),
+      ],
+      vueOptions,
+    ),
     build: ssr
       ? {
           minify: false,
@@ -245,13 +264,26 @@ export const withVueProject = async <T>(
   const serverEntryPath = path.join(sourceDirectory, 'entry-server.ts')
   const builtServerDirectory = path.join(root, 'dist-ssr')
 
+  const withDevelopmentServer: VueProject['withDevelopmentServer'] = async (platform, callback) => {
+    const server = await createServer(createConfig(root, platform, [], options.vueOptions))
+
+    try {
+      await server.listen(0)
+
+      return await callback(server)
+    } finally {
+      await server.close()
+    }
+  }
+
   const project: VueProject = {
     appModuleId,
     cleanup: temporaryDirectory.cleanup,
     root,
+    withDevelopmentServer,
     buildServerEntry: async () => {
       const result = await build({
-        ...createConfig(root, 'node'),
+        ...createConfig(root, 'node', [], options.vueOptions),
         build: {
           minify: false,
           ssr: serverEntryPath,
@@ -261,26 +293,34 @@ export const withVueProject = async <T>(
 
       return await writeOutputFiles(builtServerDirectory, result)
     },
-    captureClientAppModule: async () => await buildAppModule(root, appModuleId, false),
-    captureServerAppModule: async () => await buildAppModule(root, appModuleId, true),
+    captureClientAppModule: async () =>
+      await buildAppModule(root, appModuleId, false, options.vueOptions),
+    captureServerAppModule: async () =>
+      await buildAppModule(root, appModuleId, true, options.vueOptions),
     transformDevelopmentRequest: async (
       request = '/src/App.vue?vue&type=style&index=0&lang.css',
-      options,
+      transformOptions,
     ) => {
-      const server = await createServer(createConfig(root, 'browser'))
+      const platform = transformOptions?.ssr === true ? 'node' : 'browser'
 
-      try {
-        const result = await server.transformRequest(request, options)
+      return await withDevelopmentServer(platform, async (server) => {
+        const result = await server.transformRequest(request, transformOptions)
 
         if (result?.code === undefined) {
           throw new Error(`Expected development transform for '${request}'`)
         }
 
         return result.code
-      } finally {
-        await server.close()
-      }
+      })
     },
+    withDevelopmentServerEntry: async <Entry, Result>(
+      callback: (entry: Entry) => Promise<Result>,
+    ): Promise<Result> =>
+      await withDevelopmentServer('node', async (server) => {
+        const entry = (await server.ssrLoadModule('/src/entry-server.ts')) as Entry
+
+        return await callback(entry)
+      }),
   }
 
   try {
