@@ -20,7 +20,7 @@
     "prettier": "3.9.6",
     "prettier-config-escapace": "1.2.2",
     "syncpack": "15.3.3",
-    "tsx": "4.23.12",
+    "tsx": "4.23.13",
     "typescript": "6.0.3",
     "vitest": "4.1.11"
   },
